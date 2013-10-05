@@ -1,0 +1,25 @@
+<!doctype html>
+<html class="no-js">
+<body data-ng-app="tapcatWebApp" data-ng-controller="AuthDevCtrl">
+
+<!-- this will not work in prod, because there won't be any of this scripts -->
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/angular-route/angular-route.js"></script>
+
+<script src="https://login.persona.org/include.js"></script>
+
+<script src="scripts/app.js"></script>
+<script src="scripts/services/auth.js"></script>
+
+<script>
+    angular.module('tapcatWebApp')
+            .controller('AuthDevCtrl',['$scope', '$http', 'personaAuthService', function ($scope, $http, $authService) {
+                // login with persona test user
+                $http.get('/personaid/email_with_assertion/https%3A%2F%2Fapi.tapcat.net:80/')
+                        .success(function(data) {
+                            $authService.login(data.assertion);
+                        });
+            }]);
+</script>
+</body>
+</html>
