@@ -7,7 +7,7 @@
         <meta name="viewport" content="width=device-width">
 
     </head>
-    <body data-ng-app="tapcatWebApp" data-ng-controller="AuthCtrl">
+    <body>
     <h1>Persona login</h1>
         <script src="https://login.persona.org/include.js"></script>
 
@@ -17,7 +17,7 @@
                 return function() {
                     if (xhr.readyState == 4) {
                         if (xhr.status == 200){
-                            window.location = '/app';
+                            window.location = '//tapcat.net/app';
                         }
                         else {
                             navigator.id.logout();
@@ -28,7 +28,7 @@
 
             function logoutHomeRedirect() {
                 return function() {
-                    window.location = '/';
+                    window.location = '//tapcat.net/';
                 };
             }
 
