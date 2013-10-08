@@ -1,0 +1,59 @@
+<!doctype html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <title>Login Tapcat</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+    </head>
+    <body data-ng-app="tapcatWebApp" data-ng-controller="AuthCtrl">
+    <h1>Persona login</h1>
+        <script src="https://login.persona.org/include.js"></script>
+
+        <script>
+            // Based on https://developer.mozilla.org/en-US/Persona/Quick_Setup?redirectlocale=en-US&redirectslug=Persona%2FQuick_Setup
+            function simpleXhrSentinel(xhr) {
+                return function() {
+                    if (xhr.readyState == 4) {
+                        if (xhr.status == 200){
+                            window.location = '/app';
+                        }
+                        else {
+                            navigator.id.logout();
+                        }
+                    }
+                }
+            }
+
+            function logoutHomeRedirect() {
+                return function() {
+                    window.location = '/';
+                };
+            }
+
+            function verifyAssertion(assertion) {
+                // Your backend must return HTTP status code 200 to indicate successful
+                // verification of user's email address and it must arrange for the binding
+                // of currentUser to said address when the page is reloaded
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/login', true);
+                // see http://www.openjs.com/articles/ajax_xmlhttp_using_post.php
+                var param = 'assertion='+assertion;
+                xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                xhr.setRequestHeader('Content-length', param.length);
+                xhr.setRequestHeader('Connection', 'close');
+                xhr.send(param); // for verification by your backend
+
+                xhr.onreadystatechange = simpleXhrSentinel(xhr);
+            }
+
+            // Go!
+            navigator.id.watch( {
+                onlogin: verifyAssertion,
+                onlogout: logoutHomeRedirect } );
+
+            navigator.id.request();
+        </script>
+    </body>
+</html>
