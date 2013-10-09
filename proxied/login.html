@@ -16,7 +16,7 @@
             function simpleXhrSentinel(xhr) {
                 return function() {
                     if (xhr.readyState == 4) {
-                        if (xhr.status.indexOf(20)) { // any 20x response code is welcomed!
+                        if (xhr.status >= 200 && xhr.status < 300) { // any 20x response code is welcomed!
                             window.location = '//tapcat.net/app';
                         }
                         else {
