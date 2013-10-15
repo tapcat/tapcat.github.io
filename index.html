@@ -14,7 +14,7 @@
     <section>
         <header class="navigation" data-ng-controller="AuthCtrl">
             <h1>Tapcat</h1>
-            <a class="btn-default" href="//api.tapcat.net/p/login">Login</a>
+            <button data-ng-click="login()">Login</button>
         </header>
         <h2>Tapcat. Not about cats... or taps...</h2>
     </section>
@@ -27,5 +27,12 @@
         ga('create', 'UA-44092592-1', 'tapcat.net');
         ga('send', 'pageview');
     </script>
+
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/angular-route/angular-route.js"></script>
+
+    <script src="https://login.persona.org/include.js"></script>
+
+    <script src="scripts/scripts.js"></script>
 </body>
 </html>
