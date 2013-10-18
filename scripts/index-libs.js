@@ -1,277 +1,277 @@
-(function(a, b, c) {
+(function(window, document, undefined) {
     "use strict";
-    function d(a) {
+    function minErr(module) {
         return function() {
-            var b = arguments[0], c = "[" + (a ? a + ":" : "") + b + "] ", d = arguments[1], e = arguments, f = function(a) {
-                if (O(a)) {
-                    return a.toString().replace(/ \{[\s\S]*$/, "");
-                } else if (H(a)) {
+            var code = arguments[0], prefix = "[" + (module ? module + ":" : "") + code + "] ", template = arguments[1], templateArgs = arguments, stringify = function(obj) {
+                if (isFunction(obj)) {
+                    return obj.toString().replace(/ \{[\s\S]*$/, "");
+                } else if (isUndefined(obj)) {
                     return "undefined";
-                } else if (!K(a)) {
-                    return JSON.stringify(a);
+                } else if (!isString(obj)) {
+                    return JSON.stringify(obj);
                 }
-                return a;
-            }, g, h;
-            g = c + d.replace(/\{\d+\}/g, function(a) {
-                var b = +a.slice(1, -1), c;
-                if (b + 2 < e.length) {
-                    c = e[b + 2];
-                    if (O(c)) {
-                        return c.toString().replace(/ ?\{[\s\S]*$/, "");
-                    } else if (H(c)) {
+                return obj;
+            }, message, i;
+            message = prefix + template.replace(/\{\d+\}/g, function(match) {
+                var index = +match.slice(1, -1), arg;
+                if (index + 2 < templateArgs.length) {
+                    arg = templateArgs[index + 2];
+                    if (isFunction(arg)) {
+                        return arg.toString().replace(/ ?\{[\s\S]*$/, "");
+                    } else if (isUndefined(arg)) {
                         return "undefined";
-                    } else if (!K(c)) {
-                        return ib(c);
+                    } else if (!isString(arg)) {
+                        return toJson(arg);
                     }
-                    return c;
+                    return arg;
                 }
-                return a;
+                return match;
             });
-            g = g + "\nhttp://errors.angularjs.org/" + Bb.full + "/" + (a ? a + "/" : "") + b;
-            for (h = 2; h < arguments.length; h++) {
-                g = g + (h == 2 ? "?" : "&") + "p" + (h - 2) + "=" + encodeURIComponent(f(arguments[h]));
+            message = message + "\nhttp://errors.angularjs.org/" + version.full + "/" + (module ? module + "/" : "") + code;
+            for (i = 2; i < arguments.length; i++) {
+                message = message + (i == 2 ? "?" : "&") + "p" + (i - 2) + "=" + encodeURIComponent(stringify(arguments[i]));
             }
-            return new Error(g);
+            return new Error(message);
         };
     }
-    var e = function(a) {
-        return K(a) ? a.toLowerCase() : a;
+    var lowercase = function(string) {
+        return isString(string) ? string.toLowerCase() : string;
     };
-    var f = function(a) {
-        return K(a) ? a.toUpperCase() : a;
+    var uppercase = function(string) {
+        return isString(string) ? string.toUpperCase() : string;
     };
-    var g = function(a) {
-        return K(a) ? a.replace(/[A-Z]/g, function(a) {
-            return String.fromCharCode(a.charCodeAt(0) | 32);
-        }) : a;
+    var manualLowercase = function(s) {
+        return isString(s) ? s.replace(/[A-Z]/g, function(ch) {
+            return String.fromCharCode(ch.charCodeAt(0) | 32);
+        }) : s;
     };
-    var h = function(a) {
-        return K(a) ? a.replace(/[a-z]/g, function(a) {
-            return String.fromCharCode(a.charCodeAt(0) & ~32);
-        }) : a;
+    var manualUppercase = function(s) {
+        return isString(s) ? s.replace(/[a-z]/g, function(ch) {
+            return String.fromCharCode(ch.charCodeAt(0) & ~32);
+        }) : s;
     };
     if ("i" !== "I".toLowerCase()) {
-        e = g;
-        f = h;
+        lowercase = manualLowercase;
+        uppercase = manualUppercase;
     }
-    var i, j, k, l = [].slice, m = [].push, n = Object.prototype.toString, o = d("ng"), p = a.angular, q = a.angular || (a.angular = {}), r, s, t = [ "0", "0", "0" ];
-    i = C((/msie (\d+)/.exec(e(navigator.userAgent)) || [])[1]);
-    if (isNaN(i)) {
-        i = C((/trident\/.*; rv:(\d+)/.exec(e(navigator.userAgent)) || [])[1]);
+    var msie, jqLite, jQuery, slice = [].slice, push = [].push, toString = Object.prototype.toString, ngMinErr = minErr("ng"), _angular = window.angular, angular = window.angular || (window.angular = {}), angularModule, nodeName_, uid = [ "0", "0", "0" ];
+    msie = int((/msie (\d+)/.exec(lowercase(navigator.userAgent)) || [])[1]);
+    if (isNaN(msie)) {
+        msie = int((/trident\/.*; rv:(\d+)/.exec(lowercase(navigator.userAgent)) || [])[1]);
     }
-    function u(a) {
-        if (a == null || Q(a)) {
+    function isArrayLike(obj) {
+        if (obj == null || isWindow(obj)) {
             return false;
         }
-        var b = a.length;
-        if (a.nodeType === 1 && b) {
+        var length = obj.length;
+        if (obj.nodeType === 1 && length) {
             return true;
         }
-        return K(a) || N(a) || b === 0 || typeof b === "number" && b > 0 && b - 1 in a;
+        return isString(obj) || isArray(obj) || length === 0 || typeof length === "number" && length > 0 && length - 1 in obj;
     }
-    function v(a, b, c) {
-        var d;
-        if (a) {
-            if (O(a)) {
-                for (d in a) {
-                    if (d != "prototype" && d != "length" && d != "name" && a.hasOwnProperty(d)) {
-                        b.call(c, a[d], d);
+    function forEach(obj, iterator, context) {
+        var key;
+        if (obj) {
+            if (isFunction(obj)) {
+                for (key in obj) {
+                    if (key != "prototype" && key != "length" && key != "name" && obj.hasOwnProperty(key)) {
+                        iterator.call(context, obj[key], key);
                     }
                 }
-            } else if (a.forEach && a.forEach !== v) {
-                a.forEach(b, c);
-            } else if (u(a)) {
-                for (d = 0; d < a.length; d++) b.call(c, a[d], d);
+            } else if (obj.forEach && obj.forEach !== forEach) {
+                obj.forEach(iterator, context);
+            } else if (isArrayLike(obj)) {
+                for (key = 0; key < obj.length; key++) iterator.call(context, obj[key], key);
             } else {
-                for (d in a) {
-                    if (a.hasOwnProperty(d)) {
-                        b.call(c, a[d], d);
+                for (key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        iterator.call(context, obj[key], key);
                     }
                 }
             }
         }
-        return a;
+        return obj;
     }
-    function w(a) {
-        var b = [];
-        for (var c in a) {
-            if (a.hasOwnProperty(c)) {
-                b.push(c);
+    function sortedKeys(obj) {
+        var keys = [];
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                keys.push(key);
             }
         }
-        return b.sort();
+        return keys.sort();
     }
-    function x(a, b, c) {
-        var d = w(a);
-        for (var e = 0; e < d.length; e++) {
-            b.call(c, a[d[e]], d[e]);
+    function forEachSorted(obj, iterator, context) {
+        var keys = sortedKeys(obj);
+        for (var i = 0; i < keys.length; i++) {
+            iterator.call(context, obj[keys[i]], keys[i]);
         }
-        return d;
+        return keys;
     }
-    function y(a) {
-        return function(b, c) {
-            a(c, b);
+    function reverseParams(iteratorFn) {
+        return function(value, key) {
+            iteratorFn(key, value);
         };
     }
-    function z() {
-        var a = t.length;
-        var b;
-        while (a) {
-            a--;
-            b = t[a].charCodeAt(0);
-            if (b == 57) {
-                t[a] = "A";
-                return t.join("");
+    function nextUid() {
+        var index = uid.length;
+        var digit;
+        while (index) {
+            index--;
+            digit = uid[index].charCodeAt(0);
+            if (digit == 57) {
+                uid[index] = "A";
+                return uid.join("");
             }
-            if (b == 90) {
-                t[a] = "0";
+            if (digit == 90) {
+                uid[index] = "0";
             } else {
-                t[a] = String.fromCharCode(b + 1);
-                return t.join("");
+                uid[index] = String.fromCharCode(digit + 1);
+                return uid.join("");
             }
         }
-        t.unshift("0");
-        return t.join("");
+        uid.unshift("0");
+        return uid.join("");
     }
-    function A(a, b) {
-        if (b) {
-            a.$$hashKey = b;
+    function setHashKey(obj, h) {
+        if (h) {
+            obj.$$hashKey = h;
         } else {
-            delete a.$$hashKey;
+            delete obj.$$hashKey;
         }
     }
-    function B(a) {
-        var b = a.$$hashKey;
-        v(arguments, function(b) {
-            if (b !== a) {
-                v(b, function(b, c) {
-                    a[c] = b;
+    function extend(dst) {
+        var h = dst.$$hashKey;
+        forEach(arguments, function(obj) {
+            if (obj !== dst) {
+                forEach(obj, function(value, key) {
+                    dst[key] = value;
                 });
             }
         });
-        A(a, b);
-        return a;
+        setHashKey(dst, h);
+        return dst;
     }
-    function C(a) {
-        return parseInt(a, 10);
+    function int(str) {
+        return parseInt(str, 10);
     }
-    function D(a, b) {
-        return B(new (B(function() {}, {
-            prototype: a
-        }))(), b);
+    function inherit(parent, extra) {
+        return extend(new (extend(function() {}, {
+            prototype: parent
+        }))(), extra);
     }
-    function E() {}
-    E.$inject = [];
-    function F(a) {
-        return a;
+    function noop() {}
+    noop.$inject = [];
+    function identity($) {
+        return $;
     }
-    F.$inject = [];
-    function G(a) {
+    identity.$inject = [];
+    function valueFn(value) {
         return function() {
-            return a;
+            return value;
         };
     }
-    function H(a) {
-        return typeof a == "undefined";
+    function isUndefined(value) {
+        return typeof value == "undefined";
     }
-    function I(a) {
-        return typeof a != "undefined";
+    function isDefined(value) {
+        return typeof value != "undefined";
     }
-    function J(a) {
-        return a != null && typeof a == "object";
+    function isObject(value) {
+        return value != null && typeof value == "object";
     }
-    function K(a) {
-        return typeof a == "string";
+    function isString(value) {
+        return typeof value == "string";
     }
-    function L(a) {
-        return typeof a == "number";
+    function isNumber(value) {
+        return typeof value == "number";
     }
-    function M(a) {
-        return n.apply(a) == "[object Date]";
+    function isDate(value) {
+        return toString.apply(value) == "[object Date]";
     }
-    function N(a) {
-        return n.apply(a) == "[object Array]";
+    function isArray(value) {
+        return toString.apply(value) == "[object Array]";
     }
-    function O(a) {
-        return typeof a == "function";
+    function isFunction(value) {
+        return typeof value == "function";
     }
-    function P(a) {
-        return n.apply(a) == "[object RegExp]";
+    function isRegExp(value) {
+        return toString.apply(value) == "[object RegExp]";
     }
-    function Q(a) {
-        return a && a.document && a.location && a.alert && a.setInterval;
+    function isWindow(obj) {
+        return obj && obj.document && obj.location && obj.alert && obj.setInterval;
     }
-    function R(a) {
-        return a && a.$evalAsync && a.$watch;
+    function isScope(obj) {
+        return obj && obj.$evalAsync && obj.$watch;
     }
-    function S(a) {
-        return n.apply(a) === "[object File]";
+    function isFile(obj) {
+        return toString.apply(obj) === "[object File]";
     }
-    function T(a) {
-        return typeof a == "boolean";
+    function isBoolean(value) {
+        return typeof value == "boolean";
     }
-    var U = function() {
+    var trim = function() {
         if (!String.prototype.trim) {
-            return function(a) {
-                return K(a) ? a.replace(/^\s*/, "").replace(/\s*$/, "") : a;
+            return function(value) {
+                return isString(value) ? value.replace(/^\s*/, "").replace(/\s*$/, "") : value;
             };
         }
-        return function(a) {
-            return K(a) ? a.trim() : a;
+        return function(value) {
+            return isString(value) ? value.trim() : value;
         };
     }();
-    function V(a) {
-        return a && (a.nodeName || a.on && a.find);
+    function isElement(node) {
+        return node && (node.nodeName || node.on && node.find);
     }
-    function W(a) {
-        var b = {}, c = a.split(","), d;
-        for (d = 0; d < c.length; d++) b[c[d]] = true;
-        return b;
+    function makeMap(str) {
+        var obj = {}, items = str.split(","), i;
+        for (i = 0; i < items.length; i++) obj[items[i]] = true;
+        return obj;
     }
-    if (i < 9) {
-        s = function(a) {
-            a = a.nodeName ? a : a[0];
-            return a.scopeName && a.scopeName != "HTML" ? f(a.scopeName + ":" + a.nodeName) : a.nodeName;
+    if (msie < 9) {
+        nodeName_ = function(element) {
+            element = element.nodeName ? element : element[0];
+            return element.scopeName && element.scopeName != "HTML" ? uppercase(element.scopeName + ":" + element.nodeName) : element.nodeName;
         };
     } else {
-        s = function(a) {
-            return a.nodeName ? a.nodeName : a[0].nodeName;
+        nodeName_ = function(element) {
+            return element.nodeName ? element.nodeName : element[0].nodeName;
         };
     }
-    function X(a, b, c) {
-        var d = [];
-        v(a, function(a, e, f) {
-            d.push(b.call(c, a, e, f));
+    function map(obj, iterator, context) {
+        var results = [];
+        forEach(obj, function(value, index, list) {
+            results.push(iterator.call(context, value, index, list));
         });
-        return d;
+        return results;
     }
-    function Y(a, b) {
-        var c = 0, d;
-        if (N(a) || K(a)) {
-            return a.length;
-        } else if (J(a)) {
-            for (d in a) if (!b || a.hasOwnProperty(d)) c++;
+    function size(obj, ownPropsOnly) {
+        var size = 0, key;
+        if (isArray(obj) || isString(obj)) {
+            return obj.length;
+        } else if (isObject(obj)) {
+            for (key in obj) if (!ownPropsOnly || obj.hasOwnProperty(key)) size++;
         }
-        return c;
+        return size;
     }
-    function Z(a, b) {
-        return $(a, b) != -1;
+    function includes(array, obj) {
+        return indexOf(array, obj) != -1;
     }
-    function $(a, b) {
-        if (a.indexOf) return a.indexOf(b);
-        for (var c = 0; c < a.length; c++) {
-            if (b === a[c]) return c;
+    function indexOf(array, obj) {
+        if (array.indexOf) return array.indexOf(obj);
+        for (var i = 0; i < array.length; i++) {
+            if (obj === array[i]) return i;
         }
         return -1;
     }
-    function _(a, b) {
-        var c = $(a, b);
-        if (c >= 0) a.splice(c, 1);
-        return b;
+    function arrayRemove(array, value) {
+        var index = indexOf(array, value);
+        if (index >= 0) array.splice(index, 1);
+        return value;
     }
-    function ab(a) {
-        if (a) {
-            switch (a.nodeName) {
+    function isLeafNode(node) {
+        if (node) {
+            switch (node.nodeName) {
               case "OPTION":
               case "PRE":
               case "TITLE":
@@ -280,81 +280,81 @@
         }
         return false;
     }
-    function bb(a, b) {
-        if (Q(a) || R(a)) {
-            throw o("cpws", "Can't copy! Making copies of Window or Scope instances is not supported.");
+    function copy(source, destination) {
+        if (isWindow(source) || isScope(source)) {
+            throw ngMinErr("cpws", "Can't copy! Making copies of Window or Scope instances is not supported.");
         }
-        if (!b) {
-            b = a;
-            if (a) {
-                if (N(a)) {
-                    b = bb(a, []);
-                } else if (M(a)) {
-                    b = new Date(a.getTime());
-                } else if (P(a)) {
-                    b = new RegExp(a.source);
-                } else if (J(a)) {
-                    b = bb(a, {});
+        if (!destination) {
+            destination = source;
+            if (source) {
+                if (isArray(source)) {
+                    destination = copy(source, []);
+                } else if (isDate(source)) {
+                    destination = new Date(source.getTime());
+                } else if (isRegExp(source)) {
+                    destination = new RegExp(source.source);
+                } else if (isObject(source)) {
+                    destination = copy(source, {});
                 }
             }
         } else {
-            if (a === b) throw o("cpi", "Can't copy! Source and destination are identical.");
-            if (N(a)) {
-                b.length = 0;
-                for (var c = 0; c < a.length; c++) {
-                    b.push(bb(a[c]));
+            if (source === destination) throw ngMinErr("cpi", "Can't copy! Source and destination are identical.");
+            if (isArray(source)) {
+                destination.length = 0;
+                for (var i = 0; i < source.length; i++) {
+                    destination.push(copy(source[i]));
                 }
             } else {
-                var d = b.$$hashKey;
-                v(b, function(a, c) {
-                    delete b[c];
+                var h = destination.$$hashKey;
+                forEach(destination, function(value, key) {
+                    delete destination[key];
                 });
-                for (var e in a) {
-                    b[e] = bb(a[e]);
+                for (var key in source) {
+                    destination[key] = copy(source[key]);
                 }
-                A(b, d);
+                setHashKey(destination, h);
             }
         }
-        return b;
+        return destination;
     }
-    function cb(a, b) {
-        b = b || {};
-        for (var c in a) {
-            if (a.hasOwnProperty(c) && c.substr(0, 2) !== "$$") {
-                b[c] = a[c];
+    function shallowCopy(src, dst) {
+        dst = dst || {};
+        for (var key in src) {
+            if (src.hasOwnProperty(key) && key.substr(0, 2) !== "$$") {
+                dst[key] = src[key];
             }
         }
-        return b;
+        return dst;
     }
-    function db(a, b) {
-        if (a === b) return true;
-        if (a === null || b === null) return false;
-        if (a !== a && b !== b) return true;
-        var d = typeof a, e = typeof b, f, g, h;
-        if (d == e) {
-            if (d == "object") {
-                if (N(a)) {
-                    if (!N(b)) return false;
-                    if ((f = a.length) == b.length) {
-                        for (g = 0; g < f; g++) {
-                            if (!db(a[g], b[g])) return false;
+    function equals(o1, o2) {
+        if (o1 === o2) return true;
+        if (o1 === null || o2 === null) return false;
+        if (o1 !== o1 && o2 !== o2) return true;
+        var t1 = typeof o1, t2 = typeof o2, length, key, keySet;
+        if (t1 == t2) {
+            if (t1 == "object") {
+                if (isArray(o1)) {
+                    if (!isArray(o2)) return false;
+                    if ((length = o1.length) == o2.length) {
+                        for (key = 0; key < length; key++) {
+                            if (!equals(o1[key], o2[key])) return false;
                         }
                         return true;
                     }
-                } else if (M(a)) {
-                    return M(b) && a.getTime() == b.getTime();
-                } else if (P(a) && P(b)) {
-                    return a.toString() == b.toString();
+                } else if (isDate(o1)) {
+                    return isDate(o2) && o1.getTime() == o2.getTime();
+                } else if (isRegExp(o1) && isRegExp(o2)) {
+                    return o1.toString() == o2.toString();
                 } else {
-                    if (R(a) || R(b) || Q(a) || Q(b) || N(b)) return false;
-                    h = {};
-                    for (g in a) {
-                        if (g.charAt(0) === "$" || O(a[g])) continue;
-                        if (!db(a[g], b[g])) return false;
-                        h[g] = true;
+                    if (isScope(o1) || isScope(o2) || isWindow(o1) || isWindow(o2) || isArray(o2)) return false;
+                    keySet = {};
+                    for (key in o1) {
+                        if (key.charAt(0) === "$" || isFunction(o1[key])) continue;
+                        if (!equals(o1[key], o2[key])) return false;
+                        keySet[key] = true;
                     }
-                    for (g in b) {
-                        if (!h.hasOwnProperty(g) && g.charAt(0) !== "$" && b[g] !== c && !O(b[g])) return false;
+                    for (key in o2) {
+                        if (!keySet.hasOwnProperty(key) && key.charAt(0) !== "$" && o2[key] !== undefined && !isFunction(o2[key])) return false;
                     }
                     return true;
                 }
@@ -362,825 +362,825 @@
         }
         return false;
     }
-    function eb(a, b, c) {
-        return a.concat(l.call(b, c));
+    function concat(array1, array2, index) {
+        return array1.concat(slice.call(array2, index));
     }
-    function fb(a, b) {
-        return l.call(a, b || 0);
+    function sliceArgs(args, startIndex) {
+        return slice.call(args, startIndex || 0);
     }
-    function gb(a, b) {
-        var c = arguments.length > 2 ? fb(arguments, 2) : [];
-        if (O(b) && !(b instanceof RegExp)) {
-            return c.length ? function() {
-                return arguments.length ? b.apply(a, c.concat(l.call(arguments, 0))) : b.apply(a, c);
+    function bind(self, fn) {
+        var curryArgs = arguments.length > 2 ? sliceArgs(arguments, 2) : [];
+        if (isFunction(fn) && !(fn instanceof RegExp)) {
+            return curryArgs.length ? function() {
+                return arguments.length ? fn.apply(self, curryArgs.concat(slice.call(arguments, 0))) : fn.apply(self, curryArgs);
             } : function() {
-                return arguments.length ? b.apply(a, arguments) : b.call(a);
+                return arguments.length ? fn.apply(self, arguments) : fn.call(self);
             };
         } else {
-            return b;
+            return fn;
         }
     }
-    function hb(a, d) {
-        var e = d;
-        if (typeof a === "string" && a.charAt(0) === "$") {
-            e = c;
-        } else if (Q(d)) {
-            e = "$WINDOW";
-        } else if (d && b === d) {
-            e = "$DOCUMENT";
-        } else if (R(d)) {
-            e = "$SCOPE";
+    function toJsonReplacer(key, value) {
+        var val = value;
+        if (typeof key === "string" && key.charAt(0) === "$") {
+            val = undefined;
+        } else if (isWindow(value)) {
+            val = "$WINDOW";
+        } else if (value && document === value) {
+            val = "$DOCUMENT";
+        } else if (isScope(value)) {
+            val = "$SCOPE";
         }
-        return e;
+        return val;
     }
-    function ib(a, b) {
-        if (typeof a === "undefined") return c;
-        return JSON.stringify(a, hb, b ? "  " : null);
+    function toJson(obj, pretty) {
+        if (typeof obj === "undefined") return undefined;
+        return JSON.stringify(obj, toJsonReplacer, pretty ? "  " : null);
     }
-    function jb(a) {
-        return K(a) ? JSON.parse(a) : a;
+    function fromJson(json) {
+        return isString(json) ? JSON.parse(json) : json;
     }
-    function kb(a) {
-        if (a && a.length !== 0) {
-            var b = e("" + a);
-            a = !(b == "f" || b == "0" || b == "false" || b == "no" || b == "n" || b == "[]");
+    function toBoolean(value) {
+        if (value && value.length !== 0) {
+            var v = lowercase("" + value);
+            value = !(v == "f" || v == "0" || v == "false" || v == "no" || v == "n" || v == "[]");
         } else {
-            a = false;
+            value = false;
         }
-        return a;
+        return value;
     }
-    function lb(a) {
-        a = j(a).clone();
+    function startingTag(element) {
+        element = jqLite(element).clone();
         try {
-            a.html("");
-        } catch (b) {}
-        var c = 3;
-        var d = j("<div>").append(a).html();
+            element.html("");
+        } catch (e) {}
+        var TEXT_NODE = 3;
+        var elemHtml = jqLite("<div>").append(element).html();
         try {
-            return a[0].nodeType === c ? e(d) : d.match(/^(<[^>]+>)/)[1].replace(/^<([\w\-]+)/, function(a, b) {
-                return "<" + e(b);
+            return element[0].nodeType === TEXT_NODE ? lowercase(elemHtml) : elemHtml.match(/^(<[^>]+>)/)[1].replace(/^<([\w\-]+)/, function(match, nodeName) {
+                return "<" + lowercase(nodeName);
             });
-        } catch (b) {
-            return e(d);
+        } catch (e) {
+            return lowercase(elemHtml);
         }
     }
-    function mb(a) {
+    function tryDecodeURIComponent(value) {
         try {
-            return decodeURIComponent(a);
-        } catch (b) {}
+            return decodeURIComponent(value);
+        } catch (e) {}
     }
-    function nb(a) {
-        var b = {}, c, d;
-        v((a || "").split("&"), function(a) {
-            if (a) {
-                c = a.split("=");
-                d = mb(c[0]);
-                if (I(d)) {
-                    var e = I(c[1]) ? mb(c[1]) : true;
-                    if (!b[d]) {
-                        b[d] = e;
-                    } else if (N(b[d])) {
-                        b[d].push(e);
+    function parseKeyValue(keyValue) {
+        var obj = {}, key_value, key;
+        forEach((keyValue || "").split("&"), function(keyValue) {
+            if (keyValue) {
+                key_value = keyValue.split("=");
+                key = tryDecodeURIComponent(key_value[0]);
+                if (isDefined(key)) {
+                    var val = isDefined(key_value[1]) ? tryDecodeURIComponent(key_value[1]) : true;
+                    if (!obj[key]) {
+                        obj[key] = val;
+                    } else if (isArray(obj[key])) {
+                        obj[key].push(val);
                     } else {
-                        b[d] = [ b[d], e ];
+                        obj[key] = [ obj[key], val ];
                     }
                 }
             }
         });
-        return b;
+        return obj;
     }
-    function ob(a) {
-        var b = [];
-        v(a, function(a, c) {
-            if (N(a)) {
-                v(a, function(a) {
-                    b.push(qb(c, true) + (a === true ? "" : "=" + qb(a, true)));
+    function toKeyValue(obj) {
+        var parts = [];
+        forEach(obj, function(value, key) {
+            if (isArray(value)) {
+                forEach(value, function(arrayValue) {
+                    parts.push(encodeUriQuery(key, true) + (arrayValue === true ? "" : "=" + encodeUriQuery(arrayValue, true)));
                 });
             } else {
-                b.push(qb(c, true) + (a === true ? "" : "=" + qb(a, true)));
+                parts.push(encodeUriQuery(key, true) + (value === true ? "" : "=" + encodeUriQuery(value, true)));
             }
         });
-        return b.length ? b.join("&") : "";
+        return parts.length ? parts.join("&") : "";
     }
-    function pb(a) {
-        return qb(a, true).replace(/%26/gi, "&").replace(/%3D/gi, "=").replace(/%2B/gi, "+");
+    function encodeUriSegment(val) {
+        return encodeUriQuery(val, true).replace(/%26/gi, "&").replace(/%3D/gi, "=").replace(/%2B/gi, "+");
     }
-    function qb(a, b) {
-        return encodeURIComponent(a).replace(/%40/gi, "@").replace(/%3A/gi, ":").replace(/%24/g, "$").replace(/%2C/gi, ",").replace(/%20/g, b ? "%20" : "+");
+    function encodeUriQuery(val, pctEncodeSpaces) {
+        return encodeURIComponent(val).replace(/%40/gi, "@").replace(/%3A/gi, ":").replace(/%24/g, "$").replace(/%2C/gi, ",").replace(/%20/g, pctEncodeSpaces ? "%20" : "+");
     }
-    function rb(a, c) {
-        var d = [ a ], e, f, g = [ "ng:app", "ng-app", "x-ng-app", "data-ng-app" ], h = /\sng[:\-]app(:\s*([\w\d_]+);?)?\s/;
-        function i(a) {
-            a && d.push(a);
+    function angularInit(element, bootstrap) {
+        var elements = [ element ], appElement, module, names = [ "ng:app", "ng-app", "x-ng-app", "data-ng-app" ], NG_APP_CLASS_REGEXP = /\sng[:\-]app(:\s*([\w\d_]+);?)?\s/;
+        function append(element) {
+            element && elements.push(element);
         }
-        v(g, function(c) {
-            g[c] = true;
-            i(b.getElementById(c));
-            c = c.replace(":", "\\:");
-            if (a.querySelectorAll) {
-                v(a.querySelectorAll("." + c), i);
-                v(a.querySelectorAll("." + c + "\\:"), i);
-                v(a.querySelectorAll("[" + c + "]"), i);
+        forEach(names, function(name) {
+            names[name] = true;
+            append(document.getElementById(name));
+            name = name.replace(":", "\\:");
+            if (element.querySelectorAll) {
+                forEach(element.querySelectorAll("." + name), append);
+                forEach(element.querySelectorAll("." + name + "\\:"), append);
+                forEach(element.querySelectorAll("[" + name + "]"), append);
             }
         });
-        v(d, function(a) {
-            if (!e) {
-                var b = " " + a.className + " ";
-                var c = h.exec(b);
-                if (c) {
-                    e = a;
-                    f = (c[2] || "").replace(/\s+/g, ",");
+        forEach(elements, function(element) {
+            if (!appElement) {
+                var className = " " + element.className + " ";
+                var match = NG_APP_CLASS_REGEXP.exec(className);
+                if (match) {
+                    appElement = element;
+                    module = (match[2] || "").replace(/\s+/g, ",");
                 } else {
-                    v(a.attributes, function(b) {
-                        if (!e && g[b.name]) {
-                            e = a;
-                            f = b.value;
+                    forEach(element.attributes, function(attr) {
+                        if (!appElement && names[attr.name]) {
+                            appElement = element;
+                            module = attr.value;
                         }
                     });
                 }
             }
         });
-        if (e) {
-            c(e, f ? [ f ] : []);
+        if (appElement) {
+            bootstrap(appElement, module ? [ module ] : []);
         }
     }
-    function sb(c, d) {
-        var e = function() {
-            c = j(c);
-            if (c.injector()) {
-                var a = c[0] === b ? "document" : lb(c);
-                throw o("btstrpd", "App Already Bootstrapped with this Element '{0}'", a);
+    function bootstrap(element, modules) {
+        var doBootstrap = function() {
+            element = jqLite(element);
+            if (element.injector()) {
+                var tag = element[0] === document ? "document" : startingTag(element);
+                throw ngMinErr("btstrpd", "App Already Bootstrapped with this Element '{0}'", tag);
             }
-            d = d || [];
-            d.unshift([ "$provide", function(a) {
-                a.value("$rootElement", c);
+            modules = modules || [];
+            modules.unshift([ "$provide", function($provide) {
+                $provide.value("$rootElement", element);
             } ]);
-            d.unshift("ng");
-            var e = mc(d);
-            e.invoke([ "$rootScope", "$rootElement", "$compile", "$injector", "$animate", function(a, b, c, d, e) {
-                a.$apply(function() {
-                    b.data("$injector", d);
-                    c(b)(a);
+            modules.unshift("ng");
+            var injector = createInjector(modules);
+            injector.invoke([ "$rootScope", "$rootElement", "$compile", "$injector", "$animate", function(scope, element, compile, injector, animate) {
+                scope.$apply(function() {
+                    element.data("$injector", injector);
+                    compile(element)(scope);
                 });
-                e.enabled(true);
+                animate.enabled(true);
             } ]);
-            return e;
+            return injector;
         };
-        var f = /^NG_DEFER_BOOTSTRAP!/;
-        if (a && !f.test(a.name)) {
-            return e();
+        var NG_DEFER_BOOTSTRAP = /^NG_DEFER_BOOTSTRAP!/;
+        if (window && !NG_DEFER_BOOTSTRAP.test(window.name)) {
+            return doBootstrap();
         }
-        a.name = a.name.replace(f, "");
-        q.resumeBootstrap = function(a) {
-            v(a, function(a) {
-                d.push(a);
+        window.name = window.name.replace(NG_DEFER_BOOTSTRAP, "");
+        angular.resumeBootstrap = function(extraModules) {
+            forEach(extraModules, function(module) {
+                modules.push(module);
             });
-            e();
+            doBootstrap();
         };
     }
-    var tb = /[A-Z]/g;
-    function ub(a, b) {
-        b = b || "_";
-        return a.replace(tb, function(a, c) {
-            return (c ? b : "") + a.toLowerCase();
+    var SNAKE_CASE_REGEXP = /[A-Z]/g;
+    function snake_case(name, separator) {
+        separator = separator || "_";
+        return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+            return (pos ? separator : "") + letter.toLowerCase();
         });
     }
-    function vb() {
-        k = a.jQuery;
-        if (k) {
-            j = k;
-            B(k.fn, {
-                scope: _b.scope,
-                controller: _b.controller,
-                injector: _b.injector,
-                inheritedData: _b.inheritedData
+    function bindJQuery() {
+        jQuery = window.jQuery;
+        if (jQuery) {
+            jqLite = jQuery;
+            extend(jQuery.fn, {
+                scope: JQLitePrototype.scope,
+                controller: JQLitePrototype.controller,
+                injector: JQLitePrototype.injector,
+                inheritedData: JQLitePrototype.inheritedData
             });
-            Nb("remove", true, true, false);
-            Nb("empty", false, false, false);
-            Nb("html", false, false, true);
+            JQLitePatchJQueryRemove("remove", true, true, false);
+            JQLitePatchJQueryRemove("empty", false, false, false);
+            JQLitePatchJQueryRemove("html", false, false, true);
         } else {
-            j = Ob;
+            jqLite = JQLite;
         }
-        q.element = j;
+        angular.element = jqLite;
     }
-    function wb(a, b, c) {
-        if (!a) {
-            throw o("areq", "Argument '{0}' is {1}", b || "?", c || "required");
+    function assertArg(arg, name, reason) {
+        if (!arg) {
+            throw ngMinErr("areq", "Argument '{0}' is {1}", name || "?", reason || "required");
         }
-        return a;
+        return arg;
     }
-    function xb(a, b, c) {
-        if (c && N(a)) {
-            a = a[a.length - 1];
+    function assertArgFn(arg, name, acceptArrayAnnotation) {
+        if (acceptArrayAnnotation && isArray(arg)) {
+            arg = arg[arg.length - 1];
         }
-        wb(O(a), b, "not a function, got " + (a && typeof a == "object" ? a.constructor.name || "Object" : typeof a));
-        return a;
+        assertArg(isFunction(arg), name, "not a function, got " + (arg && typeof arg == "object" ? arg.constructor.name || "Object" : typeof arg));
+        return arg;
     }
-    function yb(a, b) {
-        if (a === "hasOwnProperty") {
-            throw o("badname", "hasOwnProperty is not a valid {0} name", b);
+    function assertNotHasOwnProperty(name, context) {
+        if (name === "hasOwnProperty") {
+            throw ngMinErr("badname", "hasOwnProperty is not a valid {0} name", context);
         }
     }
-    function zb(a, b, c) {
-        if (!b) return a;
-        var d = b.split(".");
-        var e;
-        var f = a;
-        var g = d.length;
-        for (var h = 0; h < g; h++) {
-            e = d[h];
-            if (a) {
-                a = (f = a)[e];
+    function getter(obj, path, bindFnToScope) {
+        if (!path) return obj;
+        var keys = path.split(".");
+        var key;
+        var lastInstance = obj;
+        var len = keys.length;
+        for (var i = 0; i < len; i++) {
+            key = keys[i];
+            if (obj) {
+                obj = (lastInstance = obj)[key];
             }
         }
-        if (!c && O(a)) {
-            return gb(f, a);
+        if (!bindFnToScope && isFunction(obj)) {
+            return bind(lastInstance, obj);
         }
-        return a;
+        return obj;
     }
-    function Ab(a) {
-        var b = d("$injector");
-        function c(a, b, c) {
-            return a[b] || (a[b] = c());
+    function setupModuleLoader(window) {
+        var $injectorMinErr = minErr("$injector");
+        function ensure(obj, name, factory) {
+            return obj[name] || (obj[name] = factory());
         }
-        return c(c(a, "angular", Object), "module", function() {
-            var a = {};
-            return function d(d, e, f) {
-                yb(d, "module");
-                if (e && a.hasOwnProperty(d)) {
-                    a[d] = null;
+        return ensure(ensure(window, "angular", Object), "module", function() {
+            var modules = {};
+            return function module(name, requires, configFn) {
+                assertNotHasOwnProperty(name, "module");
+                if (requires && modules.hasOwnProperty(name)) {
+                    modules[name] = null;
                 }
-                return c(a, d, function() {
-                    if (!e) {
-                        throw b("nomod", "Module '{0}' is not available! You either misspelled the module name " + "or forgot to load it. If registering a module ensure that you specify the dependencies as the second " + "argument.", d);
+                return ensure(modules, name, function() {
+                    if (!requires) {
+                        throw $injectorMinErr("nomod", "Module '{0}' is not available! You either misspelled the module name " + "or forgot to load it. If registering a module ensure that you specify the dependencies as the second " + "argument.", name);
                     }
-                    var a = [];
-                    var c = [];
-                    var g = i("$injector", "invoke");
-                    var h = {
-                        _invokeQueue: a,
-                        _runBlocks: c,
-                        requires: e,
-                        name: d,
-                        provider: i("$provide", "provider"),
-                        factory: i("$provide", "factory"),
-                        service: i("$provide", "service"),
-                        value: i("$provide", "value"),
-                        constant: i("$provide", "constant", "unshift"),
-                        animation: i("$animateProvider", "register"),
-                        filter: i("$filterProvider", "register"),
-                        controller: i("$controllerProvider", "register"),
-                        directive: i("$compileProvider", "directive"),
-                        config: g,
-                        run: function(a) {
-                            c.push(a);
+                    var invokeQueue = [];
+                    var runBlocks = [];
+                    var config = invokeLater("$injector", "invoke");
+                    var moduleInstance = {
+                        _invokeQueue: invokeQueue,
+                        _runBlocks: runBlocks,
+                        requires: requires,
+                        name: name,
+                        provider: invokeLater("$provide", "provider"),
+                        factory: invokeLater("$provide", "factory"),
+                        service: invokeLater("$provide", "service"),
+                        value: invokeLater("$provide", "value"),
+                        constant: invokeLater("$provide", "constant", "unshift"),
+                        animation: invokeLater("$animateProvider", "register"),
+                        filter: invokeLater("$filterProvider", "register"),
+                        controller: invokeLater("$controllerProvider", "register"),
+                        directive: invokeLater("$compileProvider", "directive"),
+                        config: config,
+                        run: function(block) {
+                            runBlocks.push(block);
                             return this;
                         }
                     };
-                    if (f) {
-                        g(f);
+                    if (configFn) {
+                        config(configFn);
                     }
-                    return h;
-                    function i(b, c, d) {
+                    return moduleInstance;
+                    function invokeLater(provider, method, insertMethod) {
                         return function() {
-                            a[d || "push"]([ b, c, arguments ]);
-                            return h;
+                            invokeQueue[insertMethod || "push"]([ provider, method, arguments ]);
+                            return moduleInstance;
                         };
                     }
                 });
             };
         });
     }
-    var Bb = {
+    var version = {
         full: "1.2.0-rc.3",
         major: 1,
         minor: 2,
         dot: 0,
         codeName: "ferocious-twitch"
     };
-    function Cb(b) {
-        B(b, {
-            bootstrap: sb,
-            copy: bb,
-            extend: B,
-            equals: db,
-            element: j,
-            forEach: v,
-            injector: mc,
-            noop: E,
-            bind: gb,
-            toJson: ib,
-            fromJson: jb,
-            identity: F,
-            isUndefined: H,
-            isDefined: I,
-            isString: K,
-            isFunction: O,
-            isObject: J,
-            isNumber: L,
-            isElement: V,
-            isArray: N,
-            $$minErr: d,
-            version: Bb,
-            isDate: M,
-            lowercase: e,
-            uppercase: f,
+    function publishExternalAPI(angular) {
+        extend(angular, {
+            bootstrap: bootstrap,
+            copy: copy,
+            extend: extend,
+            equals: equals,
+            element: jqLite,
+            forEach: forEach,
+            injector: createInjector,
+            noop: noop,
+            bind: bind,
+            toJson: toJson,
+            fromJson: fromJson,
+            identity: identity,
+            isUndefined: isUndefined,
+            isDefined: isDefined,
+            isString: isString,
+            isFunction: isFunction,
+            isObject: isObject,
+            isNumber: isNumber,
+            isElement: isElement,
+            isArray: isArray,
+            $$minErr: minErr,
+            version: version,
+            isDate: isDate,
+            lowercase: lowercase,
+            uppercase: uppercase,
             callbacks: {
                 counter: 0
             }
         });
-        r = Ab(a);
+        angularModule = setupModuleLoader(window);
         try {
-            r("ngLocale");
-        } catch (c) {
-            r("ngLocale", []).provider("$locale", Oc);
+            angularModule("ngLocale");
+        } catch (e) {
+            angularModule("ngLocale", []).provider("$locale", $LocaleProvider);
         }
-        r("ng", [ "ngLocale" ], [ "$provide", function g(a) {
-            a.provider("$compile", vc).directive({
-                a: ce,
-                input: te,
-                textarea: te,
-                form: he,
-                script: bf,
-                select: ef,
-                style: gf,
-                option: ff,
-                ngBind: Fe,
-                ngBindHtml: He,
-                ngBindTemplate: Ge,
-                ngClass: Je,
-                ngClassEven: Le,
-                ngClassOdd: Ke,
-                ngCsp: Oe,
-                ngCloak: Me,
-                ngController: Ne,
-                ngForm: ie,
-                ngHide: Xe,
-                ngIf: Qe,
-                ngInclude: Re,
-                ngInit: Se,
-                ngNonBindable: Te,
-                ngPluralize: Ue,
-                ngRepeat: Ve,
-                ngShow: We,
-                ngStyle: Ye,
-                ngSwitch: Ze,
-                ngSwitchWhen: $e,
-                ngSwitchDefault: _e,
-                ngOptions: df,
-                ngTransclude: af,
-                ngModel: ze,
-                ngList: Ce,
-                ngChange: Ae,
-                required: Be,
-                ngRequired: Be,
-                ngValue: Ee
-            }).directive(de).directive(Pe);
-            a.provider({
-                $anchorScroll: nc,
-                $animate: pc,
-                $browser: rc,
-                $cacheFactory: sc,
-                $controller: Ac,
-                $document: Bc,
-                $exceptionHandler: Cc,
-                $filter: Jd,
-                $interpolate: Mc,
-                $interval: Nc,
-                $http: Hc,
-                $httpBackend: Jc,
-                $location: cd,
-                $log: dd,
-                $parse: rd,
-                $rootScope: ud,
-                $q: sd,
-                $sce: Bd,
-                $sceDelegate: Ad,
-                $sniffer: Cd,
-                $templateCache: tc,
-                $timeout: Dd,
-                $window: Id
+        angularModule("ng", [ "ngLocale" ], [ "$provide", function ngModule($provide) {
+            $provide.provider("$compile", $CompileProvider).directive({
+                a: htmlAnchorDirective,
+                input: inputDirective,
+                textarea: inputDirective,
+                form: formDirective,
+                script: scriptDirective,
+                select: selectDirective,
+                style: styleDirective,
+                option: optionDirective,
+                ngBind: ngBindDirective,
+                ngBindHtml: ngBindHtmlDirective,
+                ngBindTemplate: ngBindTemplateDirective,
+                ngClass: ngClassDirective,
+                ngClassEven: ngClassEvenDirective,
+                ngClassOdd: ngClassOddDirective,
+                ngCsp: ngCspDirective,
+                ngCloak: ngCloakDirective,
+                ngController: ngControllerDirective,
+                ngForm: ngFormDirective,
+                ngHide: ngHideDirective,
+                ngIf: ngIfDirective,
+                ngInclude: ngIncludeDirective,
+                ngInit: ngInitDirective,
+                ngNonBindable: ngNonBindableDirective,
+                ngPluralize: ngPluralizeDirective,
+                ngRepeat: ngRepeatDirective,
+                ngShow: ngShowDirective,
+                ngStyle: ngStyleDirective,
+                ngSwitch: ngSwitchDirective,
+                ngSwitchWhen: ngSwitchWhenDirective,
+                ngSwitchDefault: ngSwitchDefaultDirective,
+                ngOptions: ngOptionsDirective,
+                ngTransclude: ngTranscludeDirective,
+                ngModel: ngModelDirective,
+                ngList: ngListDirective,
+                ngChange: ngChangeDirective,
+                required: requiredDirective,
+                ngRequired: requiredDirective,
+                ngValue: ngValueDirective
+            }).directive(ngAttributeAliasDirectives).directive(ngEventDirectives);
+            $provide.provider({
+                $anchorScroll: $AnchorScrollProvider,
+                $animate: $AnimateProvider,
+                $browser: $BrowserProvider,
+                $cacheFactory: $CacheFactoryProvider,
+                $controller: $ControllerProvider,
+                $document: $DocumentProvider,
+                $exceptionHandler: $ExceptionHandlerProvider,
+                $filter: $FilterProvider,
+                $interpolate: $InterpolateProvider,
+                $interval: $IntervalProvider,
+                $http: $HttpProvider,
+                $httpBackend: $HttpBackendProvider,
+                $location: $LocationProvider,
+                $log: $LogProvider,
+                $parse: $ParseProvider,
+                $rootScope: $RootScopeProvider,
+                $q: $QProvider,
+                $sce: $SceProvider,
+                $sceDelegate: $SceDelegateProvider,
+                $sniffer: $SnifferProvider,
+                $templateCache: $TemplateCacheProvider,
+                $timeout: $TimeoutProvider,
+                $window: $WindowProvider
             });
         } ]);
     }
-    var Db = Ob.cache = {}, Eb = Ob.expando = "ng-" + new Date().getTime(), Fb = 1, Gb = a.document.addEventListener ? function(a, b, c) {
-        a.addEventListener(b, c, false);
-    } : function(a, b, c) {
-        a.attachEvent("on" + b, c);
-    }, Hb = a.document.removeEventListener ? function(a, b, c) {
-        a.removeEventListener(b, c, false);
-    } : function(a, b, c) {
-        a.detachEvent("on" + b, c);
+    var jqCache = JQLite.cache = {}, jqName = JQLite.expando = "ng-" + new Date().getTime(), jqId = 1, addEventListenerFn = window.document.addEventListener ? function(element, type, fn) {
+        element.addEventListener(type, fn, false);
+    } : function(element, type, fn) {
+        element.attachEvent("on" + type, fn);
+    }, removeEventListenerFn = window.document.removeEventListener ? function(element, type, fn) {
+        element.removeEventListener(type, fn, false);
+    } : function(element, type, fn) {
+        element.detachEvent("on" + type, fn);
     };
-    function Ib() {
-        return ++Fb;
+    function jqNextId() {
+        return ++jqId;
     }
-    var Jb = /([\:\-\_]+(.))/g;
-    var Kb = /^moz([A-Z])/;
-    var Lb = d("jqLite");
-    function Mb(a) {
-        return a.replace(Jb, function(a, b, c, d) {
-            return d ? c.toUpperCase() : c;
-        }).replace(Kb, "Moz$1");
+    var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
+    var MOZ_HACK_REGEXP = /^moz([A-Z])/;
+    var jqLiteMinErr = minErr("jqLite");
+    function camelCase(name) {
+        return name.replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
+            return offset ? letter.toUpperCase() : letter;
+        }).replace(MOZ_HACK_REGEXP, "Moz$1");
     }
-    function Nb(a, b, c, d) {
-        var e = k.fn[a];
-        e = e.$original || e;
-        f.$original = e;
-        k.fn[a] = f;
-        function f(a) {
-            var f = c && a ? [ this.filter(a) ] : [ this ], g = b, h, i, l, m, n, o, p;
-            if (!d || a != null) {
-                while (f.length) {
-                    h = f.shift();
-                    for (i = 0, l = h.length; i < l; i++) {
-                        m = j(h[i]);
-                        if (g) {
-                            m.triggerHandler("$destroy");
+    function JQLitePatchJQueryRemove(name, dispatchThis, filterElems, getterIfNoArguments) {
+        var originalJqFn = jQuery.fn[name];
+        originalJqFn = originalJqFn.$original || originalJqFn;
+        removePatch.$original = originalJqFn;
+        jQuery.fn[name] = removePatch;
+        function removePatch(param) {
+            var list = filterElems && param ? [ this.filter(param) ] : [ this ], fireEvent = dispatchThis, set, setIndex, setLength, element, childIndex, childLength, children;
+            if (!getterIfNoArguments || param != null) {
+                while (list.length) {
+                    set = list.shift();
+                    for (setIndex = 0, setLength = set.length; setIndex < setLength; setIndex++) {
+                        element = jqLite(set[setIndex]);
+                        if (fireEvent) {
+                            element.triggerHandler("$destroy");
                         } else {
-                            g = !g;
+                            fireEvent = !fireEvent;
                         }
-                        for (n = 0, o = (p = m.children()).length; n < o; n++) {
-                            f.push(k(p[n]));
+                        for (childIndex = 0, childLength = (children = element.children()).length; childIndex < childLength; childIndex++) {
+                            list.push(jQuery(children[childIndex]));
                         }
                     }
                 }
             }
-            return e.apply(this, arguments);
+            return originalJqFn.apply(this, arguments);
         }
     }
-    function Ob(a) {
-        if (a instanceof Ob) {
-            return a;
+    function JQLite(element) {
+        if (element instanceof JQLite) {
+            return element;
         }
-        if (!(this instanceof Ob)) {
-            if (K(a) && a.charAt(0) != "<") {
-                throw Lb("nosel", "Looking up elements via selectors is not supported by jqLite! See: http://docs.angularjs.org/api/angular.element");
+        if (!(this instanceof JQLite)) {
+            if (isString(element) && element.charAt(0) != "<") {
+                throw jqLiteMinErr("nosel", "Looking up elements via selectors is not supported by jqLite! See: http://docs.angularjs.org/api/angular.element");
             }
-            return new Ob(a);
+            return new JQLite(element);
         }
-        if (K(a)) {
-            var c = b.createElement("div");
-            c.innerHTML = "<div>&#160;</div>" + a;
-            c.removeChild(c.firstChild);
-            Yb(this, c.childNodes);
-            var d = j(b.createDocumentFragment());
-            d.append(this);
+        if (isString(element)) {
+            var div = document.createElement("div");
+            div.innerHTML = "<div>&#160;</div>" + element;
+            div.removeChild(div.firstChild);
+            JQLiteAddNodes(this, div.childNodes);
+            var fragment = jqLite(document.createDocumentFragment());
+            fragment.append(this);
         } else {
-            Yb(this, a);
+            JQLiteAddNodes(this, element);
         }
     }
-    function Pb(a) {
-        return a.cloneNode(true);
+    function JQLiteClone(element) {
+        return element.cloneNode(true);
     }
-    function Qb(a) {
-        Sb(a);
-        for (var b = 0, c = a.childNodes || []; b < c.length; b++) {
-            Qb(c[b]);
+    function JQLiteDealoc(element) {
+        JQLiteRemoveData(element);
+        for (var i = 0, children = element.childNodes || []; i < children.length; i++) {
+            JQLiteDealoc(children[i]);
         }
     }
-    function Rb(a, b, c, d) {
-        if (I(d)) throw Lb("offargs", "jqLite#off() does not support the `selector` argument");
-        var e = Tb(a, "events"), f = Tb(a, "handle");
-        if (!f) return;
-        if (H(b)) {
-            v(e, function(b, c) {
-                Hb(a, c, b);
-                delete e[c];
+    function JQLiteOff(element, type, fn, unsupported) {
+        if (isDefined(unsupported)) throw jqLiteMinErr("offargs", "jqLite#off() does not support the `selector` argument");
+        var events = JQLiteExpandoStore(element, "events"), handle = JQLiteExpandoStore(element, "handle");
+        if (!handle) return;
+        if (isUndefined(type)) {
+            forEach(events, function(eventHandler, type) {
+                removeEventListenerFn(element, type, eventHandler);
+                delete events[type];
             });
         } else {
-            v(b.split(" "), function(b) {
-                if (H(c)) {
-                    Hb(a, b, e[b]);
-                    delete e[b];
+            forEach(type.split(" "), function(type) {
+                if (isUndefined(fn)) {
+                    removeEventListenerFn(element, type, events[type]);
+                    delete events[type];
                 } else {
-                    _(e[b] || [], c);
+                    arrayRemove(events[type] || [], fn);
                 }
             });
         }
     }
-    function Sb(a, b) {
-        var d = a[Eb], e = Db[d];
-        if (e) {
-            if (b) {
-                delete Db[d].data[b];
+    function JQLiteRemoveData(element, name) {
+        var expandoId = element[jqName], expandoStore = jqCache[expandoId];
+        if (expandoStore) {
+            if (name) {
+                delete jqCache[expandoId].data[name];
                 return;
             }
-            if (e.handle) {
-                e.events.$destroy && e.handle({}, "$destroy");
-                Rb(a);
+            if (expandoStore.handle) {
+                expandoStore.events.$destroy && expandoStore.handle({}, "$destroy");
+                JQLiteOff(element);
             }
-            delete Db[d];
-            a[Eb] = c;
+            delete jqCache[expandoId];
+            element[jqName] = undefined;
         }
     }
-    function Tb(a, b, c) {
-        var d = a[Eb], e = Db[d || -1];
-        if (I(c)) {
-            if (!e) {
-                a[Eb] = d = Ib();
-                e = Db[d] = {};
+    function JQLiteExpandoStore(element, key, value) {
+        var expandoId = element[jqName], expandoStore = jqCache[expandoId || -1];
+        if (isDefined(value)) {
+            if (!expandoStore) {
+                element[jqName] = expandoId = jqNextId();
+                expandoStore = jqCache[expandoId] = {};
             }
-            e[b] = c;
+            expandoStore[key] = value;
         } else {
-            return e && e[b];
+            return expandoStore && expandoStore[key];
         }
     }
-    function Ub(a, b, c) {
-        var d = Tb(a, "data"), e = I(c), f = !e && I(b), g = f && !J(b);
-        if (!d && !g) {
-            Tb(a, "data", d = {});
+    function JQLiteData(element, key, value) {
+        var data = JQLiteExpandoStore(element, "data"), isSetter = isDefined(value), keyDefined = !isSetter && isDefined(key), isSimpleGetter = keyDefined && !isObject(key);
+        if (!data && !isSimpleGetter) {
+            JQLiteExpandoStore(element, "data", data = {});
         }
-        if (e) {
-            d[b] = c;
+        if (isSetter) {
+            data[key] = value;
         } else {
-            if (f) {
-                if (g) {
-                    return d && d[b];
+            if (keyDefined) {
+                if (isSimpleGetter) {
+                    return data && data[key];
                 } else {
-                    B(d, b);
+                    extend(data, key);
                 }
             } else {
-                return d;
+                return data;
             }
         }
     }
-    function Vb(a, b) {
-        if (!a.getAttribute) return false;
-        return (" " + (a.getAttribute("class") || "") + " ").replace(/[\n\t]/g, " ").indexOf(" " + b + " ") > -1;
+    function JQLiteHasClass(element, selector) {
+        if (!element.getAttribute) return false;
+        return (" " + (element.getAttribute("class") || "") + " ").replace(/[\n\t]/g, " ").indexOf(" " + selector + " ") > -1;
     }
-    function Wb(a, b) {
-        if (b && a.setAttribute) {
-            v(b.split(" "), function(b) {
-                a.setAttribute("class", U((" " + (a.getAttribute("class") || "") + " ").replace(/[\n\t]/g, " ").replace(" " + U(b) + " ", " ")));
+    function JQLiteRemoveClass(element, cssClasses) {
+        if (cssClasses && element.setAttribute) {
+            forEach(cssClasses.split(" "), function(cssClass) {
+                element.setAttribute("class", trim((" " + (element.getAttribute("class") || "") + " ").replace(/[\n\t]/g, " ").replace(" " + trim(cssClass) + " ", " ")));
             });
         }
     }
-    function Xb(a, b) {
-        if (b && a.setAttribute) {
-            var c = (" " + (a.getAttribute("class") || "") + " ").replace(/[\n\t]/g, " ");
-            v(b.split(" "), function(a) {
-                a = U(a);
-                if (c.indexOf(" " + a + " ") === -1) {
-                    c += a + " ";
+    function JQLiteAddClass(element, cssClasses) {
+        if (cssClasses && element.setAttribute) {
+            var existingClasses = (" " + (element.getAttribute("class") || "") + " ").replace(/[\n\t]/g, " ");
+            forEach(cssClasses.split(" "), function(cssClass) {
+                cssClass = trim(cssClass);
+                if (existingClasses.indexOf(" " + cssClass + " ") === -1) {
+                    existingClasses += cssClass + " ";
                 }
             });
-            a.setAttribute("class", U(c));
+            element.setAttribute("class", trim(existingClasses));
         }
     }
-    function Yb(a, b) {
-        if (b) {
-            b = !b.nodeName && I(b.length) && !Q(b) ? b : [ b ];
-            for (var c = 0; c < b.length; c++) {
-                a.push(b[c]);
+    function JQLiteAddNodes(root, elements) {
+        if (elements) {
+            elements = !elements.nodeName && isDefined(elements.length) && !isWindow(elements) ? elements : [ elements ];
+            for (var i = 0; i < elements.length; i++) {
+                root.push(elements[i]);
             }
         }
     }
-    function Zb(a, b) {
-        return $b(a, "$" + (b || "ngController") + "Controller");
+    function JQLiteController(element, name) {
+        return JQLiteInheritedData(element, "$" + (name || "ngController") + "Controller");
     }
-    function $b(a, b, d) {
-        a = j(a);
-        if (a[0].nodeType == 9) {
-            a = a.find("html");
+    function JQLiteInheritedData(element, name, value) {
+        element = jqLite(element);
+        if (element[0].nodeType == 9) {
+            element = element.find("html");
         }
-        while (a.length) {
-            if ((d = a.data(b)) !== c) return d;
-            a = a.parent();
+        while (element.length) {
+            if ((value = element.data(name)) !== undefined) return value;
+            element = element.parent();
         }
     }
-    var _b = Ob.prototype = {
-        ready: function(c) {
-            var d = false;
-            function e() {
-                if (d) return;
-                d = true;
-                c();
+    var JQLitePrototype = JQLite.prototype = {
+        ready: function(fn) {
+            var fired = false;
+            function trigger() {
+                if (fired) return;
+                fired = true;
+                fn();
             }
-            if (b.readyState === "complete") {
-                setTimeout(e);
+            if (document.readyState === "complete") {
+                setTimeout(trigger);
             } else {
-                this.on("DOMContentLoaded", e);
-                Ob(a).on("load", e);
+                this.on("DOMContentLoaded", trigger);
+                JQLite(window).on("load", trigger);
             }
         },
         toString: function() {
-            var a = [];
-            v(this, function(b) {
-                a.push("" + b);
+            var value = [];
+            forEach(this, function(e) {
+                value.push("" + e);
             });
-            return "[" + a.join(", ") + "]";
+            return "[" + value.join(", ") + "]";
         },
-        eq: function(a) {
-            return a >= 0 ? j(this[a]) : j(this[this.length + a]);
+        eq: function(index) {
+            return index >= 0 ? jqLite(this[index]) : jqLite(this[this.length + index]);
         },
         length: 0,
-        push: m,
+        push: push,
         sort: [].sort,
         splice: [].splice
     };
-    var ac = {};
-    v("multiple,selected,checked,disabled,readOnly,required,open".split(","), function(a) {
-        ac[e(a)] = a;
+    var BOOLEAN_ATTR = {};
+    forEach("multiple,selected,checked,disabled,readOnly,required,open".split(","), function(value) {
+        BOOLEAN_ATTR[lowercase(value)] = value;
     });
-    var bc = {};
-    v("input,select,option,textarea,button,form,details".split(","), function(a) {
-        bc[f(a)] = true;
+    var BOOLEAN_ELEMENTS = {};
+    forEach("input,select,option,textarea,button,form,details".split(","), function(value) {
+        BOOLEAN_ELEMENTS[uppercase(value)] = true;
     });
-    function cc(a, b) {
-        var c = ac[b.toLowerCase()];
-        return c && bc[a.nodeName] && c;
+    function getBooleanAttrName(element, name) {
+        var booleanAttr = BOOLEAN_ATTR[name.toLowerCase()];
+        return booleanAttr && BOOLEAN_ELEMENTS[element.nodeName] && booleanAttr;
     }
-    v({
-        data: Ub,
-        inheritedData: $b,
-        scope: function(a) {
-            return $b(a, "$scope");
+    forEach({
+        data: JQLiteData,
+        inheritedData: JQLiteInheritedData,
+        scope: function(element) {
+            return JQLiteInheritedData(element, "$scope");
         },
-        controller: Zb,
-        injector: function(a) {
-            return $b(a, "$injector");
+        controller: JQLiteController,
+        injector: function(element) {
+            return JQLiteInheritedData(element, "$injector");
         },
-        removeAttr: function(a, b) {
-            a.removeAttribute(b);
+        removeAttr: function(element, name) {
+            element.removeAttribute(name);
         },
-        hasClass: Vb,
-        css: function(a, b, d) {
-            b = Mb(b);
-            if (I(d)) {
-                a.style[b] = d;
+        hasClass: JQLiteHasClass,
+        css: function(element, name, value) {
+            name = camelCase(name);
+            if (isDefined(value)) {
+                element.style[name] = value;
             } else {
-                var e;
-                if (i <= 8) {
-                    e = a.currentStyle && a.currentStyle[b];
-                    if (e === "") e = "auto";
+                var val;
+                if (msie <= 8) {
+                    val = element.currentStyle && element.currentStyle[name];
+                    if (val === "") val = "auto";
                 }
-                e = e || a.style[b];
-                if (i <= 8) {
-                    e = e === "" ? c : e;
+                val = val || element.style[name];
+                if (msie <= 8) {
+                    val = val === "" ? undefined : val;
                 }
-                return e;
+                return val;
             }
         },
-        attr: function(a, b, d) {
-            var f = e(b);
-            if (ac[f]) {
-                if (I(d)) {
-                    if (!!d) {
-                        a[b] = true;
-                        a.setAttribute(b, f);
+        attr: function(element, name, value) {
+            var lowercasedName = lowercase(name);
+            if (BOOLEAN_ATTR[lowercasedName]) {
+                if (isDefined(value)) {
+                    if (!!value) {
+                        element[name] = true;
+                        element.setAttribute(name, lowercasedName);
                     } else {
-                        a[b] = false;
-                        a.removeAttribute(f);
+                        element[name] = false;
+                        element.removeAttribute(lowercasedName);
                     }
                 } else {
-                    return a[b] || (a.attributes.getNamedItem(b) || E).specified ? f : c;
+                    return element[name] || (element.attributes.getNamedItem(name) || noop).specified ? lowercasedName : undefined;
                 }
-            } else if (I(d)) {
-                a.setAttribute(b, d);
-            } else if (a.getAttribute) {
-                var g = a.getAttribute(b, 2);
-                return g === null ? c : g;
+            } else if (isDefined(value)) {
+                element.setAttribute(name, value);
+            } else if (element.getAttribute) {
+                var ret = element.getAttribute(name, 2);
+                return ret === null ? undefined : ret;
             }
         },
-        prop: function(a, b, c) {
-            if (I(c)) {
-                a[b] = c;
+        prop: function(element, name, value) {
+            if (isDefined(value)) {
+                element[name] = value;
             } else {
-                return a[b];
+                return element[name];
             }
         },
         text: function() {
-            var a = [];
-            if (i < 9) {
-                a[1] = "innerText";
-                a[3] = "nodeValue";
+            var NODE_TYPE_TEXT_PROPERTY = [];
+            if (msie < 9) {
+                NODE_TYPE_TEXT_PROPERTY[1] = "innerText";
+                NODE_TYPE_TEXT_PROPERTY[3] = "nodeValue";
             } else {
-                a[1] = a[3] = "textContent";
+                NODE_TYPE_TEXT_PROPERTY[1] = NODE_TYPE_TEXT_PROPERTY[3] = "textContent";
             }
-            b.$dv = "";
-            return b;
-            function b(b, c) {
-                var d = a[b.nodeType];
-                if (H(c)) {
-                    return d ? b[d] : "";
+            getText.$dv = "";
+            return getText;
+            function getText(element, value) {
+                var textProp = NODE_TYPE_TEXT_PROPERTY[element.nodeType];
+                if (isUndefined(value)) {
+                    return textProp ? element[textProp] : "";
                 }
-                b[d] = c;
+                element[textProp] = value;
             }
         }(),
-        val: function(a, b) {
-            if (H(b)) {
-                if (s(a) === "SELECT" && a.multiple) {
-                    var c = [];
-                    v(a.options, function(a) {
-                        if (a.selected) {
-                            c.push(a.value || a.text);
+        val: function(element, value) {
+            if (isUndefined(value)) {
+                if (nodeName_(element) === "SELECT" && element.multiple) {
+                    var result = [];
+                    forEach(element.options, function(option) {
+                        if (option.selected) {
+                            result.push(option.value || option.text);
                         }
                     });
-                    return c.length === 0 ? null : c;
+                    return result.length === 0 ? null : result;
                 }
-                return a.value;
+                return element.value;
             }
-            a.value = b;
+            element.value = value;
         },
-        html: function(a, b) {
-            if (H(b)) {
-                return a.innerHTML;
+        html: function(element, value) {
+            if (isUndefined(value)) {
+                return element.innerHTML;
             }
-            for (var c = 0, d = a.childNodes; c < d.length; c++) {
-                Qb(d[c]);
+            for (var i = 0, childNodes = element.childNodes; i < childNodes.length; i++) {
+                JQLiteDealoc(childNodes[i]);
             }
-            a.innerHTML = b;
+            element.innerHTML = value;
         }
-    }, function(a, b) {
-        Ob.prototype[b] = function(b, d) {
-            var e, f;
-            if ((a.length == 2 && a !== Vb && a !== Zb ? b : d) === c) {
-                if (J(b)) {
-                    for (e = 0; e < this.length; e++) {
-                        if (a === Ub) {
-                            a(this[e], b);
+    }, function(fn, name) {
+        JQLite.prototype[name] = function(arg1, arg2) {
+            var i, key;
+            if ((fn.length == 2 && fn !== JQLiteHasClass && fn !== JQLiteController ? arg1 : arg2) === undefined) {
+                if (isObject(arg1)) {
+                    for (i = 0; i < this.length; i++) {
+                        if (fn === JQLiteData) {
+                            fn(this[i], arg1);
                         } else {
-                            for (f in b) {
-                                a(this[e], f, b[f]);
+                            for (key in arg1) {
+                                fn(this[i], key, arg1[key]);
                             }
                         }
                     }
                     return this;
                 } else {
-                    var g = a.$dv;
-                    var h = g == c ? Math.min(this.length, 1) : this.length;
-                    for (var i = 0; i < h; i++) {
-                        var j = a(this[i], b, d);
-                        g = g ? g + j : j;
+                    var value = fn.$dv;
+                    var jj = value == undefined ? Math.min(this.length, 1) : this.length;
+                    for (var j = 0; j < jj; j++) {
+                        var nodeValue = fn(this[j], arg1, arg2);
+                        value = value ? value + nodeValue : nodeValue;
                     }
-                    return g;
+                    return value;
                 }
             } else {
-                for (e = 0; e < this.length; e++) {
-                    a(this[e], b, d);
+                for (i = 0; i < this.length; i++) {
+                    fn(this[i], arg1, arg2);
                 }
                 return this;
             }
         };
     });
-    function dc(a, c) {
-        var d = function(d, e) {
-            if (!d.preventDefault) {
-                d.preventDefault = function() {
-                    d.returnValue = false;
+    function createEventHandler(element, events) {
+        var eventHandler = function(event, type) {
+            if (!event.preventDefault) {
+                event.preventDefault = function() {
+                    event.returnValue = false;
                 };
             }
-            if (!d.stopPropagation) {
-                d.stopPropagation = function() {
-                    d.cancelBubble = true;
+            if (!event.stopPropagation) {
+                event.stopPropagation = function() {
+                    event.cancelBubble = true;
                 };
             }
-            if (!d.target) {
-                d.target = d.srcElement || b;
+            if (!event.target) {
+                event.target = event.srcElement || document;
             }
-            if (H(d.defaultPrevented)) {
-                var f = d.preventDefault;
-                d.preventDefault = function() {
-                    d.defaultPrevented = true;
-                    f.call(d);
+            if (isUndefined(event.defaultPrevented)) {
+                var prevent = event.preventDefault;
+                event.preventDefault = function() {
+                    event.defaultPrevented = true;
+                    prevent.call(event);
                 };
-                d.defaultPrevented = false;
+                event.defaultPrevented = false;
             }
-            d.isDefaultPrevented = function() {
-                return d.defaultPrevented || d.returnValue == false;
+            event.isDefaultPrevented = function() {
+                return event.defaultPrevented || event.returnValue == false;
             };
-            v(c[e || d.type], function(b) {
-                b.call(a, d);
+            forEach(events[type || event.type], function(fn) {
+                fn.call(element, event);
             });
-            if (i <= 8) {
-                d.preventDefault = null;
-                d.stopPropagation = null;
-                d.isDefaultPrevented = null;
+            if (msie <= 8) {
+                event.preventDefault = null;
+                event.stopPropagation = null;
+                event.isDefaultPrevented = null;
             } else {
-                delete d.preventDefault;
-                delete d.stopPropagation;
-                delete d.isDefaultPrevented;
+                delete event.preventDefault;
+                delete event.stopPropagation;
+                delete event.isDefaultPrevented;
             }
         };
-        d.elem = a;
-        return d;
+        eventHandler.elem = element;
+        return eventHandler;
     }
-    v({
-        removeData: Sb,
-        dealoc: Qb,
-        on: function hf(a, c, d, e) {
-            if (I(e)) throw Lb("onargs", "jqLite#on() does not support the `selector` or `eventData` parameters");
-            var f = Tb(a, "events"), g = Tb(a, "handle");
-            if (!f) Tb(a, "events", f = {});
-            if (!g) Tb(a, "handle", g = dc(a, f));
-            v(c.split(" "), function(c) {
-                var e = f[c];
-                if (!e) {
-                    if (c == "mouseenter" || c == "mouseleave") {
-                        var h = b.body.contains || b.body.compareDocumentPosition ? function(a, b) {
-                            var c = a.nodeType === 9 ? a.documentElement : a, d = b && b.parentNode;
-                            return a === d || !!(d && d.nodeType === 1 && (c.contains ? c.contains(d) : a.compareDocumentPosition && a.compareDocumentPosition(d) & 16));
+    forEach({
+        removeData: JQLiteRemoveData,
+        dealoc: JQLiteDealoc,
+        on: function onFn(element, type, fn, unsupported) {
+            if (isDefined(unsupported)) throw jqLiteMinErr("onargs", "jqLite#on() does not support the `selector` or `eventData` parameters");
+            var events = JQLiteExpandoStore(element, "events"), handle = JQLiteExpandoStore(element, "handle");
+            if (!events) JQLiteExpandoStore(element, "events", events = {});
+            if (!handle) JQLiteExpandoStore(element, "handle", handle = createEventHandler(element, events));
+            forEach(type.split(" "), function(type) {
+                var eventFns = events[type];
+                if (!eventFns) {
+                    if (type == "mouseenter" || type == "mouseleave") {
+                        var contains = document.body.contains || document.body.compareDocumentPosition ? function(a, b) {
+                            var adown = a.nodeType === 9 ? a.documentElement : a, bup = b && b.parentNode;
+                            return a === bup || !!(bup && bup.nodeType === 1 && (adown.contains ? adown.contains(bup) : a.compareDocumentPosition && a.compareDocumentPosition(bup) & 16));
                         } : function(a, b) {
                             if (b) {
                                 while (b = b.parentNode) {
@@ -1191,2000 +1191,2001 @@
                             }
                             return false;
                         };
-                        f[c] = [];
-                        var i = {
+                        events[type] = [];
+                        var eventmap = {
                             mouseleave: "mouseout",
                             mouseenter: "mouseover"
                         };
-                        hf(a, i[c], function(a) {
-                            var b = this, d = a.relatedTarget;
-                            if (!d || d !== b && !h(b, d)) {
-                                g(a, c);
+                        onFn(element, eventmap[type], function(event) {
+                            var target = this, related = event.relatedTarget;
+                            if (!related || related !== target && !contains(target, related)) {
+                                handle(event, type);
                             }
                         });
                     } else {
-                        Gb(a, c, g);
-                        f[c] = [];
+                        addEventListenerFn(element, type, handle);
+                        events[type] = [];
                     }
-                    e = f[c];
+                    eventFns = events[type];
                 }
-                e.push(d);
+                eventFns.push(fn);
             });
         },
-        off: Rb,
-        replaceWith: function(a, b) {
-            var c, d = a.parentNode;
-            Qb(a);
-            v(new Ob(b), function(b) {
-                if (c) {
-                    d.insertBefore(b, c.nextSibling);
+        off: JQLiteOff,
+        replaceWith: function(element, replaceNode) {
+            var index, parent = element.parentNode;
+            JQLiteDealoc(element);
+            forEach(new JQLite(replaceNode), function(node) {
+                if (index) {
+                    parent.insertBefore(node, index.nextSibling);
                 } else {
-                    d.replaceChild(b, a);
+                    parent.replaceChild(node, element);
                 }
-                c = b;
+                index = node;
             });
         },
-        children: function(a) {
-            var b = [];
-            v(a.childNodes, function(a) {
-                if (a.nodeType === 1) b.push(a);
+        children: function(element) {
+            var children = [];
+            forEach(element.childNodes, function(element) {
+                if (element.nodeType === 1) children.push(element);
             });
-            return b;
+            return children;
         },
-        contents: function(a) {
-            return a.childNodes || [];
+        contents: function(element) {
+            return element.childNodes || [];
         },
-        append: function(a, b) {
-            v(new Ob(b), function(b) {
-                if (a.nodeType === 1 || a.nodeType === 11) {
-                    a.appendChild(b);
+        append: function(element, node) {
+            forEach(new JQLite(node), function(child) {
+                if (element.nodeType === 1 || element.nodeType === 11) {
+                    element.appendChild(child);
                 }
             });
         },
-        prepend: function(a, b) {
-            if (a.nodeType === 1) {
-                var c = a.firstChild;
-                v(new Ob(b), function(b) {
-                    a.insertBefore(b, c);
+        prepend: function(element, node) {
+            if (element.nodeType === 1) {
+                var index = element.firstChild;
+                forEach(new JQLite(node), function(child) {
+                    element.insertBefore(child, index);
                 });
             }
         },
-        wrap: function(a, b) {
-            b = j(b)[0];
-            var c = a.parentNode;
-            if (c) {
-                c.replaceChild(b, a);
+        wrap: function(element, wrapNode) {
+            wrapNode = jqLite(wrapNode)[0];
+            var parent = element.parentNode;
+            if (parent) {
+                parent.replaceChild(wrapNode, element);
             }
-            b.appendChild(a);
+            wrapNode.appendChild(element);
         },
-        remove: function(a) {
-            Qb(a);
-            var b = a.parentNode;
-            if (b) b.removeChild(a);
+        remove: function(element) {
+            JQLiteDealoc(element);
+            var parent = element.parentNode;
+            if (parent) parent.removeChild(element);
         },
-        after: function(a, b) {
-            var c = a, d = a.parentNode;
-            v(new Ob(b), function(a) {
-                d.insertBefore(a, c.nextSibling);
-                c = a;
+        after: function(element, newElement) {
+            var index = element, parent = element.parentNode;
+            forEach(new JQLite(newElement), function(node) {
+                parent.insertBefore(node, index.nextSibling);
+                index = node;
             });
         },
-        addClass: Xb,
-        removeClass: Wb,
-        toggleClass: function(a, b, c) {
-            if (H(c)) {
-                c = !Vb(a, b);
+        addClass: JQLiteAddClass,
+        removeClass: JQLiteRemoveClass,
+        toggleClass: function(element, selector, condition) {
+            if (isUndefined(condition)) {
+                condition = !JQLiteHasClass(element, selector);
             }
-            (c ? Xb : Wb)(a, b);
+            (condition ? JQLiteAddClass : JQLiteRemoveClass)(element, selector);
         },
-        parent: function(a) {
-            var b = a.parentNode;
-            return b && b.nodeType !== 11 ? b : null;
+        parent: function(element) {
+            var parent = element.parentNode;
+            return parent && parent.nodeType !== 11 ? parent : null;
         },
-        next: function(a) {
-            if (a.nextElementSibling) {
-                return a.nextElementSibling;
+        next: function(element) {
+            if (element.nextElementSibling) {
+                return element.nextElementSibling;
             }
-            var b = a.nextSibling;
-            while (b != null && b.nodeType !== 1) {
-                b = b.nextSibling;
+            var elm = element.nextSibling;
+            while (elm != null && elm.nodeType !== 1) {
+                elm = elm.nextSibling;
             }
-            return b;
+            return elm;
         },
-        find: function(a, b) {
-            return a.getElementsByTagName(b);
+        find: function(element, selector) {
+            return element.getElementsByTagName(selector);
         },
-        clone: Pb,
-        triggerHandler: function(a, b, c) {
-            var d = (Tb(a, "events") || {})[b];
-            c = c || [];
-            var e = [ {
-                preventDefault: E,
-                stopPropagation: E
+        clone: JQLiteClone,
+        triggerHandler: function(element, eventName, eventData) {
+            var eventFns = (JQLiteExpandoStore(element, "events") || {})[eventName];
+            eventData = eventData || [];
+            var event = [ {
+                preventDefault: noop,
+                stopPropagation: noop
             } ];
-            v(d, function(b) {
-                b.apply(a, e.concat(c));
+            forEach(eventFns, function(fn) {
+                fn.apply(element, event.concat(eventData));
             });
         }
-    }, function(a, b) {
-        Ob.prototype[b] = function(b, d, e) {
-            var f;
-            for (var g = 0; g < this.length; g++) {
-                if (f == c) {
-                    f = a(this[g], b, d, e);
-                    if (f !== c) {
-                        f = j(f);
+    }, function(fn, name) {
+        JQLite.prototype[name] = function(arg1, arg2, arg3) {
+            var value;
+            for (var i = 0; i < this.length; i++) {
+                if (value == undefined) {
+                    value = fn(this[i], arg1, arg2, arg3);
+                    if (value !== undefined) {
+                        value = jqLite(value);
                     }
                 } else {
-                    Yb(f, a(this[g], b, d, e));
+                    JQLiteAddNodes(value, fn(this[i], arg1, arg2, arg3));
                 }
             }
-            return f == c ? this : f;
+            return value == undefined ? this : value;
         };
-        Ob.prototype.bind = Ob.prototype.on;
-        Ob.prototype.unbind = Ob.prototype.off;
+        JQLite.prototype.bind = JQLite.prototype.on;
+        JQLite.prototype.unbind = JQLite.prototype.off;
     });
-    function ec(a) {
-        var b = typeof a, d;
-        if (b == "object" && a !== null) {
-            if (typeof (d = a.$$hashKey) == "function") {
-                d = a.$$hashKey();
-            } else if (d === c) {
-                d = a.$$hashKey = z();
+    function hashKey(obj) {
+        var objType = typeof obj, key;
+        if (objType == "object" && obj !== null) {
+            if (typeof (key = obj.$$hashKey) == "function") {
+                key = obj.$$hashKey();
+            } else if (key === undefined) {
+                key = obj.$$hashKey = nextUid();
             }
         } else {
-            d = a;
+            key = obj;
         }
-        return b + ":" + d;
+        return objType + ":" + key;
     }
-    function fc(a) {
-        v(a, this.put, this);
+    function HashMap(array) {
+        forEach(array, this.put, this);
     }
-    fc.prototype = {
-        put: function(a, b) {
-            this[ec(a)] = b;
+    HashMap.prototype = {
+        put: function(key, value) {
+            this[hashKey(key)] = value;
         },
-        get: function(a) {
-            return this[ec(a)];
+        get: function(key) {
+            return this[hashKey(key)];
         },
-        remove: function(a) {
-            var b = this[a = ec(a)];
-            delete this[a];
-            return b;
+        remove: function(key) {
+            var value = this[key = hashKey(key)];
+            delete this[key];
+            return value;
         }
     };
-    var gc = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
-    var hc = /,/;
-    var ic = /^\s*(_?)(\S+?)\1\s*$/;
-    var jc = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm;
-    var kc = d("$injector");
-    function lc(a) {
-        var b, c, d, e;
-        if (typeof a == "function") {
-            if (!(b = a.$inject)) {
-                b = [];
-                if (a.length) {
-                    c = a.toString().replace(jc, "");
-                    d = c.match(gc);
-                    v(d[1].split(hc), function(a) {
-                        a.replace(ic, function(a, c, d) {
-                            b.push(d);
+    var FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
+    var FN_ARG_SPLIT = /,/;
+    var FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
+    var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm;
+    var $injectorMinErr = minErr("$injector");
+    function annotate(fn) {
+        var $inject, fnText, argDecl, last;
+        if (typeof fn == "function") {
+            if (!($inject = fn.$inject)) {
+                $inject = [];
+                if (fn.length) {
+                    fnText = fn.toString().replace(STRIP_COMMENTS, "");
+                    argDecl = fnText.match(FN_ARGS);
+                    forEach(argDecl[1].split(FN_ARG_SPLIT), function(arg) {
+                        arg.replace(FN_ARG, function(all, underscore, name) {
+                            $inject.push(name);
                         });
                     });
                 }
-                a.$inject = b;
+                fn.$inject = $inject;
             }
-        } else if (N(a)) {
-            e = a.length - 1;
-            xb(a[e], "fn");
-            b = a.slice(0, e);
+        } else if (isArray(fn)) {
+            last = fn.length - 1;
+            assertArgFn(fn[last], "fn");
+            $inject = fn.slice(0, last);
         } else {
-            xb(a, "fn", true);
+            assertArgFn(fn, "fn", true);
         }
-        return b;
+        return $inject;
     }
-    function mc(a) {
-        var b = {}, c = "Provider", d = [], e = new fc(), f = {
+    function createInjector(modulesToLoad) {
+        var INSTANTIATING = {}, providerSuffix = "Provider", path = [], loadedModules = new HashMap(), providerCache = {
             $provide: {
-                provider: j(k),
-                factory: j(l),
-                service: j(m),
-                value: j(n),
-                constant: j(o),
-                decorator: p
+                provider: supportObject(provider),
+                factory: supportObject(factory),
+                service: supportObject(service),
+                value: supportObject(value),
+                constant: supportObject(constant),
+                decorator: decorator
             }
-        }, g = f.$injector = s(f, function() {
-            throw kc("unpr", "Unknown provider: {0}", d.join(" <- "));
-        }), h = {}, i = h.$injector = s(h, function(a) {
-            var b = g.get(a + c);
-            return i.invoke(b.$get, b);
+        }, providerInjector = providerCache.$injector = createInternalInjector(providerCache, function() {
+            throw $injectorMinErr("unpr", "Unknown provider: {0}", path.join(" <- "));
+        }), instanceCache = {}, instanceInjector = instanceCache.$injector = createInternalInjector(instanceCache, function(servicename) {
+            var provider = providerInjector.get(servicename + providerSuffix);
+            return instanceInjector.invoke(provider.$get, provider);
         });
-        v(q(a), function(a) {
-            i.invoke(a || E);
+        forEach(loadModules(modulesToLoad), function(fn) {
+            instanceInjector.invoke(fn || noop);
         });
-        return i;
-        function j(a) {
-            return function(b, c) {
-                if (J(b)) {
-                    v(b, y(a));
+        return instanceInjector;
+        function supportObject(delegate) {
+            return function(key, value) {
+                if (isObject(key)) {
+                    forEach(key, reverseParams(delegate));
                 } else {
-                    return a(b, c);
+                    return delegate(key, value);
                 }
             };
         }
-        function k(a, b) {
-            yb(a, "service");
-            if (O(b) || N(b)) {
-                b = g.instantiate(b);
+        function provider(name, provider_) {
+            assertNotHasOwnProperty(name, "service");
+            if (isFunction(provider_) || isArray(provider_)) {
+                provider_ = providerInjector.instantiate(provider_);
             }
-            if (!b.$get) {
-                throw kc("pget", "Provider '{0}' must define $get factory method.", a);
+            if (!provider_.$get) {
+                throw $injectorMinErr("pget", "Provider '{0}' must define $get factory method.", name);
             }
-            return f[a + c] = b;
+            return providerCache[name + providerSuffix] = provider_;
         }
-        function l(a, b) {
-            return k(a, {
-                $get: b
+        function factory(name, factoryFn) {
+            return provider(name, {
+                $get: factoryFn
             });
         }
-        function m(a, b) {
-            return l(a, [ "$injector", function(a) {
-                return a.instantiate(b);
+        function service(name, constructor) {
+            return factory(name, [ "$injector", function($injector) {
+                return $injector.instantiate(constructor);
             } ]);
         }
-        function n(a, b) {
-            return l(a, G(b));
+        function value(name, value) {
+            return factory(name, valueFn(value));
         }
-        function o(a, b) {
-            yb(a, "constant");
-            f[a] = b;
-            h[a] = b;
+        function constant(name, value) {
+            assertNotHasOwnProperty(name, "constant");
+            providerCache[name] = value;
+            instanceCache[name] = value;
         }
-        function p(a, b) {
-            var d = g.get(a + c), e = d.$get;
-            d.$get = function() {
-                var a = i.invoke(e, d);
-                return i.invoke(b, null, {
-                    $delegate: a
+        function decorator(serviceName, decorFn) {
+            var origProvider = providerInjector.get(serviceName + providerSuffix), orig$get = origProvider.$get;
+            origProvider.$get = function() {
+                var origInstance = instanceInjector.invoke(orig$get, origProvider);
+                return instanceInjector.invoke(decorFn, null, {
+                    $delegate: origInstance
                 });
             };
         }
-        function q(a) {
-            var b = [];
-            v(a, function(a) {
-                if (e.get(a)) return;
-                e.put(a, true);
+        function loadModules(modulesToLoad) {
+            var runBlocks = [];
+            forEach(modulesToLoad, function(module) {
+                if (loadedModules.get(module)) return;
+                loadedModules.put(module, true);
                 try {
-                    if (K(a)) {
-                        var c = r(a);
-                        b = b.concat(q(c.requires)).concat(c._runBlocks);
-                        for (var d = c._invokeQueue, f = 0, h = d.length; f < h; f++) {
-                            var i = d[f], j = g.get(i[0]);
-                            j[i[1]].apply(j, i[2]);
+                    if (isString(module)) {
+                        var moduleFn = angularModule(module);
+                        runBlocks = runBlocks.concat(loadModules(moduleFn.requires)).concat(moduleFn._runBlocks);
+                        for (var invokeQueue = moduleFn._invokeQueue, i = 0, ii = invokeQueue.length; i < ii; i++) {
+                            var invokeArgs = invokeQueue[i], provider = providerInjector.get(invokeArgs[0]);
+                            provider[invokeArgs[1]].apply(provider, invokeArgs[2]);
                         }
-                    } else if (O(a)) {
-                        b.push(g.invoke(a));
-                    } else if (N(a)) {
-                        b.push(g.invoke(a));
+                    } else if (isFunction(module)) {
+                        runBlocks.push(providerInjector.invoke(module));
+                    } else if (isArray(module)) {
+                        runBlocks.push(providerInjector.invoke(module));
                     } else {
-                        xb(a, "module");
+                        assertArgFn(module, "module");
                     }
-                } catch (k) {
-                    if (N(a)) {
-                        a = a[a.length - 1];
+                } catch (e) {
+                    if (isArray(module)) {
+                        module = module[module.length - 1];
                     }
-                    if (k.message && k.stack && k.stack.indexOf(k.message) == -1) {
-                        k = k.message + "\n" + k.stack;
+                    if (e.message && e.stack && e.stack.indexOf(e.message) == -1) {
+                        e = e.message + "\n" + e.stack;
                     }
-                    throw kc("modulerr", "Failed to instantiate module {0} due to:\n{1}", a, k.stack || k.message || k);
+                    throw $injectorMinErr("modulerr", "Failed to instantiate module {0} due to:\n{1}", module, e.stack || e.message || e);
                 }
             });
-            return b;
+            return runBlocks;
         }
-        function s(a, e) {
-            function g(c) {
-                if (a.hasOwnProperty(c)) {
-                    if (a[c] === b) {
-                        throw kc("cdep", "Circular dependency found: {0}", d.join(" <- "));
+        function createInternalInjector(cache, factory) {
+            function getService(serviceName) {
+                if (cache.hasOwnProperty(serviceName)) {
+                    if (cache[serviceName] === INSTANTIATING) {
+                        throw $injectorMinErr("cdep", "Circular dependency found: {0}", path.join(" <- "));
                     }
-                    return a[c];
+                    return cache[serviceName];
                 } else {
                     try {
-                        d.unshift(c);
-                        a[c] = b;
-                        return a[c] = e(c);
+                        path.unshift(serviceName);
+                        cache[serviceName] = INSTANTIATING;
+                        return cache[serviceName] = factory(serviceName);
                     } finally {
-                        d.shift();
+                        path.shift();
                     }
                 }
             }
-            function h(a, b, c) {
-                var d = [], e = lc(a), f, h, i;
-                for (h = 0, f = e.length; h < f; h++) {
-                    i = e[h];
-                    if (typeof i !== "string") {
-                        throw kc("itkn", "Incorrect injection token! Expected service name as string, got {0}", i);
+            function invoke(fn, self, locals) {
+                var args = [], $inject = annotate(fn), length, i, key;
+                for (i = 0, length = $inject.length; i < length; i++) {
+                    key = $inject[i];
+                    if (typeof key !== "string") {
+                        throw $injectorMinErr("itkn", "Incorrect injection token! Expected service name as string, got {0}", key);
                     }
-                    d.push(c && c.hasOwnProperty(i) ? c[i] : g(i));
+                    args.push(locals && locals.hasOwnProperty(key) ? locals[key] : getService(key));
                 }
-                if (!a.$inject) {
-                    a = a[f];
+                if (!fn.$inject) {
+                    fn = fn[length];
                 }
-                switch (b ? -1 : d.length) {
+                switch (self ? -1 : args.length) {
                   case 0:
-                    return a();
+                    return fn();
 
                   case 1:
-                    return a(d[0]);
+                    return fn(args[0]);
 
                   case 2:
-                    return a(d[0], d[1]);
+                    return fn(args[0], args[1]);
 
                   case 3:
-                    return a(d[0], d[1], d[2]);
+                    return fn(args[0], args[1], args[2]);
 
                   case 4:
-                    return a(d[0], d[1], d[2], d[3]);
+                    return fn(args[0], args[1], args[2], args[3]);
 
                   case 5:
-                    return a(d[0], d[1], d[2], d[3], d[4]);
+                    return fn(args[0], args[1], args[2], args[3], args[4]);
 
                   case 6:
-                    return a(d[0], d[1], d[2], d[3], d[4], d[5]);
+                    return fn(args[0], args[1], args[2], args[3], args[4], args[5]);
 
                   case 7:
-                    return a(d[0], d[1], d[2], d[3], d[4], d[5], d[6]);
+                    return fn(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
 
                   case 8:
-                    return a(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7]);
+                    return fn(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);
 
                   case 9:
-                    return a(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8]);
+                    return fn(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);
 
                   case 10:
-                    return a(d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7], d[8], d[9]);
+                    return fn(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]);
 
                   default:
-                    return a.apply(b, d);
+                    return fn.apply(self, args);
                 }
             }
-            function i(a, b) {
-                var c = function() {}, d, e;
-                c.prototype = (N(a) ? a[a.length - 1] : a).prototype;
-                d = new c();
-                e = h(a, d, b);
-                return J(e) ? e : d;
+            function instantiate(Type, locals) {
+                var Constructor = function() {}, instance, returnedValue;
+                Constructor.prototype = (isArray(Type) ? Type[Type.length - 1] : Type).prototype;
+                instance = new Constructor();
+                returnedValue = invoke(Type, instance, locals);
+                return isObject(returnedValue) ? returnedValue : instance;
             }
             return {
-                invoke: h,
-                instantiate: i,
-                get: g,
-                annotate: lc,
-                has: function(b) {
-                    return f.hasOwnProperty(b + c) || a.hasOwnProperty(b);
+                invoke: invoke,
+                instantiate: instantiate,
+                get: getService,
+                annotate: annotate,
+                has: function(name) {
+                    return providerCache.hasOwnProperty(name + providerSuffix) || cache.hasOwnProperty(name);
                 }
             };
         }
     }
-    function nc() {
-        var a = true;
+    function $AnchorScrollProvider() {
+        var autoScrollingEnabled = true;
         this.disableAutoScrolling = function() {
-            a = false;
+            autoScrollingEnabled = false;
         };
-        this.$get = [ "$window", "$location", "$rootScope", function(b, c, d) {
-            var f = b.document;
-            function g(a) {
-                var b = null;
-                v(a, function(a) {
-                    if (!b && e(a.nodeName) === "a") b = a;
+        this.$get = [ "$window", "$location", "$rootScope", function($window, $location, $rootScope) {
+            var document = $window.document;
+            function getFirstAnchor(list) {
+                var result = null;
+                forEach(list, function(element) {
+                    if (!result && lowercase(element.nodeName) === "a") result = element;
                 });
-                return b;
+                return result;
             }
-            function h() {
-                var a = c.hash(), d;
-                if (!a) b.scrollTo(0, 0); else if (d = f.getElementById(a)) d.scrollIntoView(); else if (d = g(f.getElementsByName(a))) d.scrollIntoView(); else if (a === "top") b.scrollTo(0, 0);
+            function scroll() {
+                var hash = $location.hash(), elm;
+                if (!hash) $window.scrollTo(0, 0); else if (elm = document.getElementById(hash)) elm.scrollIntoView(); else if (elm = getFirstAnchor(document.getElementsByName(hash))) elm.scrollIntoView(); else if (hash === "top") $window.scrollTo(0, 0);
             }
-            if (a) {
-                d.$watch(function i() {
-                    return c.hash();
-                }, function j() {
-                    d.$evalAsync(h);
+            if (autoScrollingEnabled) {
+                $rootScope.$watch(function autoScrollWatch() {
+                    return $location.hash();
+                }, function autoScrollWatchAction() {
+                    $rootScope.$evalAsync(scroll);
                 });
             }
-            return h;
+            return scroll;
         } ];
     }
-    var oc = d("$animate");
-    var pc = [ "$provide", function(a) {
+    var $animateMinErr = minErr("$animate");
+    var $AnimateProvider = [ "$provide", function($provide) {
         this.$$selectors = {};
-        this.register = function(b, c) {
-            var d = b + "-animation";
-            if (b && b.charAt(0) != ".") throw oc("notcsel", "Expecting class selector starting with '.' got '{0}'.", b);
-            this.$$selectors[b.substr(1)] = d;
-            a.factory(d, c);
+        this.register = function(name, factory) {
+            var key = name + "-animation";
+            if (name && name.charAt(0) != ".") throw $animateMinErr("notcsel", "Expecting class selector starting with '.' got '{0}'.", name);
+            this.$$selectors[name.substr(1)] = key;
+            $provide.factory(key, factory);
         };
-        this.$get = [ "$timeout", function(a) {
+        this.$get = [ "$timeout", function($timeout) {
             return {
-                enter: function(b, c, d, e) {
-                    var f = d && d[d.length - 1];
-                    var g = c && c[0] || f && f.parentNode;
-                    var h = f && f.nextSibling || null;
-                    v(b, function(a) {
-                        g.insertBefore(a, h);
+                enter: function(element, parent, after, done) {
+                    var afterNode = after && after[after.length - 1];
+                    var parentNode = parent && parent[0] || afterNode && afterNode.parentNode;
+                    var afterNextSibling = afterNode && afterNode.nextSibling || null;
+                    forEach(element, function(node) {
+                        parentNode.insertBefore(node, afterNextSibling);
                     });
-                    e && a(e, 0, false);
+                    done && $timeout(done, 0, false);
                 },
-                leave: function(b, c) {
-                    b.remove();
-                    c && a(c, 0, false);
+                leave: function(element, done) {
+                    element.remove();
+                    done && $timeout(done, 0, false);
                 },
-                move: function(a, b, c, d) {
-                    this.enter(a, b, c, d);
+                move: function(element, parent, after, done) {
+                    this.enter(element, parent, after, done);
                 },
-                addClass: function(b, c, d) {
-                    c = K(c) ? c : N(c) ? c.join(" ") : "";
-                    v(b, function(a) {
-                        Xb(a, c);
+                addClass: function(element, className, done) {
+                    className = isString(className) ? className : isArray(className) ? className.join(" ") : "";
+                    forEach(element, function(element) {
+                        JQLiteAddClass(element, className);
                     });
-                    d && a(d, 0, false);
+                    done && $timeout(done, 0, false);
                 },
-                removeClass: function(b, c, d) {
-                    c = K(c) ? c : N(c) ? c.join(" ") : "";
-                    v(b, function(a) {
-                        Wb(a, c);
+                removeClass: function(element, className, done) {
+                    className = isString(className) ? className : isArray(className) ? className.join(" ") : "";
+                    forEach(element, function(element) {
+                        JQLiteRemoveClass(element, className);
                     });
-                    d && a(d, 0, false);
+                    done && $timeout(done, 0, false);
                 },
-                enabled: E
+                enabled: noop
             };
         } ];
     } ];
-    function qc(a, b, d, e) {
-        var f = this, g = b[0], h = a.location, i = a.history, k = a.setTimeout, l = a.clearTimeout, m = {};
-        f.isMock = false;
-        var n = 0;
-        var o = [];
-        f.$$completeOutstandingRequest = p;
-        f.$$incOutstandingRequestCount = function() {
-            n++;
+    function Browser(window, document, $log, $sniffer) {
+        var self = this, rawDocument = document[0], location = window.location, history = window.history, setTimeout = window.setTimeout, clearTimeout = window.clearTimeout, pendingDeferIds = {};
+        self.isMock = false;
+        var outstandingRequestCount = 0;
+        var outstandingRequestCallbacks = [];
+        self.$$completeOutstandingRequest = completeOutstandingRequest;
+        self.$$incOutstandingRequestCount = function() {
+            outstandingRequestCount++;
         };
-        function p(a) {
+        function completeOutstandingRequest(fn) {
             try {
-                a.apply(null, fb(arguments, 1));
+                fn.apply(null, sliceArgs(arguments, 1));
             } finally {
-                n--;
-                if (n === 0) {
-                    while (o.length) {
+                outstandingRequestCount--;
+                if (outstandingRequestCount === 0) {
+                    while (outstandingRequestCallbacks.length) {
                         try {
-                            o.pop()();
-                        } catch (b) {
-                            d.error(b);
+                            outstandingRequestCallbacks.pop()();
+                        } catch (e) {
+                            $log.error(e);
                         }
                     }
                 }
             }
         }
-        f.notifyWhenNoOutstandingRequests = function(a) {
-            v(q, function(a) {
-                a();
+        self.notifyWhenNoOutstandingRequests = function(callback) {
+            forEach(pollFns, function(pollFn) {
+                pollFn();
             });
-            if (n === 0) {
-                a();
+            if (outstandingRequestCount === 0) {
+                callback();
             } else {
-                o.push(a);
+                outstandingRequestCallbacks.push(callback);
             }
         };
-        var q = [], r;
-        f.addPollFn = function(a) {
-            if (H(r)) s(100, k);
-            q.push(a);
-            return a;
+        var pollFns = [], pollTimeout;
+        self.addPollFn = function(fn) {
+            if (isUndefined(pollTimeout)) startPoller(100, setTimeout);
+            pollFns.push(fn);
+            return fn;
         };
-        function s(a, b) {
-            (function c() {
-                v(q, function(a) {
-                    a();
+        function startPoller(interval, setTimeout) {
+            (function check() {
+                forEach(pollFns, function(pollFn) {
+                    pollFn();
                 });
-                r = b(c, a);
+                pollTimeout = setTimeout(check, interval);
             })();
         }
-        var t = h.href, u = b.find("base"), w = null;
-        f.url = function(b, c) {
-            if (h !== a.location) h = a.location;
-            if (b) {
-                if (t == b) return;
-                t = b;
-                if (e.history) {
-                    if (c) i.replaceState(null, "", b); else {
-                        i.pushState(null, "", b);
-                        u.attr("href", u.attr("href"));
+        var lastBrowserUrl = location.href, baseElement = document.find("base"), newLocation = null;
+        self.url = function(url, replace) {
+            if (location !== window.location) location = window.location;
+            if (url) {
+                if (lastBrowserUrl == url) return;
+                lastBrowserUrl = url;
+                if ($sniffer.history) {
+                    if (replace) history.replaceState(null, "", url); else {
+                        history.pushState(null, "", url);
+                        baseElement.attr("href", baseElement.attr("href"));
                     }
                 } else {
-                    w = b;
-                    if (c) {
-                        h.replace(b);
+                    newLocation = url;
+                    if (replace) {
+                        location.replace(url);
                     } else {
-                        h.href = b;
+                        location.href = url;
                     }
                 }
-                return f;
+                return self;
             } else {
-                return w || h.href.replace(/%27/g, "'");
+                return newLocation || location.href.replace(/%27/g, "'");
             }
         };
-        var x = [], y = false;
-        function z() {
-            w = null;
-            if (t == f.url()) return;
-            t = f.url();
-            v(x, function(a) {
-                a(f.url());
+        var urlChangeListeners = [], urlChangeInit = false;
+        function fireUrlChange() {
+            newLocation = null;
+            if (lastBrowserUrl == self.url()) return;
+            lastBrowserUrl = self.url();
+            forEach(urlChangeListeners, function(listener) {
+                listener(self.url());
             });
         }
-        f.onUrlChange = function(b) {
-            if (!y) {
-                if (e.history) j(a).on("popstate", z);
-                if (e.hashchange) j(a).on("hashchange", z); else f.addPollFn(z);
-                y = true;
+        self.onUrlChange = function(callback) {
+            if (!urlChangeInit) {
+                if ($sniffer.history) jqLite(window).on("popstate", fireUrlChange);
+                if ($sniffer.hashchange) jqLite(window).on("hashchange", fireUrlChange); else self.addPollFn(fireUrlChange);
+                urlChangeInit = true;
             }
-            x.push(b);
-            return b;
+            urlChangeListeners.push(callback);
+            return callback;
         };
-        f.baseHref = function() {
-            var a = u.attr("href");
-            return a ? a.replace(/^https?\:\/\/[^\/]*/, "") : "";
+        self.baseHref = function() {
+            var href = baseElement.attr("href");
+            return href ? href.replace(/^https?\:\/\/[^\/]*/, "") : "";
         };
-        var A = {};
-        var B = "";
-        var C = f.baseHref();
-        f.cookies = function(a, b) {
-            var e, f, h, i, j;
-            if (a) {
-                if (b === c) {
-                    g.cookie = escape(a) + "=;path=" + C + ";expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        var lastCookies = {};
+        var lastCookieString = "";
+        var cookiePath = self.baseHref();
+        self.cookies = function(name, value) {
+            var cookieLength, cookieArray, cookie, i, index;
+            if (name) {
+                if (value === undefined) {
+                    rawDocument.cookie = escape(name) + "=;path=" + cookiePath + ";expires=Thu, 01 Jan 1970 00:00:00 GMT";
                 } else {
-                    if (K(b)) {
-                        e = (g.cookie = escape(a) + "=" + escape(b) + ";path=" + C).length + 1;
-                        if (e > 4096) {
-                            d.warn("Cookie '" + a + "' possibly not set or overflowed because it was too large (" + e + " > 4096 bytes)!");
+                    if (isString(value)) {
+                        cookieLength = (rawDocument.cookie = escape(name) + "=" + escape(value) + ";path=" + cookiePath).length + 1;
+                        if (cookieLength > 4096) {
+                            $log.warn("Cookie '" + name + "' possibly not set or overflowed because it was too large (" + cookieLength + " > 4096 bytes)!");
                         }
                     }
                 }
             } else {
-                if (g.cookie !== B) {
-                    B = g.cookie;
-                    f = B.split("; ");
-                    A = {};
-                    for (i = 0; i < f.length; i++) {
-                        h = f[i];
-                        j = h.indexOf("=");
-                        if (j > 0) {
-                            var a = unescape(h.substring(0, j));
-                            if (A[a] === c) {
-                                A[a] = unescape(h.substring(j + 1));
+                if (rawDocument.cookie !== lastCookieString) {
+                    lastCookieString = rawDocument.cookie;
+                    cookieArray = lastCookieString.split("; ");
+                    lastCookies = {};
+                    for (i = 0; i < cookieArray.length; i++) {
+                        cookie = cookieArray[i];
+                        index = cookie.indexOf("=");
+                        if (index > 0) {
+                            var name = unescape(cookie.substring(0, index));
+                            if (lastCookies[name] === undefined) {
+                                lastCookies[name] = unescape(cookie.substring(index + 1));
                             }
                         }
                     }
                 }
-                return A;
+                return lastCookies;
             }
         };
-        f.defer = function(a, b) {
-            var c;
-            n++;
-            c = k(function() {
-                delete m[c];
-                p(a);
-            }, b || 0);
-            m[c] = true;
-            return c;
+        self.defer = function(fn, delay) {
+            var timeoutId;
+            outstandingRequestCount++;
+            timeoutId = setTimeout(function() {
+                delete pendingDeferIds[timeoutId];
+                completeOutstandingRequest(fn);
+            }, delay || 0);
+            pendingDeferIds[timeoutId] = true;
+            return timeoutId;
         };
-        f.defer.cancel = function(a) {
-            if (m[a]) {
-                delete m[a];
-                l(a);
-                p(E);
+        self.defer.cancel = function(deferId) {
+            if (pendingDeferIds[deferId]) {
+                delete pendingDeferIds[deferId];
+                clearTimeout(deferId);
+                completeOutstandingRequest(noop);
                 return true;
             }
             return false;
         };
     }
-    function rc() {
-        this.$get = [ "$window", "$log", "$sniffer", "$document", function(a, b, c, d) {
-            return new qc(a, d, b, c);
+    function $BrowserProvider() {
+        this.$get = [ "$window", "$log", "$sniffer", "$document", function($window, $log, $sniffer, $document) {
+            return new Browser($window, $document, $log, $sniffer);
         } ];
     }
-    function sc() {
+    function $CacheFactoryProvider() {
         this.$get = function() {
-            var a = {};
-            function b(b, c) {
-                if (b in a) {
-                    throw d("$cacheFactory")("iid", "CacheId '{0}' is already taken!", b);
+            var caches = {};
+            function cacheFactory(cacheId, options) {
+                if (cacheId in caches) {
+                    throw minErr("$cacheFactory")("iid", "CacheId '{0}' is already taken!", cacheId);
                 }
-                var e = 0, f = B({}, c, {
-                    id: b
-                }), g = {}, h = c && c.capacity || Number.MAX_VALUE, i = {}, j = null, k = null;
-                return a[b] = {
-                    put: function(a, b) {
-                        var c = i[a] || (i[a] = {
-                            key: a
+                var size = 0, stats = extend({}, options, {
+                    id: cacheId
+                }), data = {}, capacity = options && options.capacity || Number.MAX_VALUE, lruHash = {}, freshEnd = null, staleEnd = null;
+                return caches[cacheId] = {
+                    put: function(key, value) {
+                        var lruEntry = lruHash[key] || (lruHash[key] = {
+                            key: key
                         });
-                        l(c);
-                        if (H(b)) return;
-                        if (!(a in g)) e++;
-                        g[a] = b;
-                        if (e > h) {
-                            this.remove(k.key);
+                        refresh(lruEntry);
+                        if (isUndefined(value)) return;
+                        if (!(key in data)) size++;
+                        data[key] = value;
+                        if (size > capacity) {
+                            this.remove(staleEnd.key);
                         }
-                        return b;
+                        return value;
                     },
-                    get: function(a) {
-                        var b = i[a];
-                        if (!b) return;
-                        l(b);
-                        return g[a];
+                    get: function(key) {
+                        var lruEntry = lruHash[key];
+                        if (!lruEntry) return;
+                        refresh(lruEntry);
+                        return data[key];
                     },
-                    remove: function(a) {
-                        var b = i[a];
-                        if (!b) return;
-                        if (b == j) j = b.p;
-                        if (b == k) k = b.n;
-                        m(b.n, b.p);
-                        delete i[a];
-                        delete g[a];
-                        e--;
+                    remove: function(key) {
+                        var lruEntry = lruHash[key];
+                        if (!lruEntry) return;
+                        if (lruEntry == freshEnd) freshEnd = lruEntry.p;
+                        if (lruEntry == staleEnd) staleEnd = lruEntry.n;
+                        link(lruEntry.n, lruEntry.p);
+                        delete lruHash[key];
+                        delete data[key];
+                        size--;
                     },
                     removeAll: function() {
-                        g = {};
-                        e = 0;
-                        i = {};
-                        j = k = null;
+                        data = {};
+                        size = 0;
+                        lruHash = {};
+                        freshEnd = staleEnd = null;
                     },
                     destroy: function() {
-                        g = null;
-                        f = null;
-                        i = null;
-                        delete a[b];
+                        data = null;
+                        stats = null;
+                        lruHash = null;
+                        delete caches[cacheId];
                     },
                     info: function() {
-                        return B({}, f, {
-                            size: e
+                        return extend({}, stats, {
+                            size: size
                         });
                     }
                 };
-                function l(a) {
-                    if (a != j) {
-                        if (!k) {
-                            k = a;
-                        } else if (k == a) {
-                            k = a.n;
+                function refresh(entry) {
+                    if (entry != freshEnd) {
+                        if (!staleEnd) {
+                            staleEnd = entry;
+                        } else if (staleEnd == entry) {
+                            staleEnd = entry.n;
                         }
-                        m(a.n, a.p);
-                        m(a, j);
-                        j = a;
-                        j.n = null;
+                        link(entry.n, entry.p);
+                        link(entry, freshEnd);
+                        freshEnd = entry;
+                        freshEnd.n = null;
                     }
                 }
-                function m(a, b) {
-                    if (a != b) {
-                        if (a) a.p = b;
-                        if (b) b.n = a;
+                function link(nextEntry, prevEntry) {
+                    if (nextEntry != prevEntry) {
+                        if (nextEntry) nextEntry.p = prevEntry;
+                        if (prevEntry) prevEntry.n = nextEntry;
                     }
                 }
             }
-            b.info = function() {
-                var b = {};
-                v(a, function(a, c) {
-                    b[c] = a.info();
+            cacheFactory.info = function() {
+                var info = {};
+                forEach(caches, function(cache, cacheId) {
+                    info[cacheId] = cache.info();
                 });
-                return b;
+                return info;
             };
-            b.get = function(b) {
-                return a[b];
+            cacheFactory.get = function(cacheId) {
+                return caches[cacheId];
             };
-            return b;
+            return cacheFactory;
         };
     }
-    function tc() {
-        this.$get = [ "$cacheFactory", function(a) {
-            return a("templates");
+    function $TemplateCacheProvider() {
+        this.$get = [ "$cacheFactory", function($cacheFactory) {
+            return $cacheFactory("templates");
         } ];
     }
-    var uc = d("$compile");
-    vc.$inject = [ "$provide" ];
-    function vc(a) {
-        var d = {}, e = "Directive", f = /^\s*directive\:\s*([\d\w\-_]+)\s+(.*)$/, g = /(([\d\w\-_]+)(?:\:([^;]+))?;?)/, h = /^\s*(https?|ftp|mailto|tel|file):/, k = /^\s*(https?|ftp|file):|data:image\//;
-        var l = /^(on[a-z]+|formaction)$/;
-        this.directive = function m(b, c) {
-            yb(b, "directive");
-            if (K(b)) {
-                wb(c, "directiveFactory");
-                if (!d.hasOwnProperty(b)) {
-                    d[b] = [];
-                    a.factory(b + e, [ "$injector", "$exceptionHandler", function(a, c) {
-                        var e = [];
-                        v(d[b], function(d, f) {
+    var $compileMinErr = minErr("$compile");
+    $CompileProvider.$inject = [ "$provide" ];
+    function $CompileProvider($provide) {
+        var hasDirectives = {}, Suffix = "Directive", COMMENT_DIRECTIVE_REGEXP = /^\s*directive\:\s*([\d\w\-_]+)\s+(.*)$/, CLASS_DIRECTIVE_REGEXP = /(([\d\w\-_]+)(?:\:([^;]+))?;?)/, aHrefSanitizationWhitelist = /^\s*(https?|ftp|mailto|tel|file):/, imgSrcSanitizationWhitelist = /^\s*(https?|ftp|file):|data:image\//;
+        var EVENT_HANDLER_ATTR_REGEXP = /^(on[a-z]+|formaction)$/;
+        this.directive = function registerDirective(name, directiveFactory) {
+            assertNotHasOwnProperty(name, "directive");
+            if (isString(name)) {
+                assertArg(directiveFactory, "directiveFactory");
+                if (!hasDirectives.hasOwnProperty(name)) {
+                    hasDirectives[name] = [];
+                    $provide.factory(name + Suffix, [ "$injector", "$exceptionHandler", function($injector, $exceptionHandler) {
+                        var directives = [];
+                        forEach(hasDirectives[name], function(directiveFactory, index) {
                             try {
-                                var g = a.invoke(d);
-                                if (O(g)) {
-                                    g = {
-                                        compile: G(g)
+                                var directive = $injector.invoke(directiveFactory);
+                                if (isFunction(directive)) {
+                                    directive = {
+                                        compile: valueFn(directive)
                                     };
-                                } else if (!g.compile && g.link) {
-                                    g.compile = G(g.link);
+                                } else if (!directive.compile && directive.link) {
+                                    directive.compile = valueFn(directive.link);
                                 }
-                                g.priority = g.priority || 0;
-                                g.index = f;
-                                g.name = g.name || b;
-                                g.require = g.require || g.controller && g.name;
-                                g.restrict = g.restrict || "A";
-                                e.push(g);
-                            } catch (h) {
-                                c(h);
+                                directive.priority = directive.priority || 0;
+                                directive.index = index;
+                                directive.name = directive.name || name;
+                                directive.require = directive.require || directive.controller && directive.name;
+                                directive.restrict = directive.restrict || "A";
+                                directives.push(directive);
+                            } catch (e) {
+                                $exceptionHandler(e);
                             }
                         });
-                        return e;
+                        return directives;
                     } ]);
                 }
-                d[b].push(c);
+                hasDirectives[name].push(directiveFactory);
             } else {
-                v(b, y(m));
+                forEach(name, reverseParams(registerDirective));
             }
             return this;
         };
-        this.aHrefSanitizationWhitelist = function(a) {
-            if (I(a)) {
-                h = a;
+        this.aHrefSanitizationWhitelist = function(regexp) {
+            if (isDefined(regexp)) {
+                aHrefSanitizationWhitelist = regexp;
                 return this;
             }
-            return h;
+            return aHrefSanitizationWhitelist;
         };
-        this.imgSrcSanitizationWhitelist = function(a) {
-            if (I(a)) {
-                k = a;
+        this.imgSrcSanitizationWhitelist = function(regexp) {
+            if (isDefined(regexp)) {
+                imgSrcSanitizationWhitelist = regexp;
                 return this;
             }
-            return k;
+            return imgSrcSanitizationWhitelist;
         };
-        this.$get = [ "$injector", "$interpolate", "$exceptionHandler", "$http", "$templateCache", "$parse", "$controller", "$rootScope", "$document", "$sce", "$animate", function(a, m, n, o, p, q, r, t, u, w, x) {
-            var y = function(a, b) {
-                this.$$element = a;
-                this.$attr = b || {};
+        this.$get = [ "$injector", "$interpolate", "$exceptionHandler", "$http", "$templateCache", "$parse", "$controller", "$rootScope", "$document", "$sce", "$animate", function($injector, $interpolate, $exceptionHandler, $http, $templateCache, $parse, $controller, $rootScope, $document, $sce, $animate) {
+            var Attributes = function(element, attr) {
+                this.$$element = element;
+                this.$attr = attr || {};
             };
-            y.prototype = {
-                $normalize: xc,
-                $addClass: function(a) {
-                    if (a && a.length > 0) {
-                        x.addClass(this.$$element, a);
+            Attributes.prototype = {
+                $normalize: directiveNormalize,
+                $addClass: function(classVal) {
+                    if (classVal && classVal.length > 0) {
+                        $animate.addClass(this.$$element, classVal);
                     }
                 },
-                $removeClass: function(a) {
-                    if (a && a.length > 0) {
-                        x.removeClass(this.$$element, a);
+                $removeClass: function(classVal) {
+                    if (classVal && classVal.length > 0) {
+                        $animate.removeClass(this.$$element, classVal);
                     }
                 },
-                $set: function(a, b, d, e) {
-                    if (a == "class") {
-                        b = b || "";
-                        var f = this.$$element.attr("class") || "";
-                        this.$removeClass(o(f, b).join(" "));
-                        this.$addClass(o(b, f).join(" "));
+                $set: function(key, value, writeAttr, attrName) {
+                    if (key == "class") {
+                        value = value || "";
+                        var current = this.$$element.attr("class") || "";
+                        this.$removeClass(tokenDifference(current, value).join(" "));
+                        this.$addClass(tokenDifference(value, current).join(" "));
                     } else {
-                        var g = cc(this.$$element[0], a), j, l;
-                        if (g) {
-                            this.$$element.prop(a, b);
-                            e = g;
+                        var booleanKey = getBooleanAttrName(this.$$element[0], key), normalizedVal, nodeName;
+                        if (booleanKey) {
+                            this.$$element.prop(key, value);
+                            attrName = booleanKey;
                         }
-                        this[a] = b;
-                        if (e) {
-                            this.$attr[a] = e;
+                        this[key] = value;
+                        if (attrName) {
+                            this.$attr[key] = attrName;
                         } else {
-                            e = this.$attr[a];
-                            if (!e) {
-                                this.$attr[a] = e = ub(a, "-");
+                            attrName = this.$attr[key];
+                            if (!attrName) {
+                                this.$attr[key] = attrName = snake_case(key, "-");
                             }
                         }
-                        l = s(this.$$element);
-                        if (l === "A" && a === "href" || l === "IMG" && a === "src") {
-                            if (!i || i >= 8) {
-                                j = Gd(b).href;
-                                if (j !== "") {
-                                    if (a === "href" && !j.match(h) || a === "src" && !j.match(k)) {
-                                        this[a] = b = "unsafe:" + j;
+                        nodeName = nodeName_(this.$$element);
+                        if (nodeName === "A" && key === "href" || nodeName === "IMG" && key === "src") {
+                            if (!msie || msie >= 8) {
+                                normalizedVal = urlResolve(value).href;
+                                if (normalizedVal !== "") {
+                                    if (key === "href" && !normalizedVal.match(aHrefSanitizationWhitelist) || key === "src" && !normalizedVal.match(imgSrcSanitizationWhitelist)) {
+                                        this[key] = value = "unsafe:" + normalizedVal;
                                     }
                                 }
                             }
                         }
-                        if (d !== false) {
-                            if (b === null || b === c) {
-                                this.$$element.removeAttr(e);
+                        if (writeAttr !== false) {
+                            if (value === null || value === undefined) {
+                                this.$$element.removeAttr(attrName);
                             } else {
-                                this.$$element.attr(e, b);
+                                this.$$element.attr(attrName, value);
                             }
                         }
                     }
-                    var m = this.$$observers;
-                    m && v(m[a], function(a) {
+                    var $$observers = this.$$observers;
+                    $$observers && forEach($$observers[key], function(fn) {
                         try {
-                            a(b);
-                        } catch (c) {
-                            n(c);
+                            fn(value);
+                        } catch (e) {
+                            $exceptionHandler(e);
                         }
                     });
-                    function o(a, b) {
-                        var c = [], d = a.split(/\s+/), e = b.split(/\s+/);
-                        a: for (var f = 0; f < d.length; f++) {
-                            var g = d[f];
-                            for (var h = 0; h < e.length; h++) {
-                                if (g == e[h]) continue a;
+                    function tokenDifference(str1, str2) {
+                        var values = [], tokens1 = str1.split(/\s+/), tokens2 = str2.split(/\s+/);
+                        outer: for (var i = 0; i < tokens1.length; i++) {
+                            var token = tokens1[i];
+                            for (var j = 0; j < tokens2.length; j++) {
+                                if (token == tokens2[j]) continue outer;
                             }
-                            c.push(g);
+                            values.push(token);
                         }
-                        return c;
+                        return values;
                     }
                 },
-                $observe: function(a, b) {
-                    var c = this, d = c.$$observers || (c.$$observers = {}), e = d[a] || (d[a] = []);
-                    e.push(b);
-                    t.$evalAsync(function() {
-                        if (!e.$$inter) {
-                            b(c[a]);
+                $observe: function(key, fn) {
+                    var attrs = this, $$observers = attrs.$$observers || (attrs.$$observers = {}), listeners = $$observers[key] || ($$observers[key] = []);
+                    listeners.push(fn);
+                    $rootScope.$evalAsync(function() {
+                        if (!listeners.$$inter) {
+                            fn(attrs[key]);
                         }
                     });
-                    return b;
+                    return fn;
                 }
             };
-            var z = m.startSymbol(), A = m.endSymbol(), C = z == "{{" || A == "}}" ? F : function ab(a) {
-                return a.replace(/\{\{/g, z).replace(/}}/g, A);
-            }, E = /^ngAttr[A-Z]/;
-            return H;
-            function H(a, b, c, d, e) {
-                if (!(a instanceof j)) {
-                    a = j(a);
+            var startSymbol = $interpolate.startSymbol(), endSymbol = $interpolate.endSymbol(), denormalizeTemplate = startSymbol == "{{" || endSymbol == "}}" ? identity : function denormalizeTemplate(template) {
+                return template.replace(/\{\{/g, startSymbol).replace(/}}/g, endSymbol);
+            }, NG_ATTR_BINDING = /^ngAttr[A-Z]/;
+            return compile;
+            function compile($compileNodes, transcludeFn, maxPriority, ignoreDirective, previousCompileContext) {
+                if (!($compileNodes instanceof jqLite)) {
+                    $compileNodes = jqLite($compileNodes);
                 }
-                v(a, function(b, c) {
-                    if (b.nodeType == 3 && b.nodeValue.match(/\S+/)) {
-                        a[c] = b = j(b).wrap("<span></span>").parent()[0];
+                forEach($compileNodes, function(node, index) {
+                    if (node.nodeType == 3 && node.nodeValue.match(/\S+/)) {
+                        $compileNodes[index] = node = jqLite(node).wrap("<span></span>").parent()[0];
                     }
                 });
-                var f = L(a, b, a, c, d, e);
-                return function g(b, c) {
-                    wb(b, "scope");
-                    var d = c ? _b.clone.call(a) : a;
-                    for (var e = 0, g = d.length; e < g; e++) {
-                        var h = d[e];
-                        if (h.nodeType == 1 || h.nodeType == 9) {
-                            d.eq(e).data("$scope", b);
+                var compositeLinkFn = compileNodes($compileNodes, transcludeFn, $compileNodes, maxPriority, ignoreDirective, previousCompileContext);
+                return function publicLinkFn(scope, cloneConnectFn) {
+                    assertArg(scope, "scope");
+                    var $linkNode = cloneConnectFn ? JQLitePrototype.clone.call($compileNodes) : $compileNodes;
+                    for (var i = 0, ii = $linkNode.length; i < ii; i++) {
+                        var node = $linkNode[i];
+                        if (node.nodeType == 1 || node.nodeType == 9) {
+                            $linkNode.eq(i).data("$scope", scope);
                         }
                     }
-                    I(d, "ng-scope");
-                    if (c) c(d, b);
-                    if (f) f(b, d, d);
-                    return d;
+                    safeAddClass($linkNode, "ng-scope");
+                    if (cloneConnectFn) cloneConnectFn($linkNode, scope);
+                    if (compositeLinkFn) compositeLinkFn(scope, $linkNode, $linkNode);
+                    return $linkNode;
                 };
             }
-            function I(a, b) {
+            function safeAddClass($element, className) {
                 try {
-                    a.addClass(b);
-                } catch (c) {}
+                    $element.addClass(className);
+                } catch (e) {}
             }
-            function L(a, b, d, e, f, g) {
-                var h = [], i, k, l, m, n;
-                for (var o = 0; o < a.length; o++) {
-                    m = new y();
-                    l = M(a[o], [], m, o == 0 ? e : c, f);
-                    i = l.length ? R(l, a[o], m, b, d, null, [], [], g) : null;
-                    k = i && i.terminal || !a[o].childNodes || !a[o].childNodes.length ? null : L(a[o].childNodes, i ? i.transclude : b);
-                    h.push(i);
-                    h.push(k);
-                    n = n || i || k;
-                    g = null;
+            function compileNodes(nodeList, transcludeFn, $rootElement, maxPriority, ignoreDirective, previousCompileContext) {
+                var linkFns = [], nodeLinkFn, childLinkFn, directives, attrs, linkFnFound;
+                for (var i = 0; i < nodeList.length; i++) {
+                    attrs = new Attributes();
+                    directives = collectDirectives(nodeList[i], [], attrs, i == 0 ? maxPriority : undefined, ignoreDirective);
+                    nodeLinkFn = directives.length ? applyDirectivesToNode(directives, nodeList[i], attrs, transcludeFn, $rootElement, null, [], [], previousCompileContext) : null;
+                    childLinkFn = nodeLinkFn && nodeLinkFn.terminal || !nodeList[i].childNodes || !nodeList[i].childNodes.length ? null : compileNodes(nodeList[i].childNodes, nodeLinkFn ? nodeLinkFn.transclude : transcludeFn);
+                    linkFns.push(nodeLinkFn);
+                    linkFns.push(childLinkFn);
+                    linkFnFound = linkFnFound || nodeLinkFn || childLinkFn;
+                    previousCompileContext = null;
                 }
-                return n ? p : null;
-                function p(a, d, e, f) {
-                    var g, i, k, l, m, n, o, p;
-                    var q = [];
-                    for (n = 0, o = d.length; n < o; n++) {
-                        q.push(d[n]);
+                return linkFnFound ? compositeLinkFn : null;
+                function compositeLinkFn(scope, nodeList, $rootElement, boundTranscludeFn) {
+                    var nodeLinkFn, childLinkFn, node, childScope, childTranscludeFn, i, ii, n;
+                    var stableNodeList = [];
+                    for (i = 0, ii = nodeList.length; i < ii; i++) {
+                        stableNodeList.push(nodeList[i]);
                     }
-                    for (n = 0, p = 0, o = h.length; n < o; p++) {
-                        k = q[p];
-                        g = h[n++];
-                        i = h[n++];
-                        if (g) {
-                            if (g.scope) {
-                                l = a.$new(J(g.scope));
-                                j(k).data("$scope", l);
+                    for (i = 0, n = 0, ii = linkFns.length; i < ii; n++) {
+                        node = stableNodeList[n];
+                        nodeLinkFn = linkFns[i++];
+                        childLinkFn = linkFns[i++];
+                        if (nodeLinkFn) {
+                            if (nodeLinkFn.scope) {
+                                childScope = scope.$new(isObject(nodeLinkFn.scope));
+                                jqLite(node).data("$scope", childScope);
                             } else {
-                                l = a;
+                                childScope = scope;
                             }
-                            m = g.transclude;
-                            if (m || !f && b) {
-                                g(i, l, k, e, function(b) {
-                                    return function(c) {
-                                        var d = a.$new();
-                                        d.$$transcluded = true;
-                                        return b(d, c).on("$destroy", gb(d, d.$destroy));
+                            childTranscludeFn = nodeLinkFn.transclude;
+                            if (childTranscludeFn || !boundTranscludeFn && transcludeFn) {
+                                nodeLinkFn(childLinkFn, childScope, node, $rootElement, function(transcludeFn) {
+                                    return function(cloneFn) {
+                                        var transcludeScope = scope.$new();
+                                        transcludeScope.$$transcluded = true;
+                                        return transcludeFn(transcludeScope, cloneFn).on("$destroy", bind(transcludeScope, transcludeScope.$destroy));
                                     };
-                                }(m || b));
+                                }(childTranscludeFn || transcludeFn));
                             } else {
-                                g(i, l, k, c, f);
+                                nodeLinkFn(childLinkFn, childScope, node, undefined, boundTranscludeFn);
                             }
-                        } else if (i) {
-                            i(a, k.childNodes, c, f);
+                        } else if (childLinkFn) {
+                            childLinkFn(scope, node.childNodes, undefined, boundTranscludeFn);
                         }
                     }
                 }
             }
-            function M(a, b, c, d, e) {
-                var h = a.nodeType, j = c.$attr, k, l;
-                switch (h) {
+            function collectDirectives(node, directives, attrs, maxPriority, ignoreDirective) {
+                var nodeType = node.nodeType, attrsMap = attrs.$attr, match, className;
+                switch (nodeType) {
                   case 1:
-                    S(b, xc(s(a).toLowerCase()), "E", d, e);
-                    for (var m, n, o, p, q, r = a.attributes, t = 0, u = r && r.length; t < u; t++) {
-                        var v = false;
-                        var w = false;
-                        m = r[t];
-                        if (!i || i >= 8 || m.specified) {
-                            n = m.name;
-                            p = xc(n);
-                            if (E.test(p)) {
-                                n = ub(p.substr(6), "-");
+                    addDirective(directives, directiveNormalize(nodeName_(node).toLowerCase()), "E", maxPriority, ignoreDirective);
+                    for (var attr, name, nName, ngAttrName, value, nAttrs = node.attributes, j = 0, jj = nAttrs && nAttrs.length; j < jj; j++) {
+                        var attrStartName = false;
+                        var attrEndName = false;
+                        attr = nAttrs[j];
+                        if (!msie || msie >= 8 || attr.specified) {
+                            name = attr.name;
+                            ngAttrName = directiveNormalize(name);
+                            if (NG_ATTR_BINDING.test(ngAttrName)) {
+                                name = snake_case(ngAttrName.substr(6), "-");
                             }
-                            var x = p.replace(/(Start|End)$/, "");
-                            if (p === x + "Start") {
-                                v = n;
-                                w = n.substr(0, n.length - 5) + "end";
-                                n = n.substr(0, n.length - 6);
+                            var directiveNName = ngAttrName.replace(/(Start|End)$/, "");
+                            if (ngAttrName === directiveNName + "Start") {
+                                attrStartName = name;
+                                attrEndName = name.substr(0, name.length - 5) + "end";
+                                name = name.substr(0, name.length - 6);
                             }
-                            o = xc(n.toLowerCase());
-                            j[o] = n;
-                            c[o] = q = U(i && n == "href" ? decodeURIComponent(a.getAttribute(n, 2)) : m.value);
-                            if (cc(a, o)) {
-                                c[o] = true;
+                            nName = directiveNormalize(name.toLowerCase());
+                            attrsMap[nName] = name;
+                            attrs[nName] = value = trim(msie && name == "href" ? decodeURIComponent(node.getAttribute(name, 2)) : attr.value);
+                            if (getBooleanAttrName(node, nName)) {
+                                attrs[nName] = true;
                             }
-                            $(a, b, q, o);
-                            S(b, o, "A", d, e, v, w);
+                            addAttrInterpolateDirective(node, directives, value, nName);
+                            addDirective(directives, nName, "A", maxPriority, ignoreDirective, attrStartName, attrEndName);
                         }
                     }
-                    l = a.className;
-                    if (K(l) && l !== "") {
-                        while (k = g.exec(l)) {
-                            o = xc(k[2]);
-                            if (S(b, o, "C", d, e)) {
-                                c[o] = U(k[3]);
+                    className = node.className;
+                    if (isString(className) && className !== "") {
+                        while (match = CLASS_DIRECTIVE_REGEXP.exec(className)) {
+                            nName = directiveNormalize(match[2]);
+                            if (addDirective(directives, nName, "C", maxPriority, ignoreDirective)) {
+                                attrs[nName] = trim(match[3]);
                             }
-                            l = l.substr(k.index + k[0].length);
+                            className = className.substr(match.index + match[0].length);
                         }
                     }
                     break;
 
                   case 3:
-                    Y(b, a.nodeValue);
+                    addTextInterpolateDirective(directives, node.nodeValue);
                     break;
 
                   case 8:
                     try {
-                        k = f.exec(a.nodeValue);
-                        if (k) {
-                            o = xc(k[1]);
-                            if (S(b, o, "M", d, e)) {
-                                c[o] = U(k[2]);
+                        match = COMMENT_DIRECTIVE_REGEXP.exec(node.nodeValue);
+                        if (match) {
+                            nName = directiveNormalize(match[1]);
+                            if (addDirective(directives, nName, "M", maxPriority, ignoreDirective)) {
+                                attrs[nName] = trim(match[2]);
                             }
                         }
-                    } catch (y) {}
+                    } catch (e) {}
                     break;
                 }
-                b.sort(W);
-                return b;
+                directives.sort(byPriority);
+                return directives;
             }
-            function P(a, b, c) {
-                var d = [];
-                var e = 0;
-                if (b && a.hasAttribute && a.hasAttribute(b)) {
-                    var f = a;
+            function groupScan(node, attrStart, attrEnd) {
+                var nodes = [];
+                var depth = 0;
+                if (attrStart && node.hasAttribute && node.hasAttribute(attrStart)) {
+                    var startNode = node;
                     do {
-                        if (!a) {
-                            throw uc("uterdir", "Unterminated attribute, found '{0}' but no matching '{1}' found.", b, c);
+                        if (!node) {
+                            throw $compileMinErr("uterdir", "Unterminated attribute, found '{0}' but no matching '{1}' found.", attrStart, attrEnd);
                         }
-                        if (a.nodeType == 1) {
-                            if (a.hasAttribute(b)) e++;
-                            if (a.hasAttribute(c)) e--;
+                        if (node.nodeType == 1) {
+                            if (node.hasAttribute(attrStart)) depth++;
+                            if (node.hasAttribute(attrEnd)) depth--;
                         }
-                        d.push(a);
-                        a = a.nextSibling;
-                    } while (e > 0);
+                        nodes.push(node);
+                        node = node.nextSibling;
+                    } while (depth > 0);
                 } else {
-                    d.push(a);
+                    nodes.push(node);
                 }
-                return j(d);
+                return jqLite(nodes);
             }
-            function Q(a, b, c) {
-                return function(d, e, f, g) {
-                    e = P(e[0], b, c);
-                    return a(d, e, f, g);
+            function groupElementsLinkFnWrapper(linkFn, attrStart, attrEnd) {
+                return function(scope, element, attrs, controllers) {
+                    element = groupScan(element[0], attrStart, attrEnd);
+                    return linkFn(scope, element, attrs, controllers);
                 };
             }
-            function R(a, d, e, f, g, h, i, k, l) {
-                l = l || {};
-                var o = -Number.MAX_VALUE, p, s = l.newIsolateScopeDirective, t = l.templateDirective, u = e.$$element = j(d), w, x, z, A = l.transcludeDirective, B = h, D = f, E, F, G;
-                for (var L = 0, R = a.length; L < R; L++) {
-                    w = a[L];
-                    var S = w.$$start;
-                    var W = w.$$end;
-                    if (S) {
-                        u = P(d, S, W);
+            function applyDirectivesToNode(directives, compileNode, templateAttrs, transcludeFn, jqCollection, originalReplaceDirective, preLinkFns, postLinkFns, previousCompileContext) {
+                previousCompileContext = previousCompileContext || {};
+                var terminalPriority = -Number.MAX_VALUE, newScopeDirective, newIsolateScopeDirective = previousCompileContext.newIsolateScopeDirective, templateDirective = previousCompileContext.templateDirective, $compileNode = templateAttrs.$$element = jqLite(compileNode), directive, directiveName, $template, transcludeDirective = previousCompileContext.transcludeDirective, replaceDirective = originalReplaceDirective, childTranscludeFn = transcludeFn, controllerDirectives, linkFn, directiveValue;
+                for (var i = 0, ii = directives.length; i < ii; i++) {
+                    directive = directives[i];
+                    var attrStart = directive.$$start;
+                    var attrEnd = directive.$$end;
+                    if (attrStart) {
+                        $compileNode = groupScan(compileNode, attrStart, attrEnd);
                     }
-                    z = c;
-                    if (o > w.priority) {
+                    $template = undefined;
+                    if (terminalPriority > directive.priority) {
                         break;
                     }
-                    if (G = w.scope) {
-                        p = p || w;
-                        if (!w.templateUrl) {
-                            X("new/isolated scope", s, w, u);
-                            if (J(G)) {
-                                I(u, "ng-isolate-scope");
-                                s = w;
+                    if (directiveValue = directive.scope) {
+                        newScopeDirective = newScopeDirective || directive;
+                        if (!directive.templateUrl) {
+                            assertNoDuplicate("new/isolated scope", newIsolateScopeDirective, directive, $compileNode);
+                            if (isObject(directiveValue)) {
+                                safeAddClass($compileNode, "ng-isolate-scope");
+                                newIsolateScopeDirective = directive;
                             }
-                            I(u, "ng-scope");
+                            safeAddClass($compileNode, "ng-scope");
                         }
                     }
-                    x = w.name;
-                    if (!w.templateUrl && w.controller) {
-                        G = w.controller;
-                        E = E || {};
-                        X("'" + x + "' controller", E[x], w, u);
-                        E[x] = w;
+                    directiveName = directive.name;
+                    if (!directive.templateUrl && directive.controller) {
+                        directiveValue = directive.controller;
+                        controllerDirectives = controllerDirectives || {};
+                        assertNoDuplicate("'" + directiveName + "' controller", controllerDirectives[directiveName], directive, $compileNode);
+                        controllerDirectives[directiveName] = directive;
                     }
-                    if (G = w.transclude) {
-                        if (x !== "ngRepeat") {
-                            X("transclusion", A, w, u);
-                            A = w;
+                    if (directiveValue = directive.transclude) {
+                        if (directiveName !== "ngRepeat") {
+                            assertNoDuplicate("transclusion", transcludeDirective, directive, $compileNode);
+                            transcludeDirective = directive;
                         }
-                        if (G == "element") {
-                            o = w.priority;
-                            z = P(d, S, W);
-                            u = e.$$element = j(b.createComment(" " + x + ": " + e[x] + " "));
-                            d = u[0];
-                            _(g, j(fb(z)), d);
-                            D = H(z, f, o, B && B.name, {
-                                newIsolateScopeDirective: s,
-                                transcludeDirective: A,
-                                templateDirective: t
+                        if (directiveValue == "element") {
+                            terminalPriority = directive.priority;
+                            $template = groupScan(compileNode, attrStart, attrEnd);
+                            $compileNode = templateAttrs.$$element = jqLite(document.createComment(" " + directiveName + ": " + templateAttrs[directiveName] + " "));
+                            compileNode = $compileNode[0];
+                            replaceWith(jqCollection, jqLite(sliceArgs($template)), compileNode);
+                            childTranscludeFn = compile($template, transcludeFn, terminalPriority, replaceDirective && replaceDirective.name, {
+                                newIsolateScopeDirective: newIsolateScopeDirective,
+                                transcludeDirective: transcludeDirective,
+                                templateDirective: templateDirective
                             });
                         } else {
-                            z = j(Pb(d)).contents();
-                            u.html("");
-                            D = H(z, f);
+                            $template = jqLite(JQLiteClone(compileNode)).contents();
+                            $compileNode.html("");
+                            childTranscludeFn = compile($template, transcludeFn);
                         }
                     }
-                    if (w.template) {
-                        X("template", t, w, u);
-                        t = w;
-                        G = O(w.template) ? w.template(u, e) : w.template;
-                        G = C(G);
-                        if (w.replace) {
-                            B = w;
-                            z = j("<div>" + U(G) + "</div>").contents();
-                            d = z[0];
-                            if (z.length != 1 || d.nodeType !== 1) {
-                                throw uc("tplrt", "Template for directive '{0}' must have exactly one root element. {1}", x, "");
+                    if (directive.template) {
+                        assertNoDuplicate("template", templateDirective, directive, $compileNode);
+                        templateDirective = directive;
+                        directiveValue = isFunction(directive.template) ? directive.template($compileNode, templateAttrs) : directive.template;
+                        directiveValue = denormalizeTemplate(directiveValue);
+                        if (directive.replace) {
+                            replaceDirective = directive;
+                            $template = jqLite("<div>" + trim(directiveValue) + "</div>").contents();
+                            compileNode = $template[0];
+                            if ($template.length != 1 || compileNode.nodeType !== 1) {
+                                throw $compileMinErr("tplrt", "Template for directive '{0}' must have exactly one root element. {1}", directiveName, "");
                             }
-                            _(g, u, d);
-                            var Y = {
+                            replaceWith(jqCollection, $compileNode, compileNode);
+                            var newTemplateAttrs = {
                                 $attr: {}
                             };
-                            a = a.concat(M(d, a.splice(L + 1, a.length - (L + 1)), Y));
-                            T(e, Y);
-                            R = a.length;
+                            directives = directives.concat(collectDirectives(compileNode, directives.splice(i + 1, directives.length - (i + 1)), newTemplateAttrs));
+                            mergeTemplateAttributes(templateAttrs, newTemplateAttrs);
+                            ii = directives.length;
                         } else {
-                            u.html(G);
+                            $compileNode.html(directiveValue);
                         }
                     }
-                    if (w.templateUrl) {
-                        X("template", t, w, u);
-                        t = w;
-                        if (w.replace) {
-                            B = w;
+                    if (directive.templateUrl) {
+                        assertNoDuplicate("template", templateDirective, directive, $compileNode);
+                        templateDirective = directive;
+                        if (directive.replace) {
+                            replaceDirective = directive;
                         }
-                        bb = V(a.splice(L, a.length - L), u, e, g, D, i, k, {
-                            newIsolateScopeDirective: s,
-                            transcludeDirective: A,
-                            templateDirective: t
+                        nodeLinkFn = compileTemplateUrl(directives.splice(i, directives.length - i), $compileNode, templateAttrs, jqCollection, childTranscludeFn, preLinkFns, postLinkFns, {
+                            newIsolateScopeDirective: newIsolateScopeDirective,
+                            transcludeDirective: transcludeDirective,
+                            templateDirective: templateDirective
                         });
-                        R = a.length;
-                    } else if (w.compile) {
+                        ii = directives.length;
+                    } else if (directive.compile) {
                         try {
-                            F = w.compile(u, e, D);
-                            if (O(F)) {
-                                $(null, F, S, W);
-                            } else if (F) {
-                                $(F.pre, F.post, S, W);
+                            linkFn = directive.compile($compileNode, templateAttrs, childTranscludeFn);
+                            if (isFunction(linkFn)) {
+                                addLinkFns(null, linkFn, attrStart, attrEnd);
+                            } else if (linkFn) {
+                                addLinkFns(linkFn.pre, linkFn.post, attrStart, attrEnd);
                             }
-                        } catch (Z) {
-                            n(Z, lb(u));
+                        } catch (e) {
+                            $exceptionHandler(e, startingTag($compileNode));
                         }
                     }
-                    if (w.terminal) {
-                        bb.terminal = true;
-                        o = Math.max(o, w.priority);
+                    if (directive.terminal) {
+                        nodeLinkFn.terminal = true;
+                        terminalPriority = Math.max(terminalPriority, directive.priority);
                     }
                 }
-                bb.scope = p && p.scope;
-                bb.transclude = A && D;
-                return bb;
-                function $(a, b, c, d) {
-                    if (a) {
-                        if (c) a = Q(a, c, d);
-                        a.require = w.require;
-                        i.push(a);
+                nodeLinkFn.scope = newScopeDirective && newScopeDirective.scope;
+                nodeLinkFn.transclude = transcludeDirective && childTranscludeFn;
+                return nodeLinkFn;
+                function addLinkFns(pre, post, attrStart, attrEnd) {
+                    if (pre) {
+                        if (attrStart) pre = groupElementsLinkFnWrapper(pre, attrStart, attrEnd);
+                        pre.require = directive.require;
+                        preLinkFns.push(pre);
                     }
-                    if (b) {
-                        if (c) b = Q(b, c, d);
-                        b.require = w.require;
-                        k.push(b);
+                    if (post) {
+                        if (attrStart) post = groupElementsLinkFnWrapper(post, attrStart, attrEnd);
+                        post.require = directive.require;
+                        postLinkFns.push(post);
                     }
                 }
-                function ab(a, b) {
-                    var c, d = "data", e = false;
-                    if (K(a)) {
-                        while ((c = a.charAt(0)) == "^" || c == "?") {
-                            a = a.substr(1);
-                            if (c == "^") {
-                                d = "inheritedData";
+                function getControllers(require, $element) {
+                    var value, retrievalMethod = "data", optional = false;
+                    if (isString(require)) {
+                        while ((value = require.charAt(0)) == "^" || value == "?") {
+                            require = require.substr(1);
+                            if (value == "^") {
+                                retrievalMethod = "inheritedData";
                             }
-                            e = e || c == "?";
+                            optional = optional || value == "?";
                         }
-                        c = b[d]("$" + a + "Controller");
-                        if (b[0].nodeType == 8 && b[0].$$controller) {
-                            c = c || b[0].$$controller;
-                            b[0].$$controller = null;
+                        value = $element[retrievalMethod]("$" + require + "Controller");
+                        if ($element[0].nodeType == 8 && $element[0].$$controller) {
+                            value = value || $element[0].$$controller;
+                            $element[0].$$controller = null;
                         }
-                        if (!c && !e) {
-                            throw uc("ctreq", "Controller '{0}', required by directive '{1}', can't be found!", a, x);
+                        if (!value && !optional) {
+                            throw $compileMinErr("ctreq", "Controller '{0}', required by directive '{1}', can't be found!", require, directiveName);
                         }
-                        return c;
-                    } else if (N(a)) {
-                        c = [];
-                        v(a, function(a) {
-                            c.push(ab(a, b));
+                        return value;
+                    } else if (isArray(require)) {
+                        value = [];
+                        forEach(require, function(require) {
+                            value.push(getControllers(require, $element));
                         });
                     }
-                    return c;
+                    return value;
                 }
-                function bb(a, b, f, g, h) {
-                    var l, o, p, t, u, w;
-                    if (d === f) {
-                        l = e;
+                function nodeLinkFn(childLinkFn, scope, linkNode, $rootElement, boundTranscludeFn) {
+                    var attrs, $element, i, ii, linkFn, controller;
+                    if (compileNode === linkNode) {
+                        attrs = templateAttrs;
                     } else {
-                        l = cb(e, new y(j(f), e.$attr));
+                        attrs = shallowCopy(templateAttrs, new Attributes(jqLite(linkNode), templateAttrs.$attr));
                     }
-                    o = l.$$element;
-                    if (s) {
-                        var x = /^\s*([@=&])(\??)\s*(\w*)\s*$/;
-                        var z = b.$parent || b;
-                        v(s.scope, function(a, c) {
-                            var d = a.match(x) || [], e = d[3] || c, f = d[2] == "?", g = d[1], h, i, j;
-                            b.$$isolateBindings[c] = g + e;
-                            switch (g) {
+                    $element = attrs.$$element;
+                    if (newIsolateScopeDirective) {
+                        var LOCAL_REGEXP = /^\s*([@=&])(\??)\s*(\w*)\s*$/;
+                        var parentScope = scope.$parent || scope;
+                        forEach(newIsolateScopeDirective.scope, function(definition, scopeName) {
+                            var match = definition.match(LOCAL_REGEXP) || [], attrName = match[3] || scopeName, optional = match[2] == "?", mode = match[1], lastValue, parentGet, parentSet;
+                            scope.$$isolateBindings[scopeName] = mode + attrName;
+                            switch (mode) {
                               case "@":
                                 {
-                                    l.$observe(e, function(a) {
-                                        b[c] = a;
+                                    attrs.$observe(attrName, function(value) {
+                                        scope[scopeName] = value;
                                     });
-                                    l.$$observers[e].$$scope = z;
-                                    if (l[e]) {
-                                        b[c] = m(l[e])(z);
+                                    attrs.$$observers[attrName].$$scope = parentScope;
+                                    if (attrs[attrName]) {
+                                        scope[scopeName] = $interpolate(attrs[attrName])(parentScope);
                                     }
                                     break;
                                 }
 
                               case "=":
                                 {
-                                    if (f && !l[e]) {
+                                    if (optional && !attrs[attrName]) {
                                         return;
                                     }
-                                    i = q(l[e]);
-                                    j = i.assign || function() {
-                                        h = b[c] = i(z);
-                                        throw uc("nonassign", "Expression '{0}' used with directive '{1}' is non-assignable!", l[e], s.name);
+                                    parentGet = $parse(attrs[attrName]);
+                                    parentSet = parentGet.assign || function() {
+                                        lastValue = scope[scopeName] = parentGet(parentScope);
+                                        throw $compileMinErr("nonassign", "Expression '{0}' used with directive '{1}' is non-assignable!", attrs[attrName], newIsolateScopeDirective.name);
                                     };
-                                    h = b[c] = i(z);
-                                    b.$watch(function k() {
-                                        var a = i(z);
-                                        if (a !== b[c]) {
-                                            if (a !== h) {
-                                                h = b[c] = a;
+                                    lastValue = scope[scopeName] = parentGet(parentScope);
+                                    scope.$watch(function parentValueWatch() {
+                                        var parentValue = parentGet(parentScope);
+                                        if (parentValue !== scope[scopeName]) {
+                                            if (parentValue !== lastValue) {
+                                                lastValue = scope[scopeName] = parentValue;
                                             } else {
-                                                j(z, a = h = b[c]);
+                                                parentSet(parentScope, parentValue = lastValue = scope[scopeName]);
                                             }
                                         }
-                                        return a;
+                                        return parentValue;
                                     });
                                     break;
                                 }
 
                               case "&":
                                 {
-                                    i = q(l[e]);
-                                    b[c] = function(a) {
-                                        return i(z, a);
+                                    parentGet = $parse(attrs[attrName]);
+                                    scope[scopeName] = function(locals) {
+                                        return parentGet(parentScope, locals);
                                     };
                                     break;
                                 }
 
                               default:
                                 {
-                                    throw uc("iscp", "Invalid isolate scope definition for directive '{0}'. Definition: {... {1}: '{2}' ...}", s.name, c, a);
+                                    throw $compileMinErr("iscp", "Invalid isolate scope definition for directive '{0}'. Definition: {... {1}: '{2}' ...}", newIsolateScopeDirective.name, scopeName, definition);
                                 }
                             }
                         });
                     }
-                    if (E) {
-                        v(E, function(a) {
-                            var c = {
-                                $scope: b,
-                                $element: o,
-                                $attrs: l,
-                                $transclude: h
-                            }, d;
-                            w = a.controller;
-                            if (w == "@") {
-                                w = l[a.name];
+                    if (controllerDirectives) {
+                        forEach(controllerDirectives, function(directive) {
+                            var locals = {
+                                $scope: scope,
+                                $element: $element,
+                                $attrs: attrs,
+                                $transclude: boundTranscludeFn
+                            }, controllerInstance;
+                            controller = directive.controller;
+                            if (controller == "@") {
+                                controller = attrs[directive.name];
                             }
-                            d = r(w, c);
-                            if (o[0].nodeType == 8) {
-                                o[0].$$controller = d;
+                            controllerInstance = $controller(controller, locals);
+                            if ($element[0].nodeType == 8) {
+                                $element[0].$$controller = controllerInstance;
                             } else {
-                                o.data("$" + a.name + "Controller", d);
+                                $element.data("$" + directive.name + "Controller", controllerInstance);
                             }
-                            if (a.controllerAs) {
-                                c.$scope[a.controllerAs] = d;
+                            if (directive.controllerAs) {
+                                locals.$scope[directive.controllerAs] = controllerInstance;
                             }
                         });
                     }
-                    for (p = 0, t = i.length; p < t; p++) {
+                    for (i = 0, ii = preLinkFns.length; i < ii; i++) {
                         try {
-                            u = i[p];
-                            u(b, o, l, u.require && ab(u.require, o));
-                        } catch (A) {
-                            n(A, lb(o));
+                            linkFn = preLinkFns[i];
+                            linkFn(scope, $element, attrs, linkFn.require && getControllers(linkFn.require, $element));
+                        } catch (e) {
+                            $exceptionHandler(e, startingTag($element));
                         }
                     }
-                    a && a(b, f.childNodes, c, h);
-                    for (p = k.length - 1; p >= 0; p--) {
+                    childLinkFn && childLinkFn(scope, linkNode.childNodes, undefined, boundTranscludeFn);
+                    for (i = postLinkFns.length - 1; i >= 0; i--) {
                         try {
-                            u = k[p];
-                            u(b, o, l, u.require && ab(u.require, o));
-                        } catch (A) {
-                            n(A, lb(o));
+                            linkFn = postLinkFns[i];
+                            linkFn(scope, $element, attrs, linkFn.require && getControllers(linkFn.require, $element));
+                        } catch (e) {
+                            $exceptionHandler(e, startingTag($element));
                         }
                     }
                 }
             }
-            function S(b, f, g, h, i, j, k) {
-                if (f === i) return null;
-                var l = null;
-                if (d.hasOwnProperty(f)) {
-                    for (var m, o = a.get(f + e), p = 0, q = o.length; p < q; p++) {
+            function addDirective(tDirectives, name, location, maxPriority, ignoreDirective, startAttrName, endAttrName) {
+                if (name === ignoreDirective) return null;
+                var match = null;
+                if (hasDirectives.hasOwnProperty(name)) {
+                    for (var directive, directives = $injector.get(name + Suffix), i = 0, ii = directives.length; i < ii; i++) {
                         try {
-                            m = o[p];
-                            if ((h === c || h > m.priority) && m.restrict.indexOf(g) != -1) {
-                                if (j) {
-                                    m = D(m, {
-                                        $$start: j,
-                                        $$end: k
+                            directive = directives[i];
+                            if ((maxPriority === undefined || maxPriority > directive.priority) && directive.restrict.indexOf(location) != -1) {
+                                if (startAttrName) {
+                                    directive = inherit(directive, {
+                                        $$start: startAttrName,
+                                        $$end: endAttrName
                                     });
                                 }
-                                b.push(m);
-                                l = m;
+                                tDirectives.push(directive);
+                                match = directive;
                             }
-                        } catch (r) {
-                            n(r);
+                        } catch (e) {
+                            $exceptionHandler(e);
                         }
                     }
                 }
-                return l;
+                return match;
             }
-            function T(a, b) {
-                var c = b.$attr, d = a.$attr, e = a.$$element;
-                v(a, function(d, e) {
-                    if (e.charAt(0) != "$") {
-                        if (b[e]) {
-                            d += (e === "style" ? ";" : " ") + b[e];
+            function mergeTemplateAttributes(dst, src) {
+                var srcAttr = src.$attr, dstAttr = dst.$attr, $element = dst.$$element;
+                forEach(dst, function(value, key) {
+                    if (key.charAt(0) != "$") {
+                        if (src[key]) {
+                            value += (key === "style" ? ";" : " ") + src[key];
                         }
-                        a.$set(e, d, true, c[e]);
+                        dst.$set(key, value, true, srcAttr[key]);
                     }
                 });
-                v(b, function(b, f) {
-                    if (f == "class") {
-                        I(e, b);
-                        a["class"] = (a["class"] ? a["class"] + " " : "") + b;
-                    } else if (f == "style") {
-                        e.attr("style", e.attr("style") + ";" + b);
-                    } else if (f.charAt(0) != "$" && !a.hasOwnProperty(f)) {
-                        a[f] = b;
-                        d[f] = c[f];
+                forEach(src, function(value, key) {
+                    if (key == "class") {
+                        safeAddClass($element, value);
+                        dst["class"] = (dst["class"] ? dst["class"] + " " : "") + value;
+                    } else if (key == "style") {
+                        $element.attr("style", $element.attr("style") + ";" + value);
+                    } else if (key.charAt(0) != "$" && !dst.hasOwnProperty(key)) {
+                        dst[key] = value;
+                        dstAttr[key] = srcAttr[key];
                     }
                 });
             }
-            function V(a, b, c, d, e, f, g, h) {
-                var i = [], k, l, m = b[0], n = a.shift(), q = B({}, n, {
+            function compileTemplateUrl(directives, $compileNode, tAttrs, $rootElement, childTranscludeFn, preLinkFns, postLinkFns, previousCompileContext) {
+                var linkQueue = [], afterTemplateNodeLinkFn, afterTemplateChildLinkFn, beforeTemplateCompileNode = $compileNode[0], origAsyncDirective = directives.shift(), derivedSyncDirective = extend({}, origAsyncDirective, {
                     templateUrl: null,
                     transclude: null,
                     replace: null
-                }), r = O(n.templateUrl) ? n.templateUrl(b, c) : n.templateUrl;
-                b.html("");
-                o.get(w.getTrustedResourceUrl(r), {
-                    cache: p
-                }).success(function(o) {
-                    var p, s, t;
-                    o = C(o);
-                    if (n.replace) {
-                        t = j("<div>" + U(o) + "</div>").contents();
-                        p = t[0];
-                        if (t.length != 1 || p.nodeType !== 1) {
-                            throw uc("tplrt", "Template for directive '{0}' must have exactly one root element. {1}", n.name, r);
+                }), templateUrl = isFunction(origAsyncDirective.templateUrl) ? origAsyncDirective.templateUrl($compileNode, tAttrs) : origAsyncDirective.templateUrl;
+                $compileNode.html("");
+                $http.get($sce.getTrustedResourceUrl(templateUrl), {
+                    cache: $templateCache
+                }).success(function(content) {
+                    var compileNode, tempTemplateAttrs, $template;
+                    content = denormalizeTemplate(content);
+                    if (origAsyncDirective.replace) {
+                        $template = jqLite("<div>" + trim(content) + "</div>").contents();
+                        compileNode = $template[0];
+                        if ($template.length != 1 || compileNode.nodeType !== 1) {
+                            throw $compileMinErr("tplrt", "Template for directive '{0}' must have exactly one root element. {1}", origAsyncDirective.name, templateUrl);
                         }
-                        s = {
+                        tempTemplateAttrs = {
                             $attr: {}
                         };
-                        _(d, b, p);
-                        M(p, a, s);
-                        T(c, s);
+                        replaceWith($rootElement, $compileNode, compileNode);
+                        collectDirectives(compileNode, directives, tempTemplateAttrs);
+                        mergeTemplateAttributes(tAttrs, tempTemplateAttrs);
                     } else {
-                        p = m;
-                        b.html(o);
+                        compileNode = beforeTemplateCompileNode;
+                        $compileNode.html(content);
                     }
-                    a.unshift(q);
-                    k = R(a, p, c, e, b, n, f, g, h);
-                    v(d, function(a, c) {
-                        if (a == p) {
-                            d[c] = b[0];
+                    directives.unshift(derivedSyncDirective);
+                    afterTemplateNodeLinkFn = applyDirectivesToNode(directives, compileNode, tAttrs, childTranscludeFn, $compileNode, origAsyncDirective, preLinkFns, postLinkFns, previousCompileContext);
+                    forEach($rootElement, function(node, i) {
+                        if (node == compileNode) {
+                            $rootElement[i] = $compileNode[0];
                         }
                     });
-                    l = L(b[0].childNodes, e);
-                    while (i.length) {
-                        var u = i.shift(), w = i.shift(), x = i.shift(), y = i.shift(), z = b[0];
-                        if (w !== m) {
-                            z = Pb(p);
-                            _(x, j(w), z);
+                    afterTemplateChildLinkFn = compileNodes($compileNode[0].childNodes, childTranscludeFn);
+                    while (linkQueue.length) {
+                        var scope = linkQueue.shift(), beforeTemplateLinkNode = linkQueue.shift(), linkRootElement = linkQueue.shift(), controller = linkQueue.shift(), linkNode = $compileNode[0];
+                        if (beforeTemplateLinkNode !== beforeTemplateCompileNode) {
+                            linkNode = JQLiteClone(compileNode);
+                            replaceWith(linkRootElement, jqLite(beforeTemplateLinkNode), linkNode);
                         }
-                        k(l, u, z, d, y);
+                        afterTemplateNodeLinkFn(afterTemplateChildLinkFn, scope, linkNode, $rootElement, controller);
                     }
-                    i = null;
-                }).error(function(a, b, c, d) {
-                    throw uc("tpload", "Failed to load template: {0}", d.url);
+                    linkQueue = null;
+                }).error(function(response, code, headers, config) {
+                    throw $compileMinErr("tpload", "Failed to load template: {0}", config.url);
                 });
-                return function s(a, b, c, d, e) {
-                    if (i) {
-                        i.push(b);
-                        i.push(c);
-                        i.push(d);
-                        i.push(e);
+                return function delayedNodeLinkFn(ignoreChildLinkFn, scope, node, rootElement, controller) {
+                    if (linkQueue) {
+                        linkQueue.push(scope);
+                        linkQueue.push(node);
+                        linkQueue.push(rootElement);
+                        linkQueue.push(controller);
                     } else {
-                        k(l, b, c, d, e);
+                        afterTemplateNodeLinkFn(afterTemplateChildLinkFn, scope, node, rootElement, controller);
                     }
                 };
             }
-            function W(a, b) {
-                var c = b.priority - a.priority;
-                if (c !== 0) return c;
+            function byPriority(a, b) {
+                var diff = b.priority - a.priority;
+                if (diff !== 0) return diff;
                 if (a.name !== b.name) return a.name < b.name ? -1 : 1;
                 return a.index - b.index;
             }
-            function X(a, b, c, d) {
-                if (b) {
-                    throw uc("multidir", "Multiple directives [{0}, {1}] asking for {2} on: {3}", b.name, c.name, a, lb(d));
+            function assertNoDuplicate(what, previousDirective, directive, element) {
+                if (previousDirective) {
+                    throw $compileMinErr("multidir", "Multiple directives [{0}, {1}] asking for {2} on: {3}", previousDirective.name, directive.name, what, startingTag(element));
                 }
             }
-            function Y(a, b) {
-                var c = m(b, true);
-                if (c) {
-                    a.push({
+            function addTextInterpolateDirective(directives, text) {
+                var interpolateFn = $interpolate(text, true);
+                if (interpolateFn) {
+                    directives.push({
                         priority: 0,
-                        compile: G(function d(a, b) {
-                            var d = b.parent(), e = d.data("$binding") || [];
-                            e.push(c);
-                            I(d.data("$binding", e), "ng-binding");
-                            a.$watch(c, function f(a) {
-                                b[0].nodeValue = a;
+                        compile: valueFn(function textInterpolateLinkFn(scope, node) {
+                            var parent = node.parent(), bindings = parent.data("$binding") || [];
+                            bindings.push(interpolateFn);
+                            safeAddClass(parent.data("$binding", bindings), "ng-binding");
+                            scope.$watch(interpolateFn, function interpolateFnWatchAction(value) {
+                                node[0].nodeValue = value;
                             });
                         })
                     });
                 }
             }
-            function Z(a, b) {
-                if (b == "xlinkHref" || s(a) != "IMG" && (b == "src" || b == "ngSrc")) {
-                    return w.RESOURCE_URL;
+            function getTrustedContext(node, attrNormalizedName) {
+                if (attrNormalizedName == "xlinkHref" || nodeName_(node) != "IMG" && (attrNormalizedName == "src" || attrNormalizedName == "ngSrc")) {
+                    return $sce.RESOURCE_URL;
                 }
             }
-            function $(a, b, c, d) {
-                var e = m(c, true);
-                if (!e) return;
-                if (d === "multiple" && s(a) === "SELECT") {
-                    throw uc("selmulti", "Binding to the 'multiple' attribute is not supported. Element: {0}", lb(a));
+            function addAttrInterpolateDirective(node, directives, value, name) {
+                var interpolateFn = $interpolate(value, true);
+                if (!interpolateFn) return;
+                if (name === "multiple" && nodeName_(node) === "SELECT") {
+                    throw $compileMinErr("selmulti", "Binding to the 'multiple' attribute is not supported. Element: {0}", startingTag(node));
                 }
-                b.push({
+                directives.push({
                     priority: -100,
-                    compile: G(function f(b, c, f) {
-                        var g = f.$$observers || (f.$$observers = {});
-                        if (l.test(d)) {
-                            throw uc("nodomevents", "Interpolations for HTML DOM event attributes are disallowed.  Please use the ng- " + "versions (such as ng-click instead of onclick) instead.");
+                    compile: valueFn(function attrInterpolateLinkFn(scope, element, attr) {
+                        var $$observers = attr.$$observers || (attr.$$observers = {});
+                        if (EVENT_HANDLER_ATTR_REGEXP.test(name)) {
+                            throw $compileMinErr("nodomevents", "Interpolations for HTML DOM event attributes are disallowed.  Please use the ng- " + "versions (such as ng-click instead of onclick) instead.");
                         }
-                        e = m(f[d], true, Z(a, d));
-                        if (!e) return;
-                        f[d] = e(b);
-                        (g[d] || (g[d] = [])).$$inter = true;
-                        (f.$$observers && f.$$observers[d].$$scope || b).$watch(e, function h(a) {
-                            f.$set(d, a);
+                        interpolateFn = $interpolate(attr[name], true, getTrustedContext(node, name));
+                        if (!interpolateFn) return;
+                        attr[name] = interpolateFn(scope);
+                        ($$observers[name] || ($$observers[name] = [])).$$inter = true;
+                        (attr.$$observers && attr.$$observers[name].$$scope || scope).$watch(interpolateFn, function interpolateFnWatchAction(value) {
+                            attr.$set(name, value);
                         });
                     })
                 });
             }
-            function _(a, c, d) {
-                var e = c[0], f = c.length, g = e.parentNode, h, i;
-                if (a) {
-                    for (h = 0, i = a.length; h < i; h++) {
-                        if (a[h] == e) {
-                            a[h++] = d;
-                            for (var k = h, l = k + f - 1, m = a.length; k < m; k++, l++) {
-                                if (l < m) {
-                                    a[k] = a[l];
+            function replaceWith($rootElement, elementsToRemove, newNode) {
+                var firstElementToRemove = elementsToRemove[0], removeCount = elementsToRemove.length, parent = firstElementToRemove.parentNode, i, ii;
+                if ($rootElement) {
+                    for (i = 0, ii = $rootElement.length; i < ii; i++) {
+                        if ($rootElement[i] == firstElementToRemove) {
+                            $rootElement[i++] = newNode;
+                            for (var j = i, j2 = j + removeCount - 1, jj = $rootElement.length; j < jj; j++, 
+                            j2++) {
+                                if (j2 < jj) {
+                                    $rootElement[j] = $rootElement[j2];
                                 } else {
-                                    delete a[k];
+                                    delete $rootElement[j];
                                 }
                             }
-                            a.length -= f - 1;
+                            $rootElement.length -= removeCount - 1;
                             break;
                         }
                     }
                 }
-                if (g) {
-                    g.replaceChild(d, e);
+                if (parent) {
+                    parent.replaceChild(newNode, firstElementToRemove);
                 }
-                var n = b.createDocumentFragment();
-                n.appendChild(e);
-                d[j.expando] = e[j.expando];
-                for (var o = 1, p = c.length; o < p; o++) {
-                    var q = c[o];
-                    j(q).remove();
-                    n.appendChild(q);
-                    delete c[o];
+                var fragment = document.createDocumentFragment();
+                fragment.appendChild(firstElementToRemove);
+                newNode[jqLite.expando] = firstElementToRemove[jqLite.expando];
+                for (var k = 1, kk = elementsToRemove.length; k < kk; k++) {
+                    var element = elementsToRemove[k];
+                    jqLite(element).remove();
+                    fragment.appendChild(element);
+                    delete elementsToRemove[k];
                 }
-                c[0] = d;
-                c.length = 1;
+                elementsToRemove[0] = newNode;
+                elementsToRemove.length = 1;
             }
         } ];
     }
-    var wc = /^(x[\:\-_]|data[\:\-_])/i;
-    function xc(a) {
-        return Mb(a.replace(wc, ""));
+    var PREFIX_REGEXP = /^(x[\:\-_]|data[\:\-_])/i;
+    function directiveNormalize(name) {
+        return camelCase(name.replace(PREFIX_REGEXP, ""));
     }
-    function yc(a, b, c, d) {}
-    function zc(a, b, c, d, e) {}
-    function Ac() {
-        var a = {}, b = /^(\S+)(\s+as\s+(\w+))?$/;
-        this.register = function(b, c) {
-            yb(b, "controller");
-            if (J(b)) {
-                B(a, b);
+    function nodesetLinkingFn(scope, nodeList, rootElement, boundTranscludeFn) {}
+    function directiveLinkingFn(nodesetLinkingFn, scope, node, rootElement, boundTranscludeFn) {}
+    function $ControllerProvider() {
+        var controllers = {}, CNTRL_REG = /^(\S+)(\s+as\s+(\w+))?$/;
+        this.register = function(name, constructor) {
+            assertNotHasOwnProperty(name, "controller");
+            if (isObject(name)) {
+                extend(controllers, name);
             } else {
-                a[b] = c;
+                controllers[name] = constructor;
             }
         };
-        this.$get = [ "$injector", "$window", function(c, e) {
-            return function(f, g) {
-                var h, i, j, k;
-                if (K(f)) {
-                    i = f.match(b), j = i[1], k = i[3];
-                    f = a.hasOwnProperty(j) ? a[j] : zb(g.$scope, j, true) || zb(e, j, true);
-                    xb(f, j, true);
+        this.$get = [ "$injector", "$window", function($injector, $window) {
+            return function(expression, locals) {
+                var instance, match, constructor, identifier;
+                if (isString(expression)) {
+                    match = expression.match(CNTRL_REG), constructor = match[1], identifier = match[3];
+                    expression = controllers.hasOwnProperty(constructor) ? controllers[constructor] : getter(locals.$scope, constructor, true) || getter($window, constructor, true);
+                    assertArgFn(expression, constructor, true);
                 }
-                h = c.instantiate(f, g);
-                if (k) {
-                    if (!(g && typeof g.$scope == "object")) {
-                        throw d("$controller")("noscp", "Cannot export controller '{0}' as '{1}'! No $scope object provided via `locals`.", j || f.name, k);
+                instance = $injector.instantiate(expression, locals);
+                if (identifier) {
+                    if (!(locals && typeof locals.$scope == "object")) {
+                        throw minErr("$controller")("noscp", "Cannot export controller '{0}' as '{1}'! No $scope object provided via `locals`.", constructor || expression.name, identifier);
                     }
-                    g.$scope[k] = h;
+                    locals.$scope[identifier] = instance;
                 }
-                return h;
+                return instance;
             };
         } ];
     }
-    function Bc() {
-        this.$get = [ "$window", function(a) {
-            return j(a.document);
+    function $DocumentProvider() {
+        this.$get = [ "$window", function(window) {
+            return jqLite(window.document);
         } ];
     }
-    function Cc() {
-        this.$get = [ "$log", function(a) {
-            return function(b, c) {
-                a.error.apply(a, arguments);
+    function $ExceptionHandlerProvider() {
+        this.$get = [ "$log", function($log) {
+            return function(exception, cause) {
+                $log.error.apply($log, arguments);
             };
         } ];
     }
-    function Dc(a) {
-        var b = {}, c, d, f;
-        if (!a) return b;
-        v(a.split("\n"), function(a) {
-            f = a.indexOf(":");
-            c = e(U(a.substr(0, f)));
-            d = U(a.substr(f + 1));
-            if (c) {
-                if (b[c]) {
-                    b[c] += ", " + d;
+    function parseHeaders(headers) {
+        var parsed = {}, key, val, i;
+        if (!headers) return parsed;
+        forEach(headers.split("\n"), function(line) {
+            i = line.indexOf(":");
+            key = lowercase(trim(line.substr(0, i)));
+            val = trim(line.substr(i + 1));
+            if (key) {
+                if (parsed[key]) {
+                    parsed[key] += ", " + val;
                 } else {
-                    b[c] = d;
+                    parsed[key] = val;
                 }
             }
         });
-        return b;
+        return parsed;
     }
-    function Ec(a) {
-        var b = J(a) ? a : c;
-        return function(c) {
-            if (!b) b = Dc(a);
-            if (c) {
-                return b[e(c)] || null;
+    function headersGetter(headers) {
+        var headersObj = isObject(headers) ? headers : undefined;
+        return function(name) {
+            if (!headersObj) headersObj = parseHeaders(headers);
+            if (name) {
+                return headersObj[lowercase(name)] || null;
             }
-            return b;
+            return headersObj;
         };
     }
-    function Fc(a, b, c) {
-        if (O(c)) return c(a, b);
-        v(c, function(c) {
-            a = c(a, b);
+    function transformData(data, headers, fns) {
+        if (isFunction(fns)) return fns(data, headers);
+        forEach(fns, function(fn) {
+            data = fn(data, headers);
         });
-        return a;
+        return data;
     }
-    function Gc(a) {
-        return 200 <= a && a < 300;
+    function isSuccess(status) {
+        return 200 <= status && status < 300;
     }
-    function Hc() {
-        var a = /^\s*(\[|\{[^\{])/, b = /[\}\]]\s*$/, d = /^\)\]\}',?\n/, g = {
+    function $HttpProvider() {
+        var JSON_START = /^\s*(\[|\{[^\{])/, JSON_END = /[\}\]]\s*$/, PROTECTION_PREFIX = /^\)\]\}',?\n/, CONTENT_TYPE_APPLICATION_JSON = {
             "Content-Type": "application/json;charset=utf-8"
         };
-        var h = this.defaults = {
-            transformResponse: [ function(c) {
-                if (K(c)) {
-                    c = c.replace(d, "");
-                    if (a.test(c) && b.test(c)) c = jb(c);
+        var defaults = this.defaults = {
+            transformResponse: [ function(data) {
+                if (isString(data)) {
+                    data = data.replace(PROTECTION_PREFIX, "");
+                    if (JSON_START.test(data) && JSON_END.test(data)) data = fromJson(data);
                 }
-                return c;
+                return data;
             } ],
-            transformRequest: [ function(a) {
-                return J(a) && !S(a) ? ib(a) : a;
+            transformRequest: [ function(d) {
+                return isObject(d) && !isFile(d) ? toJson(d) : d;
             } ],
             headers: {
                 common: {
                     Accept: "application/json, text/plain, */*"
                 },
-                post: g,
-                put: g,
-                patch: g
+                post: CONTENT_TYPE_APPLICATION_JSON,
+                put: CONTENT_TYPE_APPLICATION_JSON,
+                patch: CONTENT_TYPE_APPLICATION_JSON
             },
             xsrfCookieName: "XSRF-TOKEN",
             xsrfHeaderName: "X-XSRF-TOKEN"
         };
-        var i = this.interceptors = [];
-        var j = this.responseInterceptors = [];
-        this.$get = [ "$httpBackend", "$browser", "$cacheFactory", "$rootScope", "$q", "$injector", function(a, b, d, g, k, l) {
-            var m = d("$http");
-            var n = [];
-            v(i, function(a) {
-                n.unshift(K(a) ? l.get(a) : l.invoke(a));
+        var interceptorFactories = this.interceptors = [];
+        var responseInterceptorFactories = this.responseInterceptors = [];
+        this.$get = [ "$httpBackend", "$browser", "$cacheFactory", "$rootScope", "$q", "$injector", function($httpBackend, $browser, $cacheFactory, $rootScope, $q, $injector) {
+            var defaultCache = $cacheFactory("$http");
+            var reversedInterceptors = [];
+            forEach(interceptorFactories, function(interceptorFactory) {
+                reversedInterceptors.unshift(isString(interceptorFactory) ? $injector.get(interceptorFactory) : $injector.invoke(interceptorFactory));
             });
-            v(j, function(a, b) {
-                var c = K(a) ? l.get(a) : l.invoke(a);
-                n.splice(b, 0, {
-                    response: function(a) {
-                        return c(k.when(a));
+            forEach(responseInterceptorFactories, function(interceptorFactory, index) {
+                var responseFn = isString(interceptorFactory) ? $injector.get(interceptorFactory) : $injector.invoke(interceptorFactory);
+                reversedInterceptors.splice(index, 0, {
+                    response: function(response) {
+                        return responseFn($q.when(response));
                     },
-                    responseError: function(a) {
-                        return c(k.reject(a));
+                    responseError: function(response) {
+                        return responseFn($q.reject(response));
                     }
                 });
             });
-            function o(a) {
-                var d = {
-                    transformRequest: h.transformRequest,
-                    transformResponse: h.transformResponse
+            function $http(requestConfig) {
+                var config = {
+                    transformRequest: defaults.transformRequest,
+                    transformResponse: defaults.transformResponse
                 };
-                var g = s(a);
-                B(d, a);
-                d.headers = g;
-                d.method = f(d.method);
-                var i = Hd(d.url) ? b.cookies()[d.xsrfCookieName || h.xsrfCookieName] : c;
-                if (i) {
-                    g[d.xsrfHeaderName || h.xsrfHeaderName] = i;
+                var headers = mergeHeaders(requestConfig);
+                extend(config, requestConfig);
+                config.headers = headers;
+                config.method = uppercase(config.method);
+                var xsrfValue = urlIsSameOrigin(config.url) ? $browser.cookies()[config.xsrfCookieName || defaults.xsrfCookieName] : undefined;
+                if (xsrfValue) {
+                    headers[config.xsrfHeaderName || defaults.xsrfHeaderName] = xsrfValue;
                 }
-                var j = function(a) {
-                    g = a.headers;
-                    var b = Fc(a.data, Ec(g), a.transformRequest);
-                    if (H(a.data)) {
-                        v(g, function(a, b) {
-                            if (e(b) === "content-type") {
-                                delete g[b];
+                var serverRequest = function(config) {
+                    headers = config.headers;
+                    var reqData = transformData(config.data, headersGetter(headers), config.transformRequest);
+                    if (isUndefined(config.data)) {
+                        forEach(headers, function(value, header) {
+                            if (lowercase(header) === "content-type") {
+                                delete headers[header];
                             }
                         });
                     }
-                    if (H(a.withCredentials) && !H(h.withCredentials)) {
-                        a.withCredentials = h.withCredentials;
+                    if (isUndefined(config.withCredentials) && !isUndefined(defaults.withCredentials)) {
+                        config.withCredentials = defaults.withCredentials;
                     }
-                    return r(a, b, g).then(q, q);
+                    return sendReq(config, reqData, headers).then(transformResponse, transformResponse);
                 };
-                var l = [ j, c ];
-                var m = k.when(d);
-                v(n, function(a) {
-                    if (a.request || a.requestError) {
-                        l.unshift(a.request, a.requestError);
+                var chain = [ serverRequest, undefined ];
+                var promise = $q.when(config);
+                forEach(reversedInterceptors, function(interceptor) {
+                    if (interceptor.request || interceptor.requestError) {
+                        chain.unshift(interceptor.request, interceptor.requestError);
                     }
-                    if (a.response || a.responseError) {
-                        l.push(a.response, a.responseError);
+                    if (interceptor.response || interceptor.responseError) {
+                        chain.push(interceptor.response, interceptor.responseError);
                     }
                 });
-                while (l.length) {
-                    var o = l.shift();
-                    var p = l.shift();
-                    m = m.then(o, p);
+                while (chain.length) {
+                    var thenFn = chain.shift();
+                    var rejectFn = chain.shift();
+                    promise = promise.then(thenFn, rejectFn);
                 }
-                m.success = function(a) {
-                    m.then(function(b) {
-                        a(b.data, b.status, b.headers, d);
+                promise.success = function(fn) {
+                    promise.then(function(response) {
+                        fn(response.data, response.status, response.headers, config);
                     });
-                    return m;
+                    return promise;
                 };
-                m.error = function(a) {
-                    m.then(null, function(b) {
-                        a(b.data, b.status, b.headers, d);
+                promise.error = function(fn) {
+                    promise.then(null, function(response) {
+                        fn(response.data, response.status, response.headers, config);
                     });
-                    return m;
+                    return promise;
                 };
-                return m;
-                function q(a) {
-                    var b = B({}, a, {
-                        data: Fc(a.data, a.headers, d.transformResponse)
+                return promise;
+                function transformResponse(response) {
+                    var resp = extend({}, response, {
+                        data: transformData(response.data, response.headers, config.transformResponse)
                     });
-                    return Gc(a.status) ? b : k.reject(b);
+                    return isSuccess(response.status) ? resp : $q.reject(resp);
                 }
-                function s(a) {
-                    var b = h.headers, c = B({}, a.headers), d, f, g;
-                    b = B({}, b.common, b[e(a.method)]);
-                    i(b);
-                    i(c);
-                    a: for (d in b) {
-                        f = e(d);
-                        for (g in c) {
-                            if (e(g) === f) {
-                                continue a;
+                function mergeHeaders(config) {
+                    var defHeaders = defaults.headers, reqHeaders = extend({}, config.headers), defHeaderName, lowercaseDefHeaderName, reqHeaderName;
+                    defHeaders = extend({}, defHeaders.common, defHeaders[lowercase(config.method)]);
+                    execHeaders(defHeaders);
+                    execHeaders(reqHeaders);
+                    defaultHeadersIteration: for (defHeaderName in defHeaders) {
+                        lowercaseDefHeaderName = lowercase(defHeaderName);
+                        for (reqHeaderName in reqHeaders) {
+                            if (lowercase(reqHeaderName) === lowercaseDefHeaderName) {
+                                continue defaultHeadersIteration;
                             }
                         }
-                        c[d] = b[d];
+                        reqHeaders[defHeaderName] = defHeaders[defHeaderName];
                     }
-                    return c;
-                    function i(a) {
-                        var b;
-                        v(a, function(c, d) {
-                            if (O(c)) {
-                                b = c();
-                                if (b != null) {
-                                    a[d] = b;
+                    return reqHeaders;
+                    function execHeaders(headers) {
+                        var headerContent;
+                        forEach(headers, function(headerFn, header) {
+                            if (isFunction(headerFn)) {
+                                headerContent = headerFn();
+                                if (headerContent != null) {
+                                    headers[header] = headerContent;
                                 } else {
-                                    delete a[d];
+                                    delete headers[header];
                                 }
                             }
                         });
                     }
                 }
             }
-            o.pendingRequests = [];
-            p("get", "delete", "head", "jsonp");
-            q("post", "put");
-            o.defaults = h;
-            return o;
-            function p(a) {
-                v(arguments, function(a) {
-                    o[a] = function(b, c) {
-                        return o(B(c || {}, {
-                            method: a,
-                            url: b
+            $http.pendingRequests = [];
+            createShortMethods("get", "delete", "head", "jsonp");
+            createShortMethodsWithData("post", "put");
+            $http.defaults = defaults;
+            return $http;
+            function createShortMethods(names) {
+                forEach(arguments, function(name) {
+                    $http[name] = function(url, config) {
+                        return $http(extend(config || {}, {
+                            method: name,
+                            url: url
                         }));
                     };
                 });
             }
-            function q(a) {
-                v(arguments, function(a) {
-                    o[a] = function(b, c, d) {
-                        return o(B(d || {}, {
-                            method: a,
-                            url: b,
-                            data: c
+            function createShortMethodsWithData(name) {
+                forEach(arguments, function(name) {
+                    $http[name] = function(url, data, config) {
+                        return $http(extend(config || {}, {
+                            method: name,
+                            url: url,
+                            data: data
                         }));
                     };
                 });
             }
-            function r(b, c, d) {
-                var e = k.defer(), f = e.promise, i, j, l = s(b.url, b.params);
-                o.pendingRequests.push(b);
-                f.then(q, q);
-                if ((b.cache || h.cache) && b.cache !== false && b.method == "GET") {
-                    i = J(b.cache) ? b.cache : J(h.cache) ? h.cache : m;
+            function sendReq(config, reqData, reqHeaders) {
+                var deferred = $q.defer(), promise = deferred.promise, cache, cachedResp, url = buildUrl(config.url, config.params);
+                $http.pendingRequests.push(config);
+                promise.then(removePendingReq, removePendingReq);
+                if ((config.cache || defaults.cache) && config.cache !== false && config.method == "GET") {
+                    cache = isObject(config.cache) ? config.cache : isObject(defaults.cache) ? defaults.cache : defaultCache;
                 }
-                if (i) {
-                    j = i.get(l);
-                    if (I(j)) {
-                        if (j.then) {
-                            j.then(q, q);
-                            return j;
+                if (cache) {
+                    cachedResp = cache.get(url);
+                    if (isDefined(cachedResp)) {
+                        if (cachedResp.then) {
+                            cachedResp.then(removePendingReq, removePendingReq);
+                            return cachedResp;
                         } else {
-                            if (N(j)) {
-                                p(j[1], j[0], bb(j[2]));
+                            if (isArray(cachedResp)) {
+                                resolvePromise(cachedResp[1], cachedResp[0], copy(cachedResp[2]));
                             } else {
-                                p(j, 200, {});
+                                resolvePromise(cachedResp, 200, {});
                             }
                         }
                     } else {
-                        i.put(l, f);
+                        cache.put(url, promise);
                     }
                 }
-                if (H(j)) {
-                    a(b.method, l, c, n, d, b.timeout, b.withCredentials, b.responseType);
+                if (isUndefined(cachedResp)) {
+                    $httpBackend(config.method, url, reqData, done, reqHeaders, config.timeout, config.withCredentials, config.responseType);
                 }
-                return f;
-                function n(a, b, c) {
-                    if (i) {
-                        if (Gc(a)) {
-                            i.put(l, [ a, b, Dc(c) ]);
+                return promise;
+                function done(status, response, headersString) {
+                    if (cache) {
+                        if (isSuccess(status)) {
+                            cache.put(url, [ status, response, parseHeaders(headersString) ]);
                         } else {
-                            i.remove(l);
+                            cache.remove(url);
                         }
                     }
-                    p(b, a, c);
-                    if (!g.$$phase) g.$apply();
+                    resolvePromise(response, status, headersString);
+                    if (!$rootScope.$$phase) $rootScope.$apply();
                 }
-                function p(a, c, d) {
-                    c = Math.max(c, 0);
-                    (Gc(c) ? e.resolve : e.reject)({
-                        data: a,
-                        status: c,
-                        headers: Ec(d),
-                        config: b
+                function resolvePromise(response, status, headers) {
+                    status = Math.max(status, 0);
+                    (isSuccess(status) ? deferred.resolve : deferred.reject)({
+                        data: response,
+                        status: status,
+                        headers: headersGetter(headers),
+                        config: config
                     });
                 }
-                function q() {
-                    var a = $(o.pendingRequests, b);
-                    if (a !== -1) o.pendingRequests.splice(a, 1);
+                function removePendingReq() {
+                    var idx = indexOf($http.pendingRequests, config);
+                    if (idx !== -1) $http.pendingRequests.splice(idx, 1);
                 }
             }
-            function s(a, b) {
-                if (!b) return a;
-                var d = [];
-                x(b, function(a, b) {
-                    if (a == null || a == c) return;
-                    if (!N(a)) a = [ a ];
-                    v(a, function(a) {
-                        if (J(a)) {
-                            a = ib(a);
+            function buildUrl(url, params) {
+                if (!params) return url;
+                var parts = [];
+                forEachSorted(params, function(value, key) {
+                    if (value == null || value == undefined) return;
+                    if (!isArray(value)) value = [ value ];
+                    forEach(value, function(v) {
+                        if (isObject(v)) {
+                            v = toJson(v);
                         }
-                        d.push(qb(b) + "=" + qb(a));
+                        parts.push(encodeUriQuery(key) + "=" + encodeUriQuery(v));
                     });
                 });
-                return a + (a.indexOf("?") == -1 ? "?" : "&") + d.join("&");
+                return url + (url.indexOf("?") == -1 ? "?" : "&") + parts.join("&");
             }
         } ];
     }
-    var Ic = a.XMLHttpRequest || function() {
+    var XHR = window.XMLHttpRequest || function() {
         try {
             return new ActiveXObject("Msxml2.XMLHTTP.6.0");
-        } catch (a) {}
+        } catch (e1) {}
         try {
             return new ActiveXObject("Msxml2.XMLHTTP.3.0");
-        } catch (b) {}
+        } catch (e2) {}
         try {
             return new ActiveXObject("Msxml2.XMLHTTP");
-        } catch (c) {}
-        throw d("$httpBackend")("noxhr", "This browser does not support XMLHttpRequest.");
+        } catch (e3) {}
+        throw minErr("$httpBackend")("noxhr", "This browser does not support XMLHttpRequest.");
     };
-    function Jc() {
-        this.$get = [ "$browser", "$window", "$document", function(a, b, c) {
-            return Kc(a, Ic, a.defer, b.angular.callbacks, c[0], b.location.protocol.replace(":", ""));
+    function $HttpBackendProvider() {
+        this.$get = [ "$browser", "$window", "$document", function($browser, $window, $document) {
+            return createHttpBackend($browser, XHR, $browser.defer, $window.angular.callbacks, $document[0], $window.location.protocol.replace(":", ""));
         } ];
     }
-    function Kc(a, b, c, d, f, g) {
-        return function(f, i, j, k, l, m, n, o) {
-            var p;
-            a.$$incOutstandingRequestCount();
-            i = i || a.url();
-            if (e(f) == "jsonp") {
-                var q = "_" + (d.counter++).toString(36);
-                d[q] = function(a) {
-                    d[q].data = a;
+    function createHttpBackend($browser, XHR, $browserDefer, callbacks, rawDocument, locationProtocol) {
+        return function(method, url, post, callback, headers, timeout, withCredentials, responseType) {
+            var status;
+            $browser.$$incOutstandingRequestCount();
+            url = url || $browser.url();
+            if (lowercase(method) == "jsonp") {
+                var callbackId = "_" + (callbacks.counter++).toString(36);
+                callbacks[callbackId] = function(data) {
+                    callbacks[callbackId].data = data;
                 };
-                var r = h(i.replace("JSON_CALLBACK", "angular.callbacks." + q), function() {
-                    if (d[q].data) {
-                        w(k, 200, d[q].data);
+                var jsonpDone = jsonpReq(url.replace("JSON_CALLBACK", "angular.callbacks." + callbackId), function() {
+                    if (callbacks[callbackId].data) {
+                        completeRequest(callback, 200, callbacks[callbackId].data);
                     } else {
-                        w(k, p || -2);
+                        completeRequest(callback, status || -2);
                     }
-                    delete d[q];
+                    delete callbacks[callbackId];
                 });
             } else {
-                var s = new b();
-                s.open(f, i, true);
-                v(l, function(a, b) {
-                    if (I(a)) {
-                        s.setRequestHeader(b, a);
+                var xhr = new XHR();
+                xhr.open(method, url, true);
+                forEach(headers, function(value, key) {
+                    if (isDefined(value)) {
+                        xhr.setRequestHeader(key, value);
                     }
                 });
-                s.onreadystatechange = function() {
-                    if (s.readyState == 4) {
-                        var a = s.getAllResponseHeaders();
-                        w(k, p || s.status, s.responseType ? s.response : s.responseText, a);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4) {
+                        var responseHeaders = xhr.getAllResponseHeaders();
+                        completeRequest(callback, status || xhr.status, xhr.responseType ? xhr.response : xhr.responseText, responseHeaders);
                     }
                 };
-                if (n) {
-                    s.withCredentials = true;
+                if (withCredentials) {
+                    xhr.withCredentials = true;
                 }
-                if (o) {
-                    s.responseType = o;
+                if (responseType) {
+                    xhr.responseType = responseType;
                 }
-                s.send(j || null);
+                xhr.send(post || null);
             }
-            if (m > 0) {
-                var t = c(u, m);
-            } else if (m && m.then) {
-                m.then(u);
+            if (timeout > 0) {
+                var timeoutId = $browserDefer(timeoutRequest, timeout);
+            } else if (timeout && timeout.then) {
+                timeout.then(timeoutRequest);
             }
-            function u() {
-                p = -1;
-                r && r();
-                s && s.abort();
+            function timeoutRequest() {
+                status = -1;
+                jsonpDone && jsonpDone();
+                xhr && xhr.abort();
             }
-            function w(b, d, e, f) {
-                var h = g || Gd(i).protocol;
-                t && c.cancel(t);
-                r = s = null;
-                d = h == "file" ? e ? 200 : 404 : d;
-                d = d == 1223 ? 204 : d;
-                b(d, e, f);
-                a.$$completeOutstandingRequest(E);
+            function completeRequest(callback, status, response, headersString) {
+                var protocol = locationProtocol || urlResolve(url).protocol;
+                timeoutId && $browserDefer.cancel(timeoutId);
+                jsonpDone = xhr = null;
+                status = protocol == "file" ? response ? 200 : 404 : status;
+                status = status == 1223 ? 204 : status;
+                callback(status, response, headersString);
+                $browser.$$completeOutstandingRequest(noop);
             }
         };
-        function h(a, b) {
-            var c = f.createElement("script"), d = function() {
-                f.body.removeChild(c);
-                if (b) b();
+        function jsonpReq(url, done) {
+            var script = rawDocument.createElement("script"), doneWrapper = function() {
+                rawDocument.body.removeChild(script);
+                if (done) done();
             };
-            c.type = "text/javascript";
-            c.src = a;
-            if (i) {
-                c.onreadystatechange = function() {
-                    if (/loaded|complete/.test(c.readyState)) d();
+            script.type = "text/javascript";
+            script.src = url;
+            if (msie) {
+                script.onreadystatechange = function() {
+                    if (/loaded|complete/.test(script.readyState)) doneWrapper();
                 };
             } else {
-                c.onload = c.onerror = d;
+                script.onload = script.onerror = doneWrapper;
             }
-            f.body.appendChild(c);
-            return d;
+            rawDocument.body.appendChild(script);
+            return doneWrapper;
         }
     }
-    var Lc = d("$interpolate");
-    function Mc() {
-        var a = "{{";
-        var b = "}}";
-        this.startSymbol = function(b) {
-            if (b) {
-                a = b;
+    var $interpolateMinErr = minErr("$interpolate");
+    function $InterpolateProvider() {
+        var startSymbol = "{{";
+        var endSymbol = "}}";
+        this.startSymbol = function(value) {
+            if (value) {
+                startSymbol = value;
                 return this;
             } else {
-                return a;
+                return startSymbol;
             }
         };
-        this.endSymbol = function(a) {
-            if (a) {
-                b = a;
+        this.endSymbol = function(value) {
+            if (value) {
+                endSymbol = value;
                 return this;
             } else {
-                return b;
+                return endSymbol;
             }
         };
-        this.$get = [ "$parse", "$exceptionHandler", "$sce", function(d, e, f) {
-            var g = a.length, h = b.length;
-            function i(i, j, k) {
-                var l, m, n = 0, o = [], p = i.length, q = false, r, s, t = [];
-                while (n < p) {
-                    if ((l = i.indexOf(a, n)) != -1 && (m = i.indexOf(b, l + g)) != -1) {
-                        n != l && o.push(i.substring(n, l));
-                        o.push(r = d(s = i.substring(l + g, m)));
-                        r.exp = s;
-                        n = m + h;
-                        q = true;
+        this.$get = [ "$parse", "$exceptionHandler", "$sce", function($parse, $exceptionHandler, $sce) {
+            var startSymbolLength = startSymbol.length, endSymbolLength = endSymbol.length;
+            function $interpolate(text, mustHaveExpression, trustedContext) {
+                var startIndex, endIndex, index = 0, parts = [], length = text.length, hasInterpolation = false, fn, exp, concat = [];
+                while (index < length) {
+                    if ((startIndex = text.indexOf(startSymbol, index)) != -1 && (endIndex = text.indexOf(endSymbol, startIndex + startSymbolLength)) != -1) {
+                        index != startIndex && parts.push(text.substring(index, startIndex));
+                        parts.push(fn = $parse(exp = text.substring(startIndex + startSymbolLength, endIndex)));
+                        fn.exp = exp;
+                        index = endIndex + endSymbolLength;
+                        hasInterpolation = true;
                     } else {
-                        n != p && o.push(i.substring(n));
-                        n = p;
+                        index != length && parts.push(text.substring(index));
+                        index = length;
                     }
                 }
-                if (!(p = o.length)) {
-                    o.push("");
-                    p = 1;
+                if (!(length = parts.length)) {
+                    parts.push("");
+                    length = 1;
                 }
-                if (k && o.length > 1) {
-                    throw Lc("noconcat", "Error while interpolating: {0}\nStrict Contextual Escaping disallows " + "interpolations that concatenate multiple expressions when a trusted value is " + "required.  See http://docs.angularjs.org/api/ng.$sce", i);
+                if (trustedContext && parts.length > 1) {
+                    throw $interpolateMinErr("noconcat", "Error while interpolating: {0}\nStrict Contextual Escaping disallows " + "interpolations that concatenate multiple expressions when a trusted value is " + "required.  See http://docs.angularjs.org/api/ng.$sce", text);
                 }
-                if (!j || q) {
-                    t.length = p;
-                    r = function(a) {
+                if (!mustHaveExpression || hasInterpolation) {
+                    concat.length = length;
+                    fn = function(context) {
                         try {
-                            for (var b = 0, d = p, g; b < d; b++) {
-                                if (typeof (g = o[b]) == "function") {
-                                    g = g(a);
-                                    if (k) {
-                                        g = f.getTrusted(k, g);
+                            for (var i = 0, ii = length, part; i < ii; i++) {
+                                if (typeof (part = parts[i]) == "function") {
+                                    part = part(context);
+                                    if (trustedContext) {
+                                        part = $sce.getTrusted(trustedContext, part);
                                     } else {
-                                        g = f.valueOf(g);
+                                        part = $sce.valueOf(part);
                                     }
-                                    if (g == null || g == c) {
-                                        g = "";
-                                    } else if (typeof g != "string") {
-                                        g = ib(g);
+                                    if (part == null || part == undefined) {
+                                        part = "";
+                                    } else if (typeof part != "string") {
+                                        part = toJson(part);
                                     }
                                 }
-                                t[b] = g;
+                                concat[i] = part;
                             }
-                            return t.join("");
-                        } catch (h) {
-                            var j = Lc("interr", "Can't interpolate: {0}\n{1}", i, h.toString());
-                            e(j);
+                            return concat.join("");
+                        } catch (err) {
+                            var newErr = $interpolateMinErr("interr", "Can't interpolate: {0}\n{1}", text, err.toString());
+                            $exceptionHandler(newErr);
                         }
                     };
-                    r.exp = i;
-                    r.parts = o;
-                    return r;
+                    fn.exp = text;
+                    fn.parts = parts;
+                    return fn;
                 }
             }
-            i.startSymbol = function() {
-                return a;
+            $interpolate.startSymbol = function() {
+                return startSymbol;
             };
-            i.endSymbol = function() {
-                return b;
+            $interpolate.endSymbol = function() {
+                return endSymbol;
             };
-            return i;
+            return $interpolate;
         } ];
     }
-    function Nc() {
-        this.$get = [ "$rootScope", "$window", "$q", function(a, b, c) {
-            var d = {};
-            function e(e, f, g, h) {
-                var i = b.setInterval, j = b.clearInterval;
-                var k = c.defer(), l = k.promise, g = I(g) ? g : 0, m = 0, n = I(h) && !h;
-                l.then(null, null, e);
-                l.$$intervalId = i(function o() {
-                    k.notify(m++);
-                    if (g > 0 && m >= g) {
-                        k.resolve(m);
-                        j(l.$$intervalId);
-                        delete d[l.$$intervalId];
+    function $IntervalProvider() {
+        this.$get = [ "$rootScope", "$window", "$q", function($rootScope, $window, $q) {
+            var intervals = {};
+            function interval(fn, delay, count, invokeApply) {
+                var setInterval = $window.setInterval, clearInterval = $window.clearInterval;
+                var deferred = $q.defer(), promise = deferred.promise, count = isDefined(count) ? count : 0, iteration = 0, skipApply = isDefined(invokeApply) && !invokeApply;
+                promise.then(null, null, fn);
+                promise.$$intervalId = setInterval(function tick() {
+                    deferred.notify(iteration++);
+                    if (count > 0 && iteration >= count) {
+                        deferred.resolve(iteration);
+                        clearInterval(promise.$$intervalId);
+                        delete intervals[promise.$$intervalId];
                     }
-                    if (!n) a.$apply();
-                }, f);
-                d[l.$$intervalId] = k;
-                return l;
+                    if (!skipApply) $rootScope.$apply();
+                }, delay);
+                intervals[promise.$$intervalId] = deferred;
+                return promise;
             }
-            e.cancel = function(a) {
-                if (a && a.$$intervalId in d) {
-                    d[a.$$intervalId].reject("canceled");
-                    clearInterval(a.$$intervalId);
-                    delete d[a.$$intervalId];
+            interval.cancel = function(promise) {
+                if (promise && promise.$$intervalId in intervals) {
+                    intervals[promise.$$intervalId].reject("canceled");
+                    clearInterval(promise.$$intervalId);
+                    delete intervals[promise.$$intervalId];
                     return true;
                 }
                 return false;
             };
-            return e;
+            return interval;
         } ];
     }
-    function Oc() {
+    function $LocaleProvider() {
         this.$get = function() {
             return {
                 id: "en-us",
@@ -3229,8 +3230,8 @@
                     mediumTime: "h:mm:ss a",
                     shortTime: "h:mm a"
                 },
-                pluralCat: function(a) {
-                    if (a === 1) {
+                pluralCat: function(num) {
+                    if (num === 1) {
                         return "one";
                     }
                     return "other";
@@ -3238,348 +3239,348 @@
             };
         };
     }
-    var Pc = /^([^\?#]*)(\?([^#]*))?(#(.*))?$/, Qc = {
+    var PATH_MATCH = /^([^\?#]*)(\?([^#]*))?(#(.*))?$/, DEFAULT_PORTS = {
         http: 80,
         https: 443,
         ftp: 21
     };
-    var Rc = d("$location");
-    function Sc(a) {
-        var b = a.split("/"), c = b.length;
-        while (c--) {
-            b[c] = pb(b[c]);
+    var $locationMinErr = minErr("$location");
+    function encodePath(path) {
+        var segments = path.split("/"), i = segments.length;
+        while (i--) {
+            segments[i] = encodeUriSegment(segments[i]);
         }
-        return b.join("/");
+        return segments.join("/");
     }
-    function Tc(a, b) {
-        var c = Gd(a);
-        b.$$protocol = c.protocol;
-        b.$$host = c.hostname;
-        b.$$port = C(c.port) || Qc[c.protocol] || null;
+    function parseAbsoluteUrl(absoluteUrl, locationObj) {
+        var parsedUrl = urlResolve(absoluteUrl);
+        locationObj.$$protocol = parsedUrl.protocol;
+        locationObj.$$host = parsedUrl.hostname;
+        locationObj.$$port = int(parsedUrl.port) || DEFAULT_PORTS[parsedUrl.protocol] || null;
     }
-    function Uc(a, b) {
-        var c = a.charAt(0) !== "/";
-        if (c) {
-            a = "/" + a;
+    function parseAppUrl(relativeUrl, locationObj) {
+        var prefixed = relativeUrl.charAt(0) !== "/";
+        if (prefixed) {
+            relativeUrl = "/" + relativeUrl;
         }
-        var d = Gd(a);
-        b.$$path = decodeURIComponent(c && d.pathname.charAt(0) === "/" ? d.pathname.substring(1) : d.pathname);
-        b.$$search = nb(d.search);
-        b.$$hash = decodeURIComponent(d.hash);
-        if (b.$$path && b.$$path.charAt(0) != "/") b.$$path = "/" + b.$$path;
+        var match = urlResolve(relativeUrl);
+        locationObj.$$path = decodeURIComponent(prefixed && match.pathname.charAt(0) === "/" ? match.pathname.substring(1) : match.pathname);
+        locationObj.$$search = parseKeyValue(match.search);
+        locationObj.$$hash = decodeURIComponent(match.hash);
+        if (locationObj.$$path && locationObj.$$path.charAt(0) != "/") locationObj.$$path = "/" + locationObj.$$path;
     }
-    function Vc(a, b) {
-        if (b.indexOf(a) == 0) {
-            return b.substr(a.length);
+    function beginsWith(begin, whole) {
+        if (whole.indexOf(begin) == 0) {
+            return whole.substr(begin.length);
         }
     }
-    function Wc(a) {
-        var b = a.indexOf("#");
-        return b == -1 ? a : a.substr(0, b);
+    function stripHash(url) {
+        var index = url.indexOf("#");
+        return index == -1 ? url : url.substr(0, index);
     }
-    function Xc(a) {
-        return a.substr(0, Wc(a).lastIndexOf("/") + 1);
+    function stripFile(url) {
+        return url.substr(0, stripHash(url).lastIndexOf("/") + 1);
     }
-    function Yc(a) {
-        return a.substring(0, a.indexOf("/", a.indexOf("//") + 2));
+    function serverBase(url) {
+        return url.substring(0, url.indexOf("/", url.indexOf("//") + 2));
     }
-    function Zc(a, b) {
+    function LocationHtml5Url(appBase, basePrefix) {
         this.$$html5 = true;
-        b = b || "";
-        var d = Xc(a);
-        Tc(a, this);
-        this.$$parse = function(a) {
-            var b = Vc(d, a);
-            if (!K(b)) {
-                throw Rc("ipthprfx", 'Invalid url "{0}", missing path prefix "{1}".', a, d);
+        basePrefix = basePrefix || "";
+        var appBaseNoFile = stripFile(appBase);
+        parseAbsoluteUrl(appBase, this);
+        this.$$parse = function(url) {
+            var pathUrl = beginsWith(appBaseNoFile, url);
+            if (!isString(pathUrl)) {
+                throw $locationMinErr("ipthprfx", 'Invalid url "{0}", missing path prefix "{1}".', url, appBaseNoFile);
             }
-            Uc(b, this);
+            parseAppUrl(pathUrl, this);
             if (!this.$$path) {
                 this.$$path = "/";
             }
             this.$$compose();
         };
         this.$$compose = function() {
-            var a = ob(this.$$search), b = this.$$hash ? "#" + pb(this.$$hash) : "";
-            this.$$url = Sc(this.$$path) + (a ? "?" + a : "") + b;
-            this.$$absUrl = d + this.$$url.substr(1);
+            var search = toKeyValue(this.$$search), hash = this.$$hash ? "#" + encodeUriSegment(this.$$hash) : "";
+            this.$$url = encodePath(this.$$path) + (search ? "?" + search : "") + hash;
+            this.$$absUrl = appBaseNoFile + this.$$url.substr(1);
         };
-        this.$$rewrite = function(e) {
-            var f, g;
-            if ((f = Vc(a, e)) !== c) {
-                g = f;
-                if ((f = Vc(b, f)) !== c) {
-                    return d + (Vc("/", f) || f);
+        this.$$rewrite = function(url) {
+            var appUrl, prevAppUrl;
+            if ((appUrl = beginsWith(appBase, url)) !== undefined) {
+                prevAppUrl = appUrl;
+                if ((appUrl = beginsWith(basePrefix, appUrl)) !== undefined) {
+                    return appBaseNoFile + (beginsWith("/", appUrl) || appUrl);
                 } else {
-                    return a + g;
+                    return appBase + prevAppUrl;
                 }
-            } else if ((f = Vc(d, e)) !== c) {
-                return d + f;
-            } else if (d == e + "/") {
-                return d;
+            } else if ((appUrl = beginsWith(appBaseNoFile, url)) !== undefined) {
+                return appBaseNoFile + appUrl;
+            } else if (appBaseNoFile == url + "/") {
+                return appBaseNoFile;
             }
         };
     }
-    function $c(a, b) {
-        var c = Xc(a);
-        Tc(a, this);
-        this.$$parse = function(d) {
-            var e = Vc(a, d) || Vc(c, d);
-            var f = e.charAt(0) == "#" ? Vc(b, e) : this.$$html5 ? e : "";
-            if (!K(f)) {
-                throw Rc("ihshprfx", 'Invalid url "{0}", missing hash prefix "{1}".', d, b);
+    function LocationHashbangUrl(appBase, hashPrefix) {
+        var appBaseNoFile = stripFile(appBase);
+        parseAbsoluteUrl(appBase, this);
+        this.$$parse = function(url) {
+            var withoutBaseUrl = beginsWith(appBase, url) || beginsWith(appBaseNoFile, url);
+            var withoutHashUrl = withoutBaseUrl.charAt(0) == "#" ? beginsWith(hashPrefix, withoutBaseUrl) : this.$$html5 ? withoutBaseUrl : "";
+            if (!isString(withoutHashUrl)) {
+                throw $locationMinErr("ihshprfx", 'Invalid url "{0}", missing hash prefix "{1}".', url, hashPrefix);
             }
-            Uc(f, this);
+            parseAppUrl(withoutHashUrl, this);
             this.$$compose();
         };
         this.$$compose = function() {
-            var c = ob(this.$$search), d = this.$$hash ? "#" + pb(this.$$hash) : "";
-            this.$$url = Sc(this.$$path) + (c ? "?" + c : "") + d;
-            this.$$absUrl = a + (this.$$url ? b + this.$$url : "");
+            var search = toKeyValue(this.$$search), hash = this.$$hash ? "#" + encodeUriSegment(this.$$hash) : "";
+            this.$$url = encodePath(this.$$path) + (search ? "?" + search : "") + hash;
+            this.$$absUrl = appBase + (this.$$url ? hashPrefix + this.$$url : "");
         };
-        this.$$rewrite = function(b) {
-            if (Wc(a) == Wc(b)) {
-                return b;
+        this.$$rewrite = function(url) {
+            if (stripHash(appBase) == stripHash(url)) {
+                return url;
             }
         };
     }
-    function _c(a, b) {
+    function LocationHashbangInHtml5Url(appBase, hashPrefix) {
         this.$$html5 = true;
-        $c.apply(this, arguments);
-        var c = Xc(a);
-        this.$$rewrite = function(d) {
-            var e;
-            if (a == Wc(d)) {
-                return d;
-            } else if (e = Vc(c, d)) {
-                return a + b + e;
-            } else if (c === d + "/") {
-                return c;
+        LocationHashbangUrl.apply(this, arguments);
+        var appBaseNoFile = stripFile(appBase);
+        this.$$rewrite = function(url) {
+            var appUrl;
+            if (appBase == stripHash(url)) {
+                return url;
+            } else if (appUrl = beginsWith(appBaseNoFile, url)) {
+                return appBase + hashPrefix + appUrl;
+            } else if (appBaseNoFile === url + "/") {
+                return appBaseNoFile;
             }
         };
     }
-    _c.prototype = $c.prototype = Zc.prototype = {
+    LocationHashbangInHtml5Url.prototype = LocationHashbangUrl.prototype = LocationHtml5Url.prototype = {
         $$html5: false,
         $$replace: false,
-        absUrl: ad("$$absUrl"),
-        url: function(a, b) {
-            if (H(a)) return this.$$url;
-            var c = Pc.exec(a);
-            if (c[1]) this.path(decodeURIComponent(c[1]));
-            if (c[2] || c[1]) this.search(c[3] || "");
-            this.hash(c[5] || "", b);
+        absUrl: locationGetter("$$absUrl"),
+        url: function(url, replace) {
+            if (isUndefined(url)) return this.$$url;
+            var match = PATH_MATCH.exec(url);
+            if (match[1]) this.path(decodeURIComponent(match[1]));
+            if (match[2] || match[1]) this.search(match[3] || "");
+            this.hash(match[5] || "", replace);
             return this;
         },
-        protocol: ad("$$protocol"),
-        host: ad("$$host"),
-        port: ad("$$port"),
-        path: bd("$$path", function(a) {
-            return a.charAt(0) == "/" ? a : "/" + a;
+        protocol: locationGetter("$$protocol"),
+        host: locationGetter("$$host"),
+        port: locationGetter("$$port"),
+        path: locationGetterSetter("$$path", function(path) {
+            return path.charAt(0) == "/" ? path : "/" + path;
         }),
-        search: function(a, b) {
+        search: function(search, paramValue) {
             switch (arguments.length) {
               case 0:
                 return this.$$search;
 
               case 1:
-                if (K(a)) {
-                    this.$$search = nb(a);
-                } else if (J(a)) {
-                    this.$$search = a;
+                if (isString(search)) {
+                    this.$$search = parseKeyValue(search);
+                } else if (isObject(search)) {
+                    this.$$search = search;
                 } else {
-                    throw Rc("isrcharg", "The first argument of the `$location#search()` call must be a string or an object.");
+                    throw $locationMinErr("isrcharg", "The first argument of the `$location#search()` call must be a string or an object.");
                 }
                 break;
 
               default:
-                if (b == c || b == null) {
-                    delete this.$$search[a];
+                if (paramValue == undefined || paramValue == null) {
+                    delete this.$$search[search];
                 } else {
-                    this.$$search[a] = b;
+                    this.$$search[search] = paramValue;
                 }
             }
             this.$$compose();
             return this;
         },
-        hash: bd("$$hash", F),
+        hash: locationGetterSetter("$$hash", identity),
         replace: function() {
             this.$$replace = true;
             return this;
         }
     };
-    function ad(a) {
+    function locationGetter(property) {
         return function() {
-            return this[a];
+            return this[property];
         };
     }
-    function bd(a, b) {
-        return function(c) {
-            if (H(c)) return this[a];
-            this[a] = b(c);
+    function locationGetterSetter(property, preprocess) {
+        return function(value) {
+            if (isUndefined(value)) return this[property];
+            this[property] = preprocess(value);
             this.$$compose();
             return this;
         };
     }
-    function cd() {
-        var b = "", c = false;
-        this.hashPrefix = function(a) {
-            if (I(a)) {
-                b = a;
+    function $LocationProvider() {
+        var hashPrefix = "", html5Mode = false;
+        this.hashPrefix = function(prefix) {
+            if (isDefined(prefix)) {
+                hashPrefix = prefix;
                 return this;
             } else {
-                return b;
+                return hashPrefix;
             }
         };
-        this.html5Mode = function(a) {
-            if (I(a)) {
-                c = a;
+        this.html5Mode = function(mode) {
+            if (isDefined(mode)) {
+                html5Mode = mode;
                 return this;
             } else {
-                return c;
+                return html5Mode;
             }
         };
-        this.$get = [ "$rootScope", "$browser", "$sniffer", "$rootElement", function(d, f, g, h) {
-            var i, k, l = f.baseHref(), m = f.url(), n;
-            if (c) {
-                n = Yc(m) + (l || "/");
-                k = g.history ? Zc : _c;
+        this.$get = [ "$rootScope", "$browser", "$sniffer", "$rootElement", function($rootScope, $browser, $sniffer, $rootElement) {
+            var $location, LocationMode, baseHref = $browser.baseHref(), initialUrl = $browser.url(), appBase;
+            if (html5Mode) {
+                appBase = serverBase(initialUrl) + (baseHref || "/");
+                LocationMode = $sniffer.history ? LocationHtml5Url : LocationHashbangInHtml5Url;
             } else {
-                n = Wc(m);
-                k = $c;
+                appBase = stripHash(initialUrl);
+                LocationMode = LocationHashbangUrl;
             }
-            i = new k(n, "#" + b);
-            i.$$parse(i.$$rewrite(m));
-            h.on("click", function(b) {
-                if (b.ctrlKey || b.metaKey || b.which == 2) return;
-                var c = j(b.target);
-                while (e(c[0].nodeName) !== "a") {
-                    if (c[0] === h[0] || !(c = c.parent())[0]) return;
+            $location = new LocationMode(appBase, "#" + hashPrefix);
+            $location.$$parse($location.$$rewrite(initialUrl));
+            $rootElement.on("click", function(event) {
+                if (event.ctrlKey || event.metaKey || event.which == 2) return;
+                var elm = jqLite(event.target);
+                while (lowercase(elm[0].nodeName) !== "a") {
+                    if (elm[0] === $rootElement[0] || !(elm = elm.parent())[0]) return;
                 }
-                var g = c.prop("href");
-                var k = i.$$rewrite(g);
-                if (g && !c.attr("target") && k && !b.isDefaultPrevented()) {
-                    b.preventDefault();
-                    if (k != f.url()) {
-                        i.$$parse(k);
-                        d.$apply();
-                        a.angular["ff-684208-preventDefault"] = true;
+                var absHref = elm.prop("href");
+                var rewrittenUrl = $location.$$rewrite(absHref);
+                if (absHref && !elm.attr("target") && rewrittenUrl && !event.isDefaultPrevented()) {
+                    event.preventDefault();
+                    if (rewrittenUrl != $browser.url()) {
+                        $location.$$parse(rewrittenUrl);
+                        $rootScope.$apply();
+                        window.angular["ff-684208-preventDefault"] = true;
                     }
                 }
             });
-            if (i.absUrl() != m) {
-                f.url(i.absUrl(), true);
+            if ($location.absUrl() != initialUrl) {
+                $browser.url($location.absUrl(), true);
             }
-            f.onUrlChange(function(a) {
-                if (i.absUrl() != a) {
-                    if (d.$broadcast("$locationChangeStart", a, i.absUrl()).defaultPrevented) {
-                        f.url(i.absUrl());
+            $browser.onUrlChange(function(newUrl) {
+                if ($location.absUrl() != newUrl) {
+                    if ($rootScope.$broadcast("$locationChangeStart", newUrl, $location.absUrl()).defaultPrevented) {
+                        $browser.url($location.absUrl());
                         return;
                     }
-                    d.$evalAsync(function() {
-                        var b = i.absUrl();
-                        i.$$parse(a);
-                        p(b);
+                    $rootScope.$evalAsync(function() {
+                        var oldUrl = $location.absUrl();
+                        $location.$$parse(newUrl);
+                        afterLocationChange(oldUrl);
                     });
-                    if (!d.$$phase) d.$digest();
+                    if (!$rootScope.$$phase) $rootScope.$digest();
                 }
             });
-            var o = 0;
-            d.$watch(function q() {
-                var a = f.url();
-                var b = i.$$replace;
-                if (!o || a != i.absUrl()) {
-                    o++;
-                    d.$evalAsync(function() {
-                        if (d.$broadcast("$locationChangeStart", i.absUrl(), a).defaultPrevented) {
-                            i.$$parse(a);
+            var changeCounter = 0;
+            $rootScope.$watch(function $locationWatch() {
+                var oldUrl = $browser.url();
+                var currentReplace = $location.$$replace;
+                if (!changeCounter || oldUrl != $location.absUrl()) {
+                    changeCounter++;
+                    $rootScope.$evalAsync(function() {
+                        if ($rootScope.$broadcast("$locationChangeStart", $location.absUrl(), oldUrl).defaultPrevented) {
+                            $location.$$parse(oldUrl);
                         } else {
-                            f.url(i.absUrl(), b);
-                            p(a);
+                            $browser.url($location.absUrl(), currentReplace);
+                            afterLocationChange(oldUrl);
                         }
                     });
                 }
-                i.$$replace = false;
-                return o;
+                $location.$$replace = false;
+                return changeCounter;
             });
-            return i;
-            function p(a) {
-                d.$broadcast("$locationChangeSuccess", i.absUrl(), a);
+            return $location;
+            function afterLocationChange(oldUrl) {
+                $rootScope.$broadcast("$locationChangeSuccess", $location.absUrl(), oldUrl);
             }
         } ];
     }
-    function dd() {
-        var a = true, b = this;
-        this.debugEnabled = function(b) {
-            if (I(b)) {
-                a = b;
+    function $LogProvider() {
+        var debug = true, self = this;
+        this.debugEnabled = function(flag) {
+            if (isDefined(flag)) {
+                debug = flag;
                 return this;
             } else {
-                return a;
+                return debug;
             }
         };
-        this.$get = [ "$window", function(c) {
+        this.$get = [ "$window", function($window) {
             return {
-                log: e("log"),
-                info: e("info"),
-                warn: e("warn"),
-                error: e("error"),
+                log: consoleLog("log"),
+                info: consoleLog("info"),
+                warn: consoleLog("warn"),
+                error: consoleLog("error"),
                 debug: function() {
-                    var c = e("debug");
+                    var fn = consoleLog("debug");
                     return function() {
-                        if (a) {
-                            c.apply(b, arguments);
+                        if (debug) {
+                            fn.apply(self, arguments);
                         }
                     };
                 }()
             };
-            function d(a) {
-                if (a instanceof Error) {
-                    if (a.stack) {
-                        a = a.message && a.stack.indexOf(a.message) === -1 ? "Error: " + a.message + "\n" + a.stack : a.stack;
-                    } else if (a.sourceURL) {
-                        a = a.message + "\n" + a.sourceURL + ":" + a.line;
+            function formatError(arg) {
+                if (arg instanceof Error) {
+                    if (arg.stack) {
+                        arg = arg.message && arg.stack.indexOf(arg.message) === -1 ? "Error: " + arg.message + "\n" + arg.stack : arg.stack;
+                    } else if (arg.sourceURL) {
+                        arg = arg.message + "\n" + arg.sourceURL + ":" + arg.line;
                     }
                 }
-                return a;
+                return arg;
             }
-            function e(a) {
-                var b = c.console || {}, e = b[a] || b.log || E;
-                if (e.apply) {
+            function consoleLog(type) {
+                var console = $window.console || {}, logFn = console[type] || console.log || noop;
+                if (logFn.apply) {
                     return function() {
-                        var a = [];
-                        v(arguments, function(b) {
-                            a.push(d(b));
+                        var args = [];
+                        forEach(arguments, function(arg) {
+                            args.push(formatError(arg));
                         });
-                        return e.apply(b, a);
+                        return logFn.apply(console, args);
                     };
                 }
-                return function(a, b) {
-                    e(a, b == null ? "" : b);
+                return function(arg1, arg2) {
+                    logFn(arg1, arg2 == null ? "" : arg2);
                 };
             }
         } ];
     }
-    var ed = d("$parse");
-    var fd = {};
-    var gd;
-    function hd(a, b) {
-        if (a === "constructor") {
-            throw ed("isecfld", 'Referencing "constructor" field in Angular expressions is disallowed! Expression: {0}', b);
+    var $parseMinErr = minErr("$parse");
+    var promiseWarningCache = {};
+    var promiseWarning;
+    function ensureSafeMemberName(name, fullExpression) {
+        if (name === "constructor") {
+            throw $parseMinErr("isecfld", 'Referencing "constructor" field in Angular expressions is disallowed! Expression: {0}', fullExpression);
         }
-        return a;
+        return name;
     }
-    function id(a, b) {
-        if (a && a.constructor === a) {
-            throw ed("isecfn", "Referencing Function in Angular expressions is disallowed! Expression: {0}", b);
-        } else if (a && a.document && a.location && a.alert && a.setInterval) {
-            throw ed("isecwindow", "Referencing the Window in Angular expressions is disallowed! Expression: {0}", b);
-        } else if (a && (a.nodeName || a.on && a.find)) {
-            throw ed("isecdom", "Referencing DOM nodes in Angular expressions is disallowed! Expression: {0}", b);
+    function ensureSafeObject(obj, fullExpression) {
+        if (obj && obj.constructor === obj) {
+            throw $parseMinErr("isecfn", "Referencing Function in Angular expressions is disallowed! Expression: {0}", fullExpression);
+        } else if (obj && obj.document && obj.location && obj.alert && obj.setInterval) {
+            throw $parseMinErr("isecwindow", "Referencing the Window in Angular expressions is disallowed! Expression: {0}", fullExpression);
+        } else if (obj && (obj.nodeName || obj.on && obj.find)) {
+            throw $parseMinErr("isecdom", "Referencing DOM nodes in Angular expressions is disallowed! Expression: {0}", fullExpression);
         } else {
-            return a;
+            return obj;
         }
     }
-    var jd = {
+    var OPERATORS = {
         "null": function() {
             return null;
         },
@@ -3589,77 +3590,77 @@
         "false": function() {
             return false;
         },
-        undefined: E,
-        "+": function(a, b, d, e) {
-            d = d(a, b);
-            e = e(a, b);
-            if (I(d)) {
-                if (I(e)) {
-                    return d + e;
+        undefined: noop,
+        "+": function(self, locals, a, b) {
+            a = a(self, locals);
+            b = b(self, locals);
+            if (isDefined(a)) {
+                if (isDefined(b)) {
+                    return a + b;
                 }
-                return d;
+                return a;
             }
-            return I(e) ? e : c;
+            return isDefined(b) ? b : undefined;
         },
-        "-": function(a, b, c, d) {
-            c = c(a, b);
-            d = d(a, b);
-            return (I(c) ? c : 0) - (I(d) ? d : 0);
+        "-": function(self, locals, a, b) {
+            a = a(self, locals);
+            b = b(self, locals);
+            return (isDefined(a) ? a : 0) - (isDefined(b) ? b : 0);
         },
-        "*": function(a, b, c, d) {
-            return c(a, b) * d(a, b);
+        "*": function(self, locals, a, b) {
+            return a(self, locals) * b(self, locals);
         },
-        "/": function(a, b, c, d) {
-            return c(a, b) / d(a, b);
+        "/": function(self, locals, a, b) {
+            return a(self, locals) / b(self, locals);
         },
-        "%": function(a, b, c, d) {
-            return c(a, b) % d(a, b);
+        "%": function(self, locals, a, b) {
+            return a(self, locals) % b(self, locals);
         },
-        "^": function(a, b, c, d) {
-            return c(a, b) ^ d(a, b);
+        "^": function(self, locals, a, b) {
+            return a(self, locals) ^ b(self, locals);
         },
-        "=": E,
-        "===": function(a, b, c, d) {
-            return c(a, b) === d(a, b);
+        "=": noop,
+        "===": function(self, locals, a, b) {
+            return a(self, locals) === b(self, locals);
         },
-        "!==": function(a, b, c, d) {
-            return c(a, b) !== d(a, b);
+        "!==": function(self, locals, a, b) {
+            return a(self, locals) !== b(self, locals);
         },
-        "==": function(a, b, c, d) {
-            return c(a, b) == d(a, b);
+        "==": function(self, locals, a, b) {
+            return a(self, locals) == b(self, locals);
         },
-        "!=": function(a, b, c, d) {
-            return c(a, b) != d(a, b);
+        "!=": function(self, locals, a, b) {
+            return a(self, locals) != b(self, locals);
         },
-        "<": function(a, b, c, d) {
-            return c(a, b) < d(a, b);
+        "<": function(self, locals, a, b) {
+            return a(self, locals) < b(self, locals);
         },
-        ">": function(a, b, c, d) {
-            return c(a, b) > d(a, b);
+        ">": function(self, locals, a, b) {
+            return a(self, locals) > b(self, locals);
         },
-        "<=": function(a, b, c, d) {
-            return c(a, b) <= d(a, b);
+        "<=": function(self, locals, a, b) {
+            return a(self, locals) <= b(self, locals);
         },
-        ">=": function(a, b, c, d) {
-            return c(a, b) >= d(a, b);
+        ">=": function(self, locals, a, b) {
+            return a(self, locals) >= b(self, locals);
         },
-        "&&": function(a, b, c, d) {
-            return c(a, b) && d(a, b);
+        "&&": function(self, locals, a, b) {
+            return a(self, locals) && b(self, locals);
         },
-        "||": function(a, b, c, d) {
-            return c(a, b) || d(a, b);
+        "||": function(self, locals, a, b) {
+            return a(self, locals) || b(self, locals);
         },
-        "&": function(a, b, c, d) {
-            return c(a, b) & d(a, b);
+        "&": function(self, locals, a, b) {
+            return a(self, locals) & b(self, locals);
         },
-        "|": function(a, b, c, d) {
-            return d(a, b)(a, b, c(a, b));
+        "|": function(self, locals, a, b) {
+            return b(self, locals)(self, locals, a(self, locals));
         },
-        "!": function(a, b, c) {
-            return !c(a, b);
+        "!": function(self, locals, a) {
+            return !a(self, locals);
         }
     };
-    var kd = {
+    var ESCAPE = {
         n: "\n",
         f: "\f",
         r: "\r",
@@ -3668,19 +3669,19 @@
         "'": "'",
         '"': '"'
     };
-    var ld = function(a) {
-        this.options = a;
+    var Lexer = function(options) {
+        this.options = options;
     };
-    ld.prototype = {
-        constructor: ld,
-        lex: function(a) {
-            this.text = a;
+    Lexer.prototype = {
+        constructor: Lexer,
+        lex: function(text) {
+            this.text = text;
             this.index = 0;
-            this.ch = c;
+            this.ch = undefined;
             this.lastCh = ":";
             this.tokens = [];
-            var b;
-            var d = [];
+            var token;
+            var json = [];
             while (this.index < this.text.length) {
                 this.ch = this.text.charAt(this.index);
                 if (this.is("\"'")) {
@@ -3689,8 +3690,8 @@
                     this.readNumber();
                 } else if (this.isIdent(this.ch)) {
                     this.readIdent();
-                    if (this.was("{,") && d[0] === "{" && (b = this.tokens[this.tokens.length - 1])) {
-                        b.json = b.text.indexOf(".") === -1;
+                    if (this.was("{,") && json[0] === "{" && (token = this.tokens[this.tokens.length - 1])) {
+                        token.json = token.text.indexOf(".") === -1;
                     }
                 } else if (this.is("(){}[].,;:?")) {
                     this.tokens.push({
@@ -3698,37 +3699,37 @@
                         text: this.ch,
                         json: this.was(":[,") && this.is("{[") || this.is("}]:,")
                     });
-                    if (this.is("{[")) d.unshift(this.ch);
-                    if (this.is("}]")) d.shift();
+                    if (this.is("{[")) json.unshift(this.ch);
+                    if (this.is("}]")) json.shift();
                     this.index++;
                 } else if (this.isWhitespace(this.ch)) {
                     this.index++;
                     continue;
                 } else {
-                    var e = this.ch + this.peek();
-                    var f = e + this.peek(2);
-                    var g = jd[this.ch];
-                    var h = jd[e];
-                    var i = jd[f];
-                    if (i) {
+                    var ch2 = this.ch + this.peek();
+                    var ch3 = ch2 + this.peek(2);
+                    var fn = OPERATORS[this.ch];
+                    var fn2 = OPERATORS[ch2];
+                    var fn3 = OPERATORS[ch3];
+                    if (fn3) {
                         this.tokens.push({
                             index: this.index,
-                            text: f,
-                            fn: i
+                            text: ch3,
+                            fn: fn3
                         });
                         this.index += 3;
-                    } else if (h) {
+                    } else if (fn2) {
                         this.tokens.push({
                             index: this.index,
-                            text: e,
-                            fn: h
+                            text: ch2,
+                            fn: fn2
                         });
                         this.index += 2;
-                    } else if (g) {
+                    } else if (fn) {
                         this.tokens.push({
                             index: this.index,
                             text: this.ch,
-                            fn: g,
+                            fn: fn,
                             json: this.was("[,:") && this.is("+-")
                         });
                         this.index += 1;
@@ -3740,47 +3741,47 @@
             }
             return this.tokens;
         },
-        is: function(a) {
-            return a.indexOf(this.ch) !== -1;
+        is: function(chars) {
+            return chars.indexOf(this.ch) !== -1;
         },
-        was: function(a) {
-            return a.indexOf(this.lastCh) !== -1;
+        was: function(chars) {
+            return chars.indexOf(this.lastCh) !== -1;
         },
-        peek: function(a) {
-            var b = a || 1;
-            return this.index + b < this.text.length ? this.text.charAt(this.index + b) : false;
+        peek: function(i) {
+            var num = i || 1;
+            return this.index + num < this.text.length ? this.text.charAt(this.index + num) : false;
         },
-        isNumber: function(a) {
-            return "0" <= a && a <= "9";
+        isNumber: function(ch) {
+            return "0" <= ch && ch <= "9";
         },
-        isWhitespace: function(a) {
-            return a === " " || a === "\r" || a === "	" || a === "\n" || a === "" || a === " ";
+        isWhitespace: function(ch) {
+            return ch === " " || ch === "\r" || ch === "	" || ch === "\n" || ch === "" || ch === " ";
         },
-        isIdent: function(a) {
-            return "a" <= a && a <= "z" || "A" <= a && a <= "Z" || "_" === a || a === "$";
+        isIdent: function(ch) {
+            return "a" <= ch && ch <= "z" || "A" <= ch && ch <= "Z" || "_" === ch || ch === "$";
         },
-        isExpOperator: function(a) {
-            return a === "-" || a === "+" || this.isNumber(a);
+        isExpOperator: function(ch) {
+            return ch === "-" || ch === "+" || this.isNumber(ch);
         },
-        throwError: function(a, b, c) {
-            c = c || this.index;
-            var d = I(b) ? "s " + b + "-" + this.index + " [" + this.text.substring(b, c) + "]" : " " + c;
-            throw ed("lexerr", "Lexer Error: {0} at column{1} in expression [{2}].", a, d, this.text);
+        throwError: function(error, start, end) {
+            end = end || this.index;
+            var colStr = isDefined(start) ? "s " + start + "-" + this.index + " [" + this.text.substring(start, end) + "]" : " " + end;
+            throw $parseMinErr("lexerr", "Lexer Error: {0} at column{1} in expression [{2}].", error, colStr, this.text);
         },
         readNumber: function() {
-            var a = "";
-            var b = this.index;
+            var number = "";
+            var start = this.index;
             while (this.index < this.text.length) {
-                var c = e(this.text.charAt(this.index));
-                if (c == "." || this.isNumber(c)) {
-                    a += c;
+                var ch = lowercase(this.text.charAt(this.index));
+                if (ch == "." || this.isNumber(ch)) {
+                    number += ch;
                 } else {
-                    var d = this.peek();
-                    if (c == "e" && this.isExpOperator(d)) {
-                        a += c;
-                    } else if (this.isExpOperator(c) && d && this.isNumber(d) && a.charAt(a.length - 1) == "e") {
-                        a += c;
-                    } else if (this.isExpOperator(c) && (!d || !this.isNumber(d)) && a.charAt(a.length - 1) == "e") {
+                    var peekCh = this.peek();
+                    if (ch == "e" && this.isExpOperator(peekCh)) {
+                        number += ch;
+                    } else if (this.isExpOperator(ch) && peekCh && this.isNumber(peekCh) && number.charAt(number.length - 1) == "e") {
+                        number += ch;
+                    } else if (this.isExpOperator(ch) && (!peekCh || !this.isNumber(peekCh)) && number.charAt(number.length - 1) == "e") {
                         this.throwError("Invalid exponent");
                     } else {
                         break;
@@ -3788,293 +3789,293 @@
                 }
                 this.index++;
             }
-            a = 1 * a;
+            number = 1 * number;
             this.tokens.push({
-                index: b,
-                text: a,
+                index: start,
+                text: number,
                 json: true,
                 fn: function() {
-                    return a;
+                    return number;
                 }
             });
         },
         readIdent: function() {
-            var a = this;
-            var b = "";
-            var c = this.index;
-            var d, e, f, g;
+            var parser = this;
+            var ident = "";
+            var start = this.index;
+            var lastDot, peekIndex, methodName, ch;
             while (this.index < this.text.length) {
-                g = this.text.charAt(this.index);
-                if (g === "." || this.isIdent(g) || this.isNumber(g)) {
-                    if (g === ".") d = this.index;
-                    b += g;
+                ch = this.text.charAt(this.index);
+                if (ch === "." || this.isIdent(ch) || this.isNumber(ch)) {
+                    if (ch === ".") lastDot = this.index;
+                    ident += ch;
                 } else {
                     break;
                 }
                 this.index++;
             }
-            if (d) {
-                e = this.index;
-                while (e < this.text.length) {
-                    g = this.text.charAt(e);
-                    if (g === "(") {
-                        f = b.substr(d - c + 1);
-                        b = b.substr(0, d - c);
-                        this.index = e;
+            if (lastDot) {
+                peekIndex = this.index;
+                while (peekIndex < this.text.length) {
+                    ch = this.text.charAt(peekIndex);
+                    if (ch === "(") {
+                        methodName = ident.substr(lastDot - start + 1);
+                        ident = ident.substr(0, lastDot - start);
+                        this.index = peekIndex;
                         break;
                     }
-                    if (this.isWhitespace(g)) {
-                        e++;
+                    if (this.isWhitespace(ch)) {
+                        peekIndex++;
                     } else {
                         break;
                     }
                 }
             }
-            var h = {
-                index: c,
-                text: b
+            var token = {
+                index: start,
+                text: ident
             };
-            if (jd.hasOwnProperty(b)) {
-                h.fn = jd[b];
-                h.json = jd[b];
+            if (OPERATORS.hasOwnProperty(ident)) {
+                token.fn = OPERATORS[ident];
+                token.json = OPERATORS[ident];
             } else {
-                var i = qd(b, this.options, this.text);
-                h.fn = B(function(a, b) {
-                    return i(a, b);
+                var getter = getterFn(ident, this.options, this.text);
+                token.fn = extend(function(self, locals) {
+                    return getter(self, locals);
                 }, {
-                    assign: function(c, d) {
-                        return nd(c, b, d, a.text, a.options);
+                    assign: function(self, value) {
+                        return setter(self, ident, value, parser.text, parser.options);
                     }
                 });
             }
-            this.tokens.push(h);
-            if (f) {
+            this.tokens.push(token);
+            if (methodName) {
                 this.tokens.push({
-                    index: d,
+                    index: lastDot,
                     text: ".",
                     json: false
                 });
                 this.tokens.push({
-                    index: d + 1,
-                    text: f,
+                    index: lastDot + 1,
+                    text: methodName,
                     json: false
                 });
             }
         },
-        readString: function(a) {
-            var b = this.index;
+        readString: function(quote) {
+            var start = this.index;
             this.index++;
-            var c = "";
-            var d = a;
-            var e = false;
+            var string = "";
+            var rawString = quote;
+            var escape = false;
             while (this.index < this.text.length) {
-                var f = this.text.charAt(this.index);
-                d += f;
-                if (e) {
-                    if (f === "u") {
-                        var g = this.text.substring(this.index + 1, this.index + 5);
-                        if (!g.match(/[\da-f]{4}/i)) this.throwError("Invalid unicode escape [\\u" + g + "]");
+                var ch = this.text.charAt(this.index);
+                rawString += ch;
+                if (escape) {
+                    if (ch === "u") {
+                        var hex = this.text.substring(this.index + 1, this.index + 5);
+                        if (!hex.match(/[\da-f]{4}/i)) this.throwError("Invalid unicode escape [\\u" + hex + "]");
                         this.index += 4;
-                        c += String.fromCharCode(parseInt(g, 16));
+                        string += String.fromCharCode(parseInt(hex, 16));
                     } else {
-                        var h = kd[f];
-                        if (h) {
-                            c += h;
+                        var rep = ESCAPE[ch];
+                        if (rep) {
+                            string += rep;
                         } else {
-                            c += f;
+                            string += ch;
                         }
                     }
-                    e = false;
-                } else if (f === "\\") {
-                    e = true;
-                } else if (f === a) {
+                    escape = false;
+                } else if (ch === "\\") {
+                    escape = true;
+                } else if (ch === quote) {
                     this.index++;
                     this.tokens.push({
-                        index: b,
-                        text: d,
-                        string: c,
+                        index: start,
+                        text: rawString,
+                        string: string,
                         json: true,
                         fn: function() {
-                            return c;
+                            return string;
                         }
                     });
                     return;
                 } else {
-                    c += f;
+                    string += ch;
                 }
                 this.index++;
             }
-            this.throwError("Unterminated quote", b);
+            this.throwError("Unterminated quote", start);
         }
     };
-    var md = function(a, b, c) {
-        this.lexer = a;
-        this.$filter = b;
-        this.options = c;
+    var Parser = function(lexer, $filter, options) {
+        this.lexer = lexer;
+        this.$filter = $filter;
+        this.options = options;
     };
-    md.ZERO = function() {
+    Parser.ZERO = function() {
         return 0;
     };
-    md.prototype = {
-        constructor: md,
-        parse: function(a, b) {
-            this.text = a;
-            this.json = b;
-            this.tokens = this.lexer.lex(a);
-            if (b) {
+    Parser.prototype = {
+        constructor: Parser,
+        parse: function(text, json) {
+            this.text = text;
+            this.json = json;
+            this.tokens = this.lexer.lex(text);
+            if (json) {
                 this.assignment = this.logicalOR;
                 this.functionCall = this.fieldAccess = this.objectIndex = this.filterChain = function() {
                     this.throwError("is not valid json", {
-                        text: a,
+                        text: text,
                         index: 0
                     });
                 };
             }
-            var c = b ? this.primary() : this.statements();
+            var value = json ? this.primary() : this.statements();
             if (this.tokens.length !== 0) {
                 this.throwError("is an unexpected token", this.tokens[0]);
             }
-            c.literal = !!c.literal;
-            c.constant = !!c.constant;
-            return c;
+            value.literal = !!value.literal;
+            value.constant = !!value.constant;
+            return value;
         },
         primary: function() {
-            var a;
+            var primary;
             if (this.expect("(")) {
-                a = this.filterChain();
+                primary = this.filterChain();
                 this.consume(")");
             } else if (this.expect("[")) {
-                a = this.arrayDeclaration();
+                primary = this.arrayDeclaration();
             } else if (this.expect("{")) {
-                a = this.object();
+                primary = this.object();
             } else {
-                var b = this.expect();
-                a = b.fn;
-                if (!a) {
-                    this.throwError("not a primary expression", b);
+                var token = this.expect();
+                primary = token.fn;
+                if (!primary) {
+                    this.throwError("not a primary expression", token);
                 }
-                if (b.json) {
-                    a.constant = true;
-                    a.literal = true;
+                if (token.json) {
+                    primary.constant = true;
+                    primary.literal = true;
                 }
             }
-            var c, d;
-            while (c = this.expect("(", "[", ".")) {
-                if (c.text === "(") {
-                    a = this.functionCall(a, d);
-                    d = null;
-                } else if (c.text === "[") {
-                    d = a;
-                    a = this.objectIndex(a);
-                } else if (c.text === ".") {
-                    d = a;
-                    a = this.fieldAccess(a);
+            var next, context;
+            while (next = this.expect("(", "[", ".")) {
+                if (next.text === "(") {
+                    primary = this.functionCall(primary, context);
+                    context = null;
+                } else if (next.text === "[") {
+                    context = primary;
+                    primary = this.objectIndex(primary);
+                } else if (next.text === ".") {
+                    context = primary;
+                    primary = this.fieldAccess(primary);
                 } else {
                     this.throwError("IMPOSSIBLE");
                 }
             }
-            return a;
+            return primary;
         },
-        throwError: function(a, b) {
-            throw ed("syntax", "Syntax Error: Token '{0}' {1} at column {2} of the expression [{3}] starting at [{4}].", b.text, a, b.index + 1, this.text, this.text.substring(b.index));
+        throwError: function(msg, token) {
+            throw $parseMinErr("syntax", "Syntax Error: Token '{0}' {1} at column {2} of the expression [{3}] starting at [{4}].", token.text, msg, token.index + 1, this.text, this.text.substring(token.index));
         },
         peekToken: function() {
-            if (this.tokens.length === 0) throw ed("ueoe", "Unexpected end of expression: {0}", this.text);
+            if (this.tokens.length === 0) throw $parseMinErr("ueoe", "Unexpected end of expression: {0}", this.text);
             return this.tokens[0];
         },
-        peek: function(a, b, c, d) {
+        peek: function(e1, e2, e3, e4) {
             if (this.tokens.length > 0) {
-                var e = this.tokens[0];
-                var f = e.text;
-                if (f === a || f === b || f === c || f === d || !a && !b && !c && !d) {
-                    return e;
+                var token = this.tokens[0];
+                var t = token.text;
+                if (t === e1 || t === e2 || t === e3 || t === e4 || !e1 && !e2 && !e3 && !e4) {
+                    return token;
                 }
             }
             return false;
         },
-        expect: function(a, b, c, d) {
-            var e = this.peek(a, b, c, d);
-            if (e) {
-                if (this.json && !e.json) {
-                    this.throwError("is not valid json", e);
+        expect: function(e1, e2, e3, e4) {
+            var token = this.peek(e1, e2, e3, e4);
+            if (token) {
+                if (this.json && !token.json) {
+                    this.throwError("is not valid json", token);
                 }
                 this.tokens.shift();
-                return e;
+                return token;
             }
             return false;
         },
-        consume: function(a) {
-            if (!this.expect(a)) {
-                this.throwError("is unexpected, expecting [" + a + "]", this.peek());
+        consume: function(e1) {
+            if (!this.expect(e1)) {
+                this.throwError("is unexpected, expecting [" + e1 + "]", this.peek());
             }
         },
-        unaryFn: function(a, b) {
-            return B(function(c, d) {
-                return a(c, d, b);
+        unaryFn: function(fn, right) {
+            return extend(function(self, locals) {
+                return fn(self, locals, right);
             }, {
-                constant: b.constant
+                constant: right.constant
             });
         },
-        ternaryFn: function(a, b, c) {
-            return B(function(d, e) {
-                return a(d, e) ? b(d, e) : c(d, e);
+        ternaryFn: function(left, middle, right) {
+            return extend(function(self, locals) {
+                return left(self, locals) ? middle(self, locals) : right(self, locals);
             }, {
-                constant: a.constant && b.constant && c.constant
+                constant: left.constant && middle.constant && right.constant
             });
         },
-        binaryFn: function(a, b, c) {
-            return B(function(d, e) {
-                return b(d, e, a, c);
+        binaryFn: function(left, fn, right) {
+            return extend(function(self, locals) {
+                return fn(self, locals, left, right);
             }, {
-                constant: a.constant && c.constant
+                constant: left.constant && right.constant
             });
         },
         statements: function() {
-            var a = [];
+            var statements = [];
             while (true) {
-                if (this.tokens.length > 0 && !this.peek("}", ")", ";", "]")) a.push(this.filterChain());
+                if (this.tokens.length > 0 && !this.peek("}", ")", ";", "]")) statements.push(this.filterChain());
                 if (!this.expect(";")) {
-                    return a.length === 1 ? a[0] : function(b, c) {
-                        var d;
-                        for (var e = 0; e < a.length; e++) {
-                            var f = a[e];
-                            if (f) {
-                                d = f(b, c);
+                    return statements.length === 1 ? statements[0] : function(self, locals) {
+                        var value;
+                        for (var i = 0; i < statements.length; i++) {
+                            var statement = statements[i];
+                            if (statement) {
+                                value = statement(self, locals);
                             }
                         }
-                        return d;
+                        return value;
                     };
                 }
             }
         },
         filterChain: function() {
-            var a = this.expression();
-            var b;
+            var left = this.expression();
+            var token;
             while (true) {
-                if (b = this.expect("|")) {
-                    a = this.binaryFn(a, b.fn, this.filter());
+                if (token = this.expect("|")) {
+                    left = this.binaryFn(left, token.fn, this.filter());
                 } else {
-                    return a;
+                    return left;
                 }
             }
         },
         filter: function() {
-            var a = this.expect();
-            var b = this.$filter(a.text);
-            var c = [];
+            var token = this.expect();
+            var fn = this.$filter(token.text);
+            var argsFn = [];
             while (true) {
-                if (a = this.expect(":")) {
-                    c.push(this.expression());
+                if (token = this.expect(":")) {
+                    argsFn.push(this.expression());
                 } else {
-                    var d = function(a, d, e) {
-                        var f = [ e ];
-                        for (var g = 0; g < c.length; g++) {
-                            f.push(c[g](a, d));
+                    var fnInvoke = function(self, locals, input) {
+                        var args = [ input ];
+                        for (var i = 0; i < argsFn.length; i++) {
+                            args.push(argsFn[i](self, locals));
                         }
-                        return b.apply(a, f);
+                        return fn.apply(self, args);
                     };
                     return function() {
-                        return d;
+                        return fnInvoke;
                     };
                 }
             }
@@ -4083,651 +4084,651 @@
             return this.assignment();
         },
         assignment: function() {
-            var a = this.ternary();
-            var b;
-            var c;
-            if (c = this.expect("=")) {
-                if (!a.assign) {
-                    this.throwError("implies assignment but [" + this.text.substring(0, c.index) + "] can not be assigned to", c);
+            var left = this.ternary();
+            var right;
+            var token;
+            if (token = this.expect("=")) {
+                if (!left.assign) {
+                    this.throwError("implies assignment but [" + this.text.substring(0, token.index) + "] can not be assigned to", token);
                 }
-                b = this.ternary();
-                return function(c, d) {
-                    return a.assign(c, b(c, d), d);
+                right = this.ternary();
+                return function(scope, locals) {
+                    return left.assign(scope, right(scope, locals), locals);
                 };
             }
-            return a;
+            return left;
         },
         ternary: function() {
-            var a = this.logicalOR();
-            var b;
-            var c;
-            if (c = this.expect("?")) {
-                b = this.ternary();
-                if (c = this.expect(":")) {
-                    return this.ternaryFn(a, b, this.ternary());
+            var left = this.logicalOR();
+            var middle;
+            var token;
+            if (token = this.expect("?")) {
+                middle = this.ternary();
+                if (token = this.expect(":")) {
+                    return this.ternaryFn(left, middle, this.ternary());
                 } else {
-                    this.throwError("expected :", c);
+                    this.throwError("expected :", token);
                 }
             } else {
-                return a;
+                return left;
             }
         },
         logicalOR: function() {
-            var a = this.logicalAND();
-            var b;
+            var left = this.logicalAND();
+            var token;
             while (true) {
-                if (b = this.expect("||")) {
-                    a = this.binaryFn(a, b.fn, this.logicalAND());
+                if (token = this.expect("||")) {
+                    left = this.binaryFn(left, token.fn, this.logicalAND());
                 } else {
-                    return a;
+                    return left;
                 }
             }
         },
         logicalAND: function() {
-            var a = this.equality();
-            var b;
-            if (b = this.expect("&&")) {
-                a = this.binaryFn(a, b.fn, this.logicalAND());
+            var left = this.equality();
+            var token;
+            if (token = this.expect("&&")) {
+                left = this.binaryFn(left, token.fn, this.logicalAND());
             }
-            return a;
+            return left;
         },
         equality: function() {
-            var a = this.relational();
-            var b;
-            if (b = this.expect("==", "!=", "===", "!==")) {
-                a = this.binaryFn(a, b.fn, this.equality());
+            var left = this.relational();
+            var token;
+            if (token = this.expect("==", "!=", "===", "!==")) {
+                left = this.binaryFn(left, token.fn, this.equality());
             }
-            return a;
+            return left;
         },
         relational: function() {
-            var a = this.additive();
-            var b;
-            if (b = this.expect("<", ">", "<=", ">=")) {
-                a = this.binaryFn(a, b.fn, this.relational());
+            var left = this.additive();
+            var token;
+            if (token = this.expect("<", ">", "<=", ">=")) {
+                left = this.binaryFn(left, token.fn, this.relational());
             }
-            return a;
+            return left;
         },
         additive: function() {
-            var a = this.multiplicative();
-            var b;
-            while (b = this.expect("+", "-")) {
-                a = this.binaryFn(a, b.fn, this.multiplicative());
+            var left = this.multiplicative();
+            var token;
+            while (token = this.expect("+", "-")) {
+                left = this.binaryFn(left, token.fn, this.multiplicative());
             }
-            return a;
+            return left;
         },
         multiplicative: function() {
-            var a = this.unary();
-            var b;
-            while (b = this.expect("*", "/", "%")) {
-                a = this.binaryFn(a, b.fn, this.unary());
+            var left = this.unary();
+            var token;
+            while (token = this.expect("*", "/", "%")) {
+                left = this.binaryFn(left, token.fn, this.unary());
             }
-            return a;
+            return left;
         },
         unary: function() {
-            var a;
+            var token;
             if (this.expect("+")) {
                 return this.primary();
-            } else if (a = this.expect("-")) {
-                return this.binaryFn(md.ZERO, a.fn, this.unary());
-            } else if (a = this.expect("!")) {
-                return this.unaryFn(a.fn, this.unary());
+            } else if (token = this.expect("-")) {
+                return this.binaryFn(Parser.ZERO, token.fn, this.unary());
+            } else if (token = this.expect("!")) {
+                return this.unaryFn(token.fn, this.unary());
             } else {
                 return this.primary();
             }
         },
-        fieldAccess: function(a) {
-            var b = this;
-            var c = this.expect().text;
-            var d = qd(c, this.options, this.text);
-            return B(function(b, c, e) {
-                return d(e || a(b, c), c);
+        fieldAccess: function(object) {
+            var parser = this;
+            var field = this.expect().text;
+            var getter = getterFn(field, this.options, this.text);
+            return extend(function(scope, locals, self) {
+                return getter(self || object(scope, locals), locals);
             }, {
-                assign: function(d, e, f) {
-                    return nd(a(d, f), c, e, b.text, b.options);
+                assign: function(scope, value, locals) {
+                    return setter(object(scope, locals), field, value, parser.text, parser.options);
                 }
             });
         },
-        objectIndex: function(a) {
-            var b = this;
-            var d = this.expression();
+        objectIndex: function(obj) {
+            var parser = this;
+            var indexFn = this.expression();
             this.consume("]");
-            return B(function(e, f) {
-                var g = a(e, f), h = d(e, f), i, j;
-                if (!g) return c;
-                i = id(g[h], b.text);
-                if (i && i.then && b.options.unwrapPromises) {
-                    j = i;
-                    if (!("$$v" in i)) {
-                        j.$$v = c;
-                        j.then(function(a) {
-                            j.$$v = a;
+            return extend(function(self, locals) {
+                var o = obj(self, locals), i = indexFn(self, locals), v, p;
+                if (!o) return undefined;
+                v = ensureSafeObject(o[i], parser.text);
+                if (v && v.then && parser.options.unwrapPromises) {
+                    p = v;
+                    if (!("$$v" in v)) {
+                        p.$$v = undefined;
+                        p.then(function(val) {
+                            p.$$v = val;
                         });
                     }
-                    i = i.$$v;
+                    v = v.$$v;
                 }
-                return i;
+                return v;
             }, {
-                assign: function(c, e, f) {
-                    var g = d(c, f);
-                    var h = id(a(c, f), b.text);
-                    return h[g] = e;
+                assign: function(self, value, locals) {
+                    var key = indexFn(self, locals);
+                    var safe = ensureSafeObject(obj(self, locals), parser.text);
+                    return safe[key] = value;
                 }
             });
         },
-        functionCall: function(a, b) {
-            var c = [];
+        functionCall: function(fn, contextGetter) {
+            var argsFn = [];
             if (this.peekToken().text !== ")") {
                 do {
-                    c.push(this.expression());
+                    argsFn.push(this.expression());
                 } while (this.expect(","));
             }
             this.consume(")");
-            var d = this;
-            return function(e, f) {
-                var g = [];
-                var h = b ? b(e, f) : e;
-                for (var i = 0; i < c.length; i++) {
-                    g.push(c[i](e, f));
+            var parser = this;
+            return function(scope, locals) {
+                var args = [];
+                var context = contextGetter ? contextGetter(scope, locals) : scope;
+                for (var i = 0; i < argsFn.length; i++) {
+                    args.push(argsFn[i](scope, locals));
                 }
-                var j = a(e, f, h) || E;
-                id(j, d.text);
-                var k = j.apply ? j.apply(h, g) : j(g[0], g[1], g[2], g[3], g[4]);
-                return id(k, d.text);
+                var fnPtr = fn(scope, locals, context) || noop;
+                ensureSafeObject(fnPtr, parser.text);
+                var v = fnPtr.apply ? fnPtr.apply(context, args) : fnPtr(args[0], args[1], args[2], args[3], args[4]);
+                return ensureSafeObject(v, parser.text);
             };
         },
         arrayDeclaration: function() {
-            var a = [];
-            var b = true;
+            var elementFns = [];
+            var allConstant = true;
             if (this.peekToken().text !== "]") {
                 do {
-                    var c = this.expression();
-                    a.push(c);
-                    if (!c.constant) {
-                        b = false;
+                    var elementFn = this.expression();
+                    elementFns.push(elementFn);
+                    if (!elementFn.constant) {
+                        allConstant = false;
                     }
                 } while (this.expect(","));
             }
             this.consume("]");
-            return B(function(b, c) {
-                var d = [];
-                for (var e = 0; e < a.length; e++) {
-                    d.push(a[e](b, c));
+            return extend(function(self, locals) {
+                var array = [];
+                for (var i = 0; i < elementFns.length; i++) {
+                    array.push(elementFns[i](self, locals));
                 }
-                return d;
+                return array;
             }, {
                 literal: true,
-                constant: b
+                constant: allConstant
             });
         },
         object: function() {
-            var a = [];
-            var b = true;
+            var keyValues = [];
+            var allConstant = true;
             if (this.peekToken().text !== "}") {
                 do {
-                    var c = this.expect(), d = c.string || c.text;
+                    var token = this.expect(), key = token.string || token.text;
                     this.consume(":");
-                    var e = this.expression();
-                    a.push({
-                        key: d,
-                        value: e
+                    var value = this.expression();
+                    keyValues.push({
+                        key: key,
+                        value: value
                     });
-                    if (!e.constant) {
-                        b = false;
+                    if (!value.constant) {
+                        allConstant = false;
                     }
                 } while (this.expect(","));
             }
             this.consume("}");
-            return B(function(b, c) {
-                var d = {};
-                for (var e = 0; e < a.length; e++) {
-                    var f = a[e];
-                    d[f.key] = f.value(b, c);
+            return extend(function(self, locals) {
+                var object = {};
+                for (var i = 0; i < keyValues.length; i++) {
+                    var keyValue = keyValues[i];
+                    object[keyValue.key] = keyValue.value(self, locals);
                 }
-                return d;
+                return object;
             }, {
                 literal: true,
-                constant: b
+                constant: allConstant
             });
         }
     };
-    function nd(a, b, d, e, f) {
-        f = f || {};
-        var g = b.split("."), h;
-        for (var i = 0; g.length > 1; i++) {
-            h = hd(g.shift(), e);
-            var j = a[h];
-            if (!j) {
-                j = {};
-                a[h] = j;
+    function setter(obj, path, setValue, fullExp, options) {
+        options = options || {};
+        var element = path.split("."), key;
+        for (var i = 0; element.length > 1; i++) {
+            key = ensureSafeMemberName(element.shift(), fullExp);
+            var propertyObj = obj[key];
+            if (!propertyObj) {
+                propertyObj = {};
+                obj[key] = propertyObj;
             }
-            a = j;
-            if (a.then && f.unwrapPromises) {
-                gd(e);
-                if (!("$$v" in a)) {
-                    (function(a) {
-                        a.then(function(b) {
-                            a.$$v = b;
+            obj = propertyObj;
+            if (obj.then && options.unwrapPromises) {
+                promiseWarning(fullExp);
+                if (!("$$v" in obj)) {
+                    (function(promise) {
+                        promise.then(function(val) {
+                            promise.$$v = val;
                         });
-                    })(a);
+                    })(obj);
                 }
-                if (a.$$v === c) {
-                    a.$$v = {};
+                if (obj.$$v === undefined) {
+                    obj.$$v = {};
                 }
-                a = a.$$v;
+                obj = obj.$$v;
             }
         }
-        h = hd(g.shift(), e);
-        a[h] = d;
-        return d;
+        key = ensureSafeMemberName(element.shift(), fullExp);
+        obj[key] = setValue;
+        return setValue;
     }
-    var od = {};
-    function pd(a, b, d, e, f, g, h) {
-        hd(a, g);
-        hd(b, g);
-        hd(d, g);
-        hd(e, g);
-        hd(f, g);
-        return !h.unwrapPromises ? function i(g, h) {
-            var i = h && h.hasOwnProperty(a) ? h : g;
-            if (i === null || i === c) return i;
-            i = i[a];
-            if (!b || i === null || i === c) return i;
-            i = i[b];
-            if (!d || i === null || i === c) return i;
-            i = i[d];
-            if (!e || i === null || i === c) return i;
-            i = i[e];
-            if (!f || i === null || i === c) return i;
-            i = i[f];
-            return i;
-        } : function j(h, i) {
-            var j = i && i.hasOwnProperty(a) ? i : h, k;
-            if (j === null || j === c) return j;
-            j = j[a];
-            if (j && j.then) {
-                gd(g);
-                if (!("$$v" in j)) {
-                    k = j;
-                    k.$$v = c;
-                    k.then(function(a) {
-                        k.$$v = a;
+    var getterFnCache = {};
+    function cspSafeGetterFn(key0, key1, key2, key3, key4, fullExp, options) {
+        ensureSafeMemberName(key0, fullExp);
+        ensureSafeMemberName(key1, fullExp);
+        ensureSafeMemberName(key2, fullExp);
+        ensureSafeMemberName(key3, fullExp);
+        ensureSafeMemberName(key4, fullExp);
+        return !options.unwrapPromises ? function cspSafeGetter(scope, locals) {
+            var pathVal = locals && locals.hasOwnProperty(key0) ? locals : scope;
+            if (pathVal === null || pathVal === undefined) return pathVal;
+            pathVal = pathVal[key0];
+            if (!key1 || pathVal === null || pathVal === undefined) return pathVal;
+            pathVal = pathVal[key1];
+            if (!key2 || pathVal === null || pathVal === undefined) return pathVal;
+            pathVal = pathVal[key2];
+            if (!key3 || pathVal === null || pathVal === undefined) return pathVal;
+            pathVal = pathVal[key3];
+            if (!key4 || pathVal === null || pathVal === undefined) return pathVal;
+            pathVal = pathVal[key4];
+            return pathVal;
+        } : function cspSafePromiseEnabledGetter(scope, locals) {
+            var pathVal = locals && locals.hasOwnProperty(key0) ? locals : scope, promise;
+            if (pathVal === null || pathVal === undefined) return pathVal;
+            pathVal = pathVal[key0];
+            if (pathVal && pathVal.then) {
+                promiseWarning(fullExp);
+                if (!("$$v" in pathVal)) {
+                    promise = pathVal;
+                    promise.$$v = undefined;
+                    promise.then(function(val) {
+                        promise.$$v = val;
                     });
                 }
-                j = j.$$v;
+                pathVal = pathVal.$$v;
             }
-            if (!b || j === null || j === c) return j;
-            j = j[b];
-            if (j && j.then) {
-                gd(g);
-                if (!("$$v" in j)) {
-                    k = j;
-                    k.$$v = c;
-                    k.then(function(a) {
-                        k.$$v = a;
+            if (!key1 || pathVal === null || pathVal === undefined) return pathVal;
+            pathVal = pathVal[key1];
+            if (pathVal && pathVal.then) {
+                promiseWarning(fullExp);
+                if (!("$$v" in pathVal)) {
+                    promise = pathVal;
+                    promise.$$v = undefined;
+                    promise.then(function(val) {
+                        promise.$$v = val;
                     });
                 }
-                j = j.$$v;
+                pathVal = pathVal.$$v;
             }
-            if (!d || j === null || j === c) return j;
-            j = j[d];
-            if (j && j.then) {
-                gd(g);
-                if (!("$$v" in j)) {
-                    k = j;
-                    k.$$v = c;
-                    k.then(function(a) {
-                        k.$$v = a;
+            if (!key2 || pathVal === null || pathVal === undefined) return pathVal;
+            pathVal = pathVal[key2];
+            if (pathVal && pathVal.then) {
+                promiseWarning(fullExp);
+                if (!("$$v" in pathVal)) {
+                    promise = pathVal;
+                    promise.$$v = undefined;
+                    promise.then(function(val) {
+                        promise.$$v = val;
                     });
                 }
-                j = j.$$v;
+                pathVal = pathVal.$$v;
             }
-            if (!e || j === null || j === c) return j;
-            j = j[e];
-            if (j && j.then) {
-                gd(g);
-                if (!("$$v" in j)) {
-                    k = j;
-                    k.$$v = c;
-                    k.then(function(a) {
-                        k.$$v = a;
+            if (!key3 || pathVal === null || pathVal === undefined) return pathVal;
+            pathVal = pathVal[key3];
+            if (pathVal && pathVal.then) {
+                promiseWarning(fullExp);
+                if (!("$$v" in pathVal)) {
+                    promise = pathVal;
+                    promise.$$v = undefined;
+                    promise.then(function(val) {
+                        promise.$$v = val;
                     });
                 }
-                j = j.$$v;
+                pathVal = pathVal.$$v;
             }
-            if (!f || j === null || j === c) return j;
-            j = j[f];
-            if (j && j.then) {
-                gd(g);
-                if (!("$$v" in j)) {
-                    k = j;
-                    k.$$v = c;
-                    k.then(function(a) {
-                        k.$$v = a;
+            if (!key4 || pathVal === null || pathVal === undefined) return pathVal;
+            pathVal = pathVal[key4];
+            if (pathVal && pathVal.then) {
+                promiseWarning(fullExp);
+                if (!("$$v" in pathVal)) {
+                    promise = pathVal;
+                    promise.$$v = undefined;
+                    promise.then(function(val) {
+                        promise.$$v = val;
                     });
                 }
-                j = j.$$v;
+                pathVal = pathVal.$$v;
             }
-            return j;
+            return pathVal;
         };
     }
-    function qd(a, b, d) {
-        if (od.hasOwnProperty(a)) {
-            return od[a];
+    function getterFn(path, options, fullExp) {
+        if (getterFnCache.hasOwnProperty(path)) {
+            return getterFnCache[path];
         }
-        var e = a.split("."), f = e.length, g;
-        if (b.csp) {
-            g = f < 6 ? pd(e[0], e[1], e[2], e[3], e[4], d, b) : function(a, g) {
-                var h = 0, i;
+        var pathKeys = path.split("."), pathKeysLength = pathKeys.length, fn;
+        if (options.csp) {
+            fn = pathKeysLength < 6 ? cspSafeGetterFn(pathKeys[0], pathKeys[1], pathKeys[2], pathKeys[3], pathKeys[4], fullExp, options) : function(scope, locals) {
+                var i = 0, val;
                 do {
-                    i = pd(e[h++], e[h++], e[h++], e[h++], e[h++], d, b)(a, g);
-                    g = c;
-                    a = i;
-                } while (h < f);
-                return i;
+                    val = cspSafeGetterFn(pathKeys[i++], pathKeys[i++], pathKeys[i++], pathKeys[i++], pathKeys[i++], fullExp, options)(scope, locals);
+                    locals = undefined;
+                    scope = val;
+                } while (i < pathKeysLength);
+                return val;
             };
         } else {
-            var h = "var l, fn, p;\n";
-            v(e, function(a, c) {
-                hd(a, d);
-                h += "if(s === null || s === undefined) return s;\n" + "l=s;\n" + "s=" + (c ? "s" : '((k&&k.hasOwnProperty("' + a + '"))?k:s)') + '["' + a + '"]' + ";\n" + (b.unwrapPromises ? "if (s && s.then) {\n" + ' pw("' + d.replace(/\"/g, '\\"') + '");\n' + ' if (!("$$v" in s)) {\n' + " p=s;\n" + " p.$$v = undefined;\n" + " p.then(function(v) {p.$$v=v;});\n" + "}\n" + " s=s.$$v\n" + "}\n" : "");
+            var code = "var l, fn, p;\n";
+            forEach(pathKeys, function(key, index) {
+                ensureSafeMemberName(key, fullExp);
+                code += "if(s === null || s === undefined) return s;\n" + "l=s;\n" + "s=" + (index ? "s" : '((k&&k.hasOwnProperty("' + key + '"))?k:s)') + '["' + key + '"]' + ";\n" + (options.unwrapPromises ? "if (s && s.then) {\n" + ' pw("' + fullExp.replace(/\"/g, '\\"') + '");\n' + ' if (!("$$v" in s)) {\n' + " p=s;\n" + " p.$$v = undefined;\n" + " p.then(function(v) {p.$$v=v;});\n" + "}\n" + " s=s.$$v\n" + "}\n" : "");
             });
-            h += "return s;";
-            var i = Function("s", "k", "pw", h);
-            i.toString = function() {
-                return h;
+            code += "return s;";
+            var evaledFnGetter = Function("s", "k", "pw", code);
+            evaledFnGetter.toString = function() {
+                return code;
             };
-            g = function(a, b) {
-                return i(a, b, gd);
+            fn = function(scope, locals) {
+                return evaledFnGetter(scope, locals, promiseWarning);
             };
         }
-        if (a !== "hasOwnProperty") {
-            od[a] = g;
+        if (path !== "hasOwnProperty") {
+            getterFnCache[path] = fn;
         }
-        return g;
+        return fn;
     }
-    function rd() {
-        var a = {};
-        var b = {
+    function $ParseProvider() {
+        var cache = {};
+        var $parseOptions = {
             csp: false,
             unwrapPromises: false,
             logPromiseWarnings: true
         };
-        this.unwrapPromises = function(a) {
-            if (I(a)) {
-                b.unwrapPromises = !!a;
+        this.unwrapPromises = function(value) {
+            if (isDefined(value)) {
+                $parseOptions.unwrapPromises = !!value;
                 return this;
             } else {
-                return b.unwrapPromises;
+                return $parseOptions.unwrapPromises;
             }
         };
-        this.logPromiseWarnings = function(a) {
-            if (I(a)) {
-                b.logPromiseWarnings = a;
+        this.logPromiseWarnings = function(value) {
+            if (isDefined(value)) {
+                $parseOptions.logPromiseWarnings = value;
                 return this;
             } else {
-                return b.logPromiseWarnings;
+                return $parseOptions.logPromiseWarnings;
             }
         };
-        this.$get = [ "$filter", "$sniffer", "$log", function(c, d, e) {
-            b.csp = d.csp;
-            gd = function f(a) {
-                if (!b.logPromiseWarnings || fd.hasOwnProperty(a)) return;
-                fd[a] = true;
-                e.warn("[$parse] Promise found in the expression `" + a + "`. " + "Automatic unwrapping of promises in Angular expressions is deprecated.");
+        this.$get = [ "$filter", "$sniffer", "$log", function($filter, $sniffer, $log) {
+            $parseOptions.csp = $sniffer.csp;
+            promiseWarning = function promiseWarningFn(fullExp) {
+                if (!$parseOptions.logPromiseWarnings || promiseWarningCache.hasOwnProperty(fullExp)) return;
+                promiseWarningCache[fullExp] = true;
+                $log.warn("[$parse] Promise found in the expression `" + fullExp + "`. " + "Automatic unwrapping of promises in Angular expressions is deprecated.");
             };
-            return function(d) {
-                var e;
-                switch (typeof d) {
+            return function(exp) {
+                var parsedExpression;
+                switch (typeof exp) {
                   case "string":
-                    if (a.hasOwnProperty(d)) {
-                        return a[d];
+                    if (cache.hasOwnProperty(exp)) {
+                        return cache[exp];
                     }
-                    var f = new ld(b);
-                    var g = new md(f, c, b);
-                    e = g.parse(d, false);
-                    if (d !== "hasOwnProperty") {
-                        a[d] = e;
+                    var lexer = new Lexer($parseOptions);
+                    var parser = new Parser(lexer, $filter, $parseOptions);
+                    parsedExpression = parser.parse(exp, false);
+                    if (exp !== "hasOwnProperty") {
+                        cache[exp] = parsedExpression;
                     }
-                    return e;
+                    return parsedExpression;
 
                   case "function":
-                    return d;
+                    return exp;
 
                   default:
-                    return E;
+                    return noop;
                 }
             };
         } ];
     }
-    function sd() {
-        this.$get = [ "$rootScope", "$exceptionHandler", function(a, b) {
-            return td(function(b) {
-                a.$evalAsync(b);
-            }, b);
+    function $QProvider() {
+        this.$get = [ "$rootScope", "$exceptionHandler", function($rootScope, $exceptionHandler) {
+            return qFactory(function(callback) {
+                $rootScope.$evalAsync(callback);
+            }, $exceptionHandler);
         } ];
     }
-    function td(a, b) {
-        var d = function() {
-            var g = [], j, k;
-            k = {
-                resolve: function(b) {
-                    if (g) {
-                        var d = g;
-                        g = c;
-                        j = e(b);
-                        if (d.length) {
-                            a(function() {
-                                var a;
-                                for (var b = 0, c = d.length; b < c; b++) {
-                                    a = d[b];
-                                    j.then(a[0], a[1], a[2]);
+    function qFactory(nextTick, exceptionHandler) {
+        var defer = function() {
+            var pending = [], value, deferred;
+            deferred = {
+                resolve: function(val) {
+                    if (pending) {
+                        var callbacks = pending;
+                        pending = undefined;
+                        value = ref(val);
+                        if (callbacks.length) {
+                            nextTick(function() {
+                                var callback;
+                                for (var i = 0, ii = callbacks.length; i < ii; i++) {
+                                    callback = callbacks[i];
+                                    value.then(callback[0], callback[1], callback[2]);
                                 }
                             });
                         }
                     }
                 },
-                reject: function(a) {
-                    k.resolve(f(a));
+                reject: function(reason) {
+                    deferred.resolve(reject(reason));
                 },
-                notify: function(b) {
-                    if (g) {
-                        var c = g;
-                        if (g.length) {
-                            a(function() {
-                                var a;
-                                for (var d = 0, e = c.length; d < e; d++) {
-                                    a = c[d];
-                                    a[2](b);
+                notify: function(progress) {
+                    if (pending) {
+                        var callbacks = pending;
+                        if (pending.length) {
+                            nextTick(function() {
+                                var callback;
+                                for (var i = 0, ii = callbacks.length; i < ii; i++) {
+                                    callback = callbacks[i];
+                                    callback[2](progress);
                                 }
                             });
                         }
                     }
                 },
                 promise: {
-                    then: function(a, c, e) {
-                        var f = d();
-                        var k = function(c) {
+                    then: function(callback, errback, progressback) {
+                        var result = defer();
+                        var wrappedCallback = function(value) {
                             try {
-                                f.resolve((O(a) ? a : h)(c));
-                            } catch (d) {
-                                f.reject(d);
-                                b(d);
+                                result.resolve((isFunction(callback) ? callback : defaultCallback)(value));
+                            } catch (e) {
+                                result.reject(e);
+                                exceptionHandler(e);
                             }
                         };
-                        var l = function(a) {
+                        var wrappedErrback = function(reason) {
                             try {
-                                f.resolve((O(c) ? c : i)(a));
-                            } catch (d) {
-                                f.reject(d);
-                                b(d);
+                                result.resolve((isFunction(errback) ? errback : defaultErrback)(reason));
+                            } catch (e) {
+                                result.reject(e);
+                                exceptionHandler(e);
                             }
                         };
-                        var m = function(a) {
+                        var wrappedProgressback = function(progress) {
                             try {
-                                f.notify((O(e) ? e : h)(a));
-                            } catch (c) {
-                                b(c);
+                                result.notify((isFunction(progressback) ? progressback : defaultCallback)(progress));
+                            } catch (e) {
+                                exceptionHandler(e);
                             }
                         };
-                        if (g) {
-                            g.push([ k, l, m ]);
+                        if (pending) {
+                            pending.push([ wrappedCallback, wrappedErrback, wrappedProgressback ]);
                         } else {
-                            j.then(k, l, m);
+                            value.then(wrappedCallback, wrappedErrback, wrappedProgressback);
                         }
-                        return f.promise;
+                        return result.promise;
                     },
-                    "catch": function(a) {
-                        return this.then(null, a);
+                    "catch": function(callback) {
+                        return this.then(null, callback);
                     },
-                    "finally": function(a) {
-                        function b(a, b) {
-                            var c = d();
-                            if (b) {
-                                c.resolve(a);
+                    "finally": function(callback) {
+                        function makePromise(value, resolved) {
+                            var result = defer();
+                            if (resolved) {
+                                result.resolve(value);
                             } else {
-                                c.reject(a);
+                                result.reject(value);
                             }
-                            return c.promise;
+                            return result.promise;
                         }
-                        function c(c, d) {
-                            var e = null;
+                        function handleCallback(value, isResolved) {
+                            var callbackOutput = null;
                             try {
-                                e = (a || h)();
-                            } catch (f) {
-                                return b(f, false);
+                                callbackOutput = (callback || defaultCallback)();
+                            } catch (e) {
+                                return makePromise(e, false);
                             }
-                            if (e && O(e.then)) {
-                                return e.then(function() {
-                                    return b(c, d);
-                                }, function(a) {
-                                    return b(a, false);
+                            if (callbackOutput && isFunction(callbackOutput.then)) {
+                                return callbackOutput.then(function() {
+                                    return makePromise(value, isResolved);
+                                }, function(error) {
+                                    return makePromise(error, false);
                                 });
                             } else {
-                                return b(c, d);
+                                return makePromise(value, isResolved);
                             }
                         }
-                        return this.then(function(a) {
-                            return c(a, true);
-                        }, function(a) {
-                            return c(a, false);
+                        return this.then(function(value) {
+                            return handleCallback(value, true);
+                        }, function(error) {
+                            return handleCallback(error, false);
                         });
                     }
                 }
             };
-            return k;
+            return deferred;
         };
-        var e = function(b) {
-            if (b && O(b.then)) return b;
+        var ref = function(value) {
+            if (value && isFunction(value.then)) return value;
             return {
-                then: function(c) {
-                    var e = d();
-                    a(function() {
-                        e.resolve(c(b));
+                then: function(callback) {
+                    var result = defer();
+                    nextTick(function() {
+                        result.resolve(callback(value));
                     });
-                    return e.promise;
+                    return result.promise;
                 }
             };
         };
-        var f = function(c) {
+        var reject = function(reason) {
             return {
-                then: function(e, f) {
-                    var g = d();
-                    a(function() {
+                then: function(callback, errback) {
+                    var result = defer();
+                    nextTick(function() {
                         try {
-                            g.resolve((O(f) ? f : i)(c));
-                        } catch (a) {
-                            g.reject(a);
-                            b(a);
+                            result.resolve((isFunction(errback) ? errback : defaultErrback)(reason));
+                        } catch (e) {
+                            result.reject(e);
+                            exceptionHandler(e);
                         }
                     });
-                    return g.promise;
+                    return result.promise;
                 }
             };
         };
-        var g = function(c, g, j, k) {
-            var l = d(), m;
-            var n = function(a) {
+        var when = function(value, callback, errback, progressback) {
+            var result = defer(), done;
+            var wrappedCallback = function(value) {
                 try {
-                    return (O(g) ? g : h)(a);
-                } catch (c) {
-                    b(c);
-                    return f(c);
+                    return (isFunction(callback) ? callback : defaultCallback)(value);
+                } catch (e) {
+                    exceptionHandler(e);
+                    return reject(e);
                 }
             };
-            var o = function(a) {
+            var wrappedErrback = function(reason) {
                 try {
-                    return (O(j) ? j : i)(a);
-                } catch (c) {
-                    b(c);
-                    return f(c);
+                    return (isFunction(errback) ? errback : defaultErrback)(reason);
+                } catch (e) {
+                    exceptionHandler(e);
+                    return reject(e);
                 }
             };
-            var p = function(a) {
+            var wrappedProgressback = function(progress) {
                 try {
-                    return (O(k) ? k : h)(a);
-                } catch (c) {
-                    b(c);
+                    return (isFunction(progressback) ? progressback : defaultCallback)(progress);
+                } catch (e) {
+                    exceptionHandler(e);
                 }
             };
-            a(function() {
-                e(c).then(function(a) {
-                    if (m) return;
-                    m = true;
-                    l.resolve(e(a).then(n, o, p));
-                }, function(a) {
-                    if (m) return;
-                    m = true;
-                    l.resolve(o(a));
-                }, function(a) {
-                    if (m) return;
-                    l.notify(p(a));
+            nextTick(function() {
+                ref(value).then(function(value) {
+                    if (done) return;
+                    done = true;
+                    result.resolve(ref(value).then(wrappedCallback, wrappedErrback, wrappedProgressback));
+                }, function(reason) {
+                    if (done) return;
+                    done = true;
+                    result.resolve(wrappedErrback(reason));
+                }, function(progress) {
+                    if (done) return;
+                    result.notify(wrappedProgressback(progress));
                 });
             });
-            return l.promise;
+            return result.promise;
         };
-        function h(a) {
-            return a;
+        function defaultCallback(value) {
+            return value;
         }
-        function i(a) {
-            return f(a);
+        function defaultErrback(reason) {
+            return reject(reason);
         }
-        function j(a) {
-            var b = d(), c = 0, f = N(a) ? [] : {};
-            v(a, function(a, d) {
-                c++;
-                e(a).then(function(a) {
-                    if (f.hasOwnProperty(d)) return;
-                    f[d] = a;
-                    if (!--c) b.resolve(f);
-                }, function(a) {
-                    if (f.hasOwnProperty(d)) return;
-                    b.reject(a);
+        function all(promises) {
+            var deferred = defer(), counter = 0, results = isArray(promises) ? [] : {};
+            forEach(promises, function(promise, key) {
+                counter++;
+                ref(promise).then(function(value) {
+                    if (results.hasOwnProperty(key)) return;
+                    results[key] = value;
+                    if (!--counter) deferred.resolve(results);
+                }, function(reason) {
+                    if (results.hasOwnProperty(key)) return;
+                    deferred.reject(reason);
                 });
             });
-            if (c === 0) {
-                b.resolve(f);
+            if (counter === 0) {
+                deferred.resolve(results);
             }
-            return b.promise;
+            return deferred.promise;
         }
         return {
-            defer: d,
-            reject: f,
-            when: g,
-            all: j
+            defer: defer,
+            reject: reject,
+            when: when,
+            all: all
         };
     }
-    function ud() {
-        var a = 10;
-        var b = d("$rootScope");
-        this.digestTtl = function(b) {
+    function $RootScopeProvider() {
+        var TTL = 10;
+        var $rootScopeMinErr = minErr("$rootScope");
+        this.digestTtl = function(value) {
             if (arguments.length) {
-                a = b;
+                TTL = value;
             }
-            return a;
+            return TTL;
         };
-        this.$get = [ "$injector", "$exceptionHandler", "$parse", "$browser", function(c, d, e, f) {
-            function g() {
-                this.$id = z();
+        this.$get = [ "$injector", "$exceptionHandler", "$parse", "$browser", function($injector, $exceptionHandler, $parse, $browser) {
+            function Scope() {
+                this.$id = nextUid();
                 this.$$phase = this.$parent = this.$$watchers = this.$$nextSibling = this.$$prevSibling = this.$$childHead = this.$$childTail = null;
                 this["this"] = this.$root = this;
                 this.$$destroyed = false;
@@ -4736,717 +4737,717 @@
                 this.$$listeners = {};
                 this.$$isolateBindings = {};
             }
-            g.prototype = {
-                constructor: g,
-                $new: function(a) {
-                    var b, c;
-                    if (a) {
-                        c = new g();
-                        c.$root = this.$root;
-                        c.$$asyncQueue = this.$$asyncQueue;
-                        c.$$postDigestQueue = this.$$postDigestQueue;
+            Scope.prototype = {
+                constructor: Scope,
+                $new: function(isolate) {
+                    var Child, child;
+                    if (isolate) {
+                        child = new Scope();
+                        child.$root = this.$root;
+                        child.$$asyncQueue = this.$$asyncQueue;
+                        child.$$postDigestQueue = this.$$postDigestQueue;
                     } else {
-                        b = function() {};
-                        b.prototype = this;
-                        c = new b();
-                        c.$id = z();
+                        Child = function() {};
+                        Child.prototype = this;
+                        child = new Child();
+                        child.$id = nextUid();
                     }
-                    c["this"] = c;
-                    c.$$listeners = {};
-                    c.$parent = this;
-                    c.$$watchers = c.$$nextSibling = c.$$childHead = c.$$childTail = null;
-                    c.$$prevSibling = this.$$childTail;
+                    child["this"] = child;
+                    child.$$listeners = {};
+                    child.$parent = this;
+                    child.$$watchers = child.$$nextSibling = child.$$childHead = child.$$childTail = null;
+                    child.$$prevSibling = this.$$childTail;
                     if (this.$$childHead) {
-                        this.$$childTail.$$nextSibling = c;
-                        this.$$childTail = c;
+                        this.$$childTail.$$nextSibling = child;
+                        this.$$childTail = child;
                     } else {
-                        this.$$childHead = this.$$childTail = c;
+                        this.$$childHead = this.$$childTail = child;
                     }
-                    return c;
+                    return child;
                 },
-                $watch: function(a, b, c) {
-                    var d = this, e = k(a, "watch"), f = d.$$watchers, g = {
-                        fn: b,
-                        last: l,
-                        get: e,
-                        exp: a,
-                        eq: !!c
+                $watch: function(watchExp, listener, objectEquality) {
+                    var scope = this, get = compileToFn(watchExp, "watch"), array = scope.$$watchers, watcher = {
+                        fn: listener,
+                        last: initWatchVal,
+                        get: get,
+                        exp: watchExp,
+                        eq: !!objectEquality
                     };
-                    if (!O(b)) {
-                        var h = k(b || E, "listener");
-                        g.fn = function(a, b, c) {
-                            h(c);
+                    if (!isFunction(listener)) {
+                        var listenFn = compileToFn(listener || noop, "listener");
+                        watcher.fn = function(newVal, oldVal, scope) {
+                            listenFn(scope);
                         };
                     }
-                    if (typeof a == "string" && e.constant) {
-                        var i = g.fn;
-                        g.fn = function(a, b, c) {
-                            i.call(this, a, b, c);
-                            _(f, g);
+                    if (typeof watchExp == "string" && get.constant) {
+                        var originalFn = watcher.fn;
+                        watcher.fn = function(newVal, oldVal, scope) {
+                            originalFn.call(this, newVal, oldVal, scope);
+                            arrayRemove(array, watcher);
                         };
                     }
-                    if (!f) {
-                        f = d.$$watchers = [];
+                    if (!array) {
+                        array = scope.$$watchers = [];
                     }
-                    f.unshift(g);
+                    array.unshift(watcher);
                     return function() {
-                        _(f, g);
+                        arrayRemove(array, watcher);
                     };
                 },
-                $watchCollection: function(a, b) {
-                    var c = this;
-                    var d;
-                    var f;
-                    var g = 0;
-                    var h = e(a);
-                    var i = [];
-                    var j = {};
-                    var k = 0;
-                    function l() {
-                        f = h(c);
-                        var a, b;
-                        if (!J(f)) {
-                            if (d !== f) {
-                                d = f;
-                                g++;
+                $watchCollection: function(obj, listener) {
+                    var self = this;
+                    var oldValue;
+                    var newValue;
+                    var changeDetected = 0;
+                    var objGetter = $parse(obj);
+                    var internalArray = [];
+                    var internalObject = {};
+                    var oldLength = 0;
+                    function $watchCollectionWatch() {
+                        newValue = objGetter(self);
+                        var newLength, key;
+                        if (!isObject(newValue)) {
+                            if (oldValue !== newValue) {
+                                oldValue = newValue;
+                                changeDetected++;
                             }
-                        } else if (u(f)) {
-                            if (d !== i) {
-                                d = i;
-                                k = d.length = 0;
-                                g++;
+                        } else if (isArrayLike(newValue)) {
+                            if (oldValue !== internalArray) {
+                                oldValue = internalArray;
+                                oldLength = oldValue.length = 0;
+                                changeDetected++;
                             }
-                            a = f.length;
-                            if (k !== a) {
-                                g++;
-                                d.length = k = a;
+                            newLength = newValue.length;
+                            if (oldLength !== newLength) {
+                                changeDetected++;
+                                oldValue.length = oldLength = newLength;
                             }
-                            for (var e = 0; e < a; e++) {
-                                if (d[e] !== f[e]) {
-                                    g++;
-                                    d[e] = f[e];
+                            for (var i = 0; i < newLength; i++) {
+                                if (oldValue[i] !== newValue[i]) {
+                                    changeDetected++;
+                                    oldValue[i] = newValue[i];
                                 }
                             }
                         } else {
-                            if (d !== j) {
-                                d = j = {};
-                                k = 0;
-                                g++;
+                            if (oldValue !== internalObject) {
+                                oldValue = internalObject = {};
+                                oldLength = 0;
+                                changeDetected++;
                             }
-                            a = 0;
-                            for (b in f) {
-                                if (f.hasOwnProperty(b)) {
-                                    a++;
-                                    if (d.hasOwnProperty(b)) {
-                                        if (d[b] !== f[b]) {
-                                            g++;
-                                            d[b] = f[b];
+                            newLength = 0;
+                            for (key in newValue) {
+                                if (newValue.hasOwnProperty(key)) {
+                                    newLength++;
+                                    if (oldValue.hasOwnProperty(key)) {
+                                        if (oldValue[key] !== newValue[key]) {
+                                            changeDetected++;
+                                            oldValue[key] = newValue[key];
                                         }
                                     } else {
-                                        k++;
-                                        d[b] = f[b];
-                                        g++;
+                                        oldLength++;
+                                        oldValue[key] = newValue[key];
+                                        changeDetected++;
                                     }
                                 }
                             }
-                            if (k > a) {
-                                g++;
-                                for (b in d) {
-                                    if (d.hasOwnProperty(b) && !f.hasOwnProperty(b)) {
-                                        k--;
-                                        delete d[b];
+                            if (oldLength > newLength) {
+                                changeDetected++;
+                                for (key in oldValue) {
+                                    if (oldValue.hasOwnProperty(key) && !newValue.hasOwnProperty(key)) {
+                                        oldLength--;
+                                        delete oldValue[key];
                                     }
                                 }
                             }
                         }
-                        return g;
+                        return changeDetected;
                     }
-                    function m() {
-                        b(f, d, c);
+                    function $watchCollectionAction() {
+                        listener(newValue, oldValue, self);
                     }
-                    return this.$watch(l, m);
+                    return this.$watch($watchCollectionWatch, $watchCollectionAction);
                 },
                 $digest: function() {
-                    var c, e, f, g, h = this.$$asyncQueue, k = this.$$postDigestQueue, m, n, o = a, p, q, r = this, s = [], t, u, v;
-                    i("$digest");
+                    var watch, value, last, watchers, asyncQueue = this.$$asyncQueue, postDigestQueue = this.$$postDigestQueue, length, dirty, ttl = TTL, next, current, target = this, watchLog = [], logIdx, logMsg, asyncTask;
+                    beginPhase("$digest");
                     do {
-                        n = false;
-                        q = r;
-                        while (h.length) {
+                        dirty = false;
+                        current = target;
+                        while (asyncQueue.length) {
                             try {
-                                v = h.shift();
-                                v.scope.$eval(v.expression);
-                            } catch (w) {
-                                d(w);
+                                asyncTask = asyncQueue.shift();
+                                asyncTask.scope.$eval(asyncTask.expression);
+                            } catch (e) {
+                                $exceptionHandler(e);
                             }
                         }
                         do {
-                            if (g = q.$$watchers) {
-                                m = g.length;
-                                while (m--) {
+                            if (watchers = current.$$watchers) {
+                                length = watchers.length;
+                                while (length--) {
                                     try {
-                                        c = g[m];
-                                        if (c && (e = c.get(q)) !== (f = c.last) && !(c.eq ? db(e, f) : typeof e == "number" && typeof f == "number" && isNaN(e) && isNaN(f))) {
-                                            n = true;
-                                            c.last = c.eq ? bb(e) : e;
-                                            c.fn(e, f === l ? e : f, q);
-                                            if (o < 5) {
-                                                t = 4 - o;
-                                                if (!s[t]) s[t] = [];
-                                                u = O(c.exp) ? "fn: " + (c.exp.name || c.exp.toString()) : c.exp;
-                                                u += "; newVal: " + ib(e) + "; oldVal: " + ib(f);
-                                                s[t].push(u);
+                                        watch = watchers[length];
+                                        if (watch && (value = watch.get(current)) !== (last = watch.last) && !(watch.eq ? equals(value, last) : typeof value == "number" && typeof last == "number" && isNaN(value) && isNaN(last))) {
+                                            dirty = true;
+                                            watch.last = watch.eq ? copy(value) : value;
+                                            watch.fn(value, last === initWatchVal ? value : last, current);
+                                            if (ttl < 5) {
+                                                logIdx = 4 - ttl;
+                                                if (!watchLog[logIdx]) watchLog[logIdx] = [];
+                                                logMsg = isFunction(watch.exp) ? "fn: " + (watch.exp.name || watch.exp.toString()) : watch.exp;
+                                                logMsg += "; newVal: " + toJson(value) + "; oldVal: " + toJson(last);
+                                                watchLog[logIdx].push(logMsg);
                                             }
                                         }
-                                    } catch (w) {
-                                        d(w);
+                                    } catch (e) {
+                                        $exceptionHandler(e);
                                     }
                                 }
                             }
-                            if (!(p = q.$$childHead || q !== r && q.$$nextSibling)) {
-                                while (q !== r && !(p = q.$$nextSibling)) {
-                                    q = q.$parent;
+                            if (!(next = current.$$childHead || current !== target && current.$$nextSibling)) {
+                                while (current !== target && !(next = current.$$nextSibling)) {
+                                    current = current.$parent;
                                 }
                             }
-                        } while (q = p);
-                        if (n && !o--) {
-                            j();
-                            throw b("infdig", "{0} $digest() iterations reached. Aborting!\nWatchers fired in the last 5 iterations: {1}", a, ib(s));
+                        } while (current = next);
+                        if (dirty && !ttl--) {
+                            clearPhase();
+                            throw $rootScopeMinErr("infdig", "{0} $digest() iterations reached. Aborting!\nWatchers fired in the last 5 iterations: {1}", TTL, toJson(watchLog));
                         }
-                    } while (n || h.length);
-                    j();
-                    while (k.length) {
+                    } while (dirty || asyncQueue.length);
+                    clearPhase();
+                    while (postDigestQueue.length) {
                         try {
-                            k.shift()();
-                        } catch (w) {
-                            d(w);
+                            postDigestQueue.shift()();
+                        } catch (e) {
+                            $exceptionHandler(e);
                         }
                     }
                 },
                 $destroy: function() {
-                    if (h == this || this.$$destroyed) return;
-                    var a = this.$parent;
+                    if ($rootScope == this || this.$$destroyed) return;
+                    var parent = this.$parent;
                     this.$broadcast("$destroy");
                     this.$$destroyed = true;
-                    if (a.$$childHead == this) a.$$childHead = this.$$nextSibling;
-                    if (a.$$childTail == this) a.$$childTail = this.$$prevSibling;
+                    if (parent.$$childHead == this) parent.$$childHead = this.$$nextSibling;
+                    if (parent.$$childTail == this) parent.$$childTail = this.$$prevSibling;
                     if (this.$$prevSibling) this.$$prevSibling.$$nextSibling = this.$$nextSibling;
                     if (this.$$nextSibling) this.$$nextSibling.$$prevSibling = this.$$prevSibling;
                     this.$parent = this.$$nextSibling = this.$$prevSibling = this.$$childHead = this.$$childTail = null;
                 },
-                $eval: function(a, b) {
-                    return e(a)(this, b);
+                $eval: function(expr, locals) {
+                    return $parse(expr)(this, locals);
                 },
-                $evalAsync: function(a) {
-                    if (!h.$$phase && !h.$$asyncQueue.length) {
-                        f.defer(function() {
-                            if (h.$$asyncQueue.length) {
-                                h.$digest();
+                $evalAsync: function(expr) {
+                    if (!$rootScope.$$phase && !$rootScope.$$asyncQueue.length) {
+                        $browser.defer(function() {
+                            if ($rootScope.$$asyncQueue.length) {
+                                $rootScope.$digest();
                             }
                         });
                     }
                     this.$$asyncQueue.push({
                         scope: this,
-                        expression: a
+                        expression: expr
                     });
                 },
-                $$postDigest: function(a) {
-                    this.$$postDigestQueue.push(a);
+                $$postDigest: function(fn) {
+                    this.$$postDigestQueue.push(fn);
                 },
-                $apply: function(a) {
+                $apply: function(expr) {
                     try {
-                        i("$apply");
-                        return this.$eval(a);
-                    } catch (b) {
-                        d(b);
+                        beginPhase("$apply");
+                        return this.$eval(expr);
+                    } catch (e) {
+                        $exceptionHandler(e);
                     } finally {
-                        j();
+                        clearPhase();
                         try {
-                            h.$digest();
-                        } catch (b) {
-                            d(b);
-                            throw b;
+                            $rootScope.$digest();
+                        } catch (e) {
+                            $exceptionHandler(e);
+                            throw e;
                         }
                     }
                 },
-                $on: function(a, b) {
-                    var c = this.$$listeners[a];
-                    if (!c) {
-                        this.$$listeners[a] = c = [];
+                $on: function(name, listener) {
+                    var namedListeners = this.$$listeners[name];
+                    if (!namedListeners) {
+                        this.$$listeners[name] = namedListeners = [];
                     }
-                    c.push(b);
+                    namedListeners.push(listener);
                     return function() {
-                        c[$(c, b)] = null;
+                        namedListeners[indexOf(namedListeners, listener)] = null;
                     };
                 },
-                $emit: function(a, b) {
-                    var c = [], e, f = this, g = false, h = {
-                        name: a,
-                        targetScope: f,
+                $emit: function(name, args) {
+                    var empty = [], namedListeners, scope = this, stopPropagation = false, event = {
+                        name: name,
+                        targetScope: scope,
                         stopPropagation: function() {
-                            g = true;
+                            stopPropagation = true;
                         },
                         preventDefault: function() {
-                            h.defaultPrevented = true;
+                            event.defaultPrevented = true;
                         },
                         defaultPrevented: false
-                    }, i = eb([ h ], arguments, 1), j, k;
+                    }, listenerArgs = concat([ event ], arguments, 1), i, length;
                     do {
-                        e = f.$$listeners[a] || c;
-                        h.currentScope = f;
-                        for (j = 0, k = e.length; j < k; j++) {
-                            if (!e[j]) {
-                                e.splice(j, 1);
-                                j--;
-                                k--;
+                        namedListeners = scope.$$listeners[name] || empty;
+                        event.currentScope = scope;
+                        for (i = 0, length = namedListeners.length; i < length; i++) {
+                            if (!namedListeners[i]) {
+                                namedListeners.splice(i, 1);
+                                i--;
+                                length--;
                                 continue;
                             }
                             try {
-                                e[j].apply(null, i);
-                            } catch (l) {
-                                d(l);
+                                namedListeners[i].apply(null, listenerArgs);
+                            } catch (e) {
+                                $exceptionHandler(e);
                             }
                         }
-                        if (g) return h;
-                        f = f.$parent;
-                    } while (f);
-                    return h;
+                        if (stopPropagation) return event;
+                        scope = scope.$parent;
+                    } while (scope);
+                    return event;
                 },
-                $broadcast: function(a, b) {
-                    var c = this, e = c, f = c, g = {
-                        name: a,
-                        targetScope: c,
+                $broadcast: function(name, args) {
+                    var target = this, current = target, next = target, event = {
+                        name: name,
+                        targetScope: target,
                         preventDefault: function() {
-                            g.defaultPrevented = true;
+                            event.defaultPrevented = true;
                         },
                         defaultPrevented: false
-                    }, h = eb([ g ], arguments, 1), i, j, k;
+                    }, listenerArgs = concat([ event ], arguments, 1), listeners, i, length;
                     do {
-                        e = f;
-                        g.currentScope = e;
-                        i = e.$$listeners[a] || [];
-                        for (j = 0, k = i.length; j < k; j++) {
-                            if (!i[j]) {
-                                i.splice(j, 1);
-                                j--;
-                                k--;
+                        current = next;
+                        event.currentScope = current;
+                        listeners = current.$$listeners[name] || [];
+                        for (i = 0, length = listeners.length; i < length; i++) {
+                            if (!listeners[i]) {
+                                listeners.splice(i, 1);
+                                i--;
+                                length--;
                                 continue;
                             }
                             try {
-                                i[j].apply(null, h);
-                            } catch (l) {
-                                d(l);
+                                listeners[i].apply(null, listenerArgs);
+                            } catch (e) {
+                                $exceptionHandler(e);
                             }
                         }
-                        if (!(f = e.$$childHead || e !== c && e.$$nextSibling)) {
-                            while (e !== c && !(f = e.$$nextSibling)) {
-                                e = e.$parent;
+                        if (!(next = current.$$childHead || current !== target && current.$$nextSibling)) {
+                            while (current !== target && !(next = current.$$nextSibling)) {
+                                current = current.$parent;
                             }
                         }
-                    } while (e = f);
-                    return g;
+                    } while (current = next);
+                    return event;
                 }
             };
-            var h = new g();
-            return h;
-            function i(a) {
-                if (h.$$phase) {
-                    throw b("inprog", "{0} already in progress", h.$$phase);
+            var $rootScope = new Scope();
+            return $rootScope;
+            function beginPhase(phase) {
+                if ($rootScope.$$phase) {
+                    throw $rootScopeMinErr("inprog", "{0} already in progress", $rootScope.$$phase);
                 }
-                h.$$phase = a;
+                $rootScope.$$phase = phase;
             }
-            function j() {
-                h.$$phase = null;
+            function clearPhase() {
+                $rootScope.$$phase = null;
             }
-            function k(a, b) {
-                var c = e(a);
-                xb(c, b);
-                return c;
+            function compileToFn(exp, name) {
+                var fn = $parse(exp);
+                assertArgFn(fn, name);
+                return fn;
             }
-            function l() {}
+            function initWatchVal() {}
         } ];
     }
-    var vd = d("$sce");
-    var wd = {
+    var $sceMinErr = minErr("$sce");
+    var SCE_CONTEXTS = {
         HTML: "html",
         CSS: "css",
         URL: "url",
         RESOURCE_URL: "resourceUrl",
         JS: "js"
     };
-    function xd(a) {
-        return a.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, "\\$1").replace(/\x08/g, "\\x08");
+    function escapeForRegexp(s) {
+        return s.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, "\\$1").replace(/\x08/g, "\\x08");
     }
-    function yd(a) {
-        if (a === "self") {
-            return a;
-        } else if (K(a)) {
-            if (a.indexOf("***") > -1) {
-                throw vd("iwcard", "Illegal sequence *** in string matcher.  String: {0}", a);
+    function adjustMatcher(matcher) {
+        if (matcher === "self") {
+            return matcher;
+        } else if (isString(matcher)) {
+            if (matcher.indexOf("***") > -1) {
+                throw $sceMinErr("iwcard", "Illegal sequence *** in string matcher.  String: {0}", matcher);
             }
-            a = xd(a).replace("\\*\\*", ".*").replace("\\*", "[^:/.?&;]*");
-            return new RegExp("^" + a + "$");
-        } else if (P(a)) {
-            return new RegExp("^" + a.source + "$");
+            matcher = escapeForRegexp(matcher).replace("\\*\\*", ".*").replace("\\*", "[^:/.?&;]*");
+            return new RegExp("^" + matcher + "$");
+        } else if (isRegExp(matcher)) {
+            return new RegExp("^" + matcher.source + "$");
         } else {
-            throw vd("imatcher", 'Matchers may only be "self", string patterns or RegExp objects');
+            throw $sceMinErr("imatcher", 'Matchers may only be "self", string patterns or RegExp objects');
         }
     }
-    function zd(a) {
-        var b = [];
-        if (I(a)) {
-            v(a, function(a) {
-                b.push(yd(a));
+    function adjustMatchers(matchers) {
+        var adjustedMatchers = [];
+        if (isDefined(matchers)) {
+            forEach(matchers, function(matcher) {
+                adjustedMatchers.push(adjustMatcher(matcher));
             });
         }
-        return b;
+        return adjustedMatchers;
     }
-    function Ad() {
-        this.SCE_CONTEXTS = wd;
-        var a = [ "self" ], b = [];
-        this.resourceUrlWhitelist = function(b) {
+    function $SceDelegateProvider() {
+        this.SCE_CONTEXTS = SCE_CONTEXTS;
+        var resourceUrlWhitelist = [ "self" ], resourceUrlBlacklist = [];
+        this.resourceUrlWhitelist = function(value) {
             if (arguments.length) {
-                a = zd(b);
+                resourceUrlWhitelist = adjustMatchers(value);
             }
-            return a;
+            return resourceUrlWhitelist;
         };
-        this.resourceUrlBlacklist = function(a) {
+        this.resourceUrlBlacklist = function(value) {
             if (arguments.length) {
-                b = zd(a);
+                resourceUrlBlacklist = adjustMatchers(value);
             }
-            return b;
+            return resourceUrlBlacklist;
         };
-        this.$get = [ "$log", "$document", "$injector", function(d, e, f) {
-            var g = function p(a) {
-                throw vd("unsafe", "Attempting to use an unsafe value in a safe context.");
+        this.$get = [ "$log", "$document", "$injector", function($log, $document, $injector) {
+            var htmlSanitizer = function htmlSanitizer(html) {
+                throw $sceMinErr("unsafe", "Attempting to use an unsafe value in a safe context.");
             };
-            if (f.has("$sanitize")) {
-                g = f.get("$sanitize");
+            if ($injector.has("$sanitize")) {
+                htmlSanitizer = $injector.get("$sanitize");
             }
-            function h(a, b) {
-                if (a === "self") {
-                    return Hd(b);
+            function matchUrl(matcher, parsedUrl) {
+                if (matcher === "self") {
+                    return urlIsSameOrigin(parsedUrl);
                 } else {
-                    return !!a.exec(b.href);
+                    return !!matcher.exec(parsedUrl.href);
                 }
             }
-            function i(c) {
-                var d = Gd(c.toString());
-                var e, f, g = false;
-                for (e = 0, f = a.length; e < f; e++) {
-                    if (h(a[e], d)) {
-                        g = true;
+            function isResourceUrlAllowedByPolicy(url) {
+                var parsedUrl = urlResolve(url.toString());
+                var i, n, allowed = false;
+                for (i = 0, n = resourceUrlWhitelist.length; i < n; i++) {
+                    if (matchUrl(resourceUrlWhitelist[i], parsedUrl)) {
+                        allowed = true;
                         break;
                     }
                 }
-                if (g) {
-                    for (e = 0, f = b.length; e < f; e++) {
-                        if (h(b[e], d)) {
-                            g = false;
+                if (allowed) {
+                    for (i = 0, n = resourceUrlBlacklist.length; i < n; i++) {
+                        if (matchUrl(resourceUrlBlacklist[i], parsedUrl)) {
+                            allowed = false;
                             break;
                         }
                     }
                 }
-                return g;
+                return allowed;
             }
-            function j(a) {
-                var b = function c(a) {
+            function generateHolderType(base) {
+                var holderType = function TrustedValueHolderType(trustedValue) {
                     this.$$unwrapTrustedValue = function() {
-                        return a;
+                        return trustedValue;
                     };
                 };
-                if (a) {
-                    b.prototype = new a();
+                if (base) {
+                    holderType.prototype = new base();
                 }
-                b.prototype.valueOf = function d() {
+                holderType.prototype.valueOf = function sceValueOf() {
                     return this.$$unwrapTrustedValue();
                 };
-                b.prototype.toString = function e() {
+                holderType.prototype.toString = function sceToString() {
                     return this.$$unwrapTrustedValue().toString();
                 };
-                return b;
+                return holderType;
             }
-            var k = j(), l = {};
-            l[wd.HTML] = j(k);
-            l[wd.CSS] = j(k);
-            l[wd.URL] = j(k);
-            l[wd.JS] = j(k);
-            l[wd.RESOURCE_URL] = j(l[wd.URL]);
-            function m(a, b) {
-                var d = l.hasOwnProperty(a) ? l[a] : null;
-                if (!d) {
-                    throw vd("icontext", "Attempted to trust a value in invalid context. Context: {0}; Value: {1}", a, b);
+            var trustedValueHolderBase = generateHolderType(), byType = {};
+            byType[SCE_CONTEXTS.HTML] = generateHolderType(trustedValueHolderBase);
+            byType[SCE_CONTEXTS.CSS] = generateHolderType(trustedValueHolderBase);
+            byType[SCE_CONTEXTS.URL] = generateHolderType(trustedValueHolderBase);
+            byType[SCE_CONTEXTS.JS] = generateHolderType(trustedValueHolderBase);
+            byType[SCE_CONTEXTS.RESOURCE_URL] = generateHolderType(byType[SCE_CONTEXTS.URL]);
+            function trustAs(type, trustedValue) {
+                var constructor = byType.hasOwnProperty(type) ? byType[type] : null;
+                if (!constructor) {
+                    throw $sceMinErr("icontext", "Attempted to trust a value in invalid context. Context: {0}; Value: {1}", type, trustedValue);
                 }
-                if (b === null || b === c || b === "") {
-                    return b;
+                if (trustedValue === null || trustedValue === undefined || trustedValue === "") {
+                    return trustedValue;
                 }
-                if (typeof b !== "string") {
-                    throw vd("itype", "Attempted to trust a non-string value in a content requiring a string: Context: {0}", a);
+                if (typeof trustedValue !== "string") {
+                    throw $sceMinErr("itype", "Attempted to trust a non-string value in a content requiring a string: Context: {0}", type);
                 }
-                return new d(b);
+                return new constructor(trustedValue);
             }
-            function n(a) {
-                if (a instanceof k) {
-                    return a.$$unwrapTrustedValue();
+            function valueOf(maybeTrusted) {
+                if (maybeTrusted instanceof trustedValueHolderBase) {
+                    return maybeTrusted.$$unwrapTrustedValue();
                 } else {
-                    return a;
+                    return maybeTrusted;
                 }
             }
-            function o(a, b) {
-                if (b === null || b === c || b === "") {
-                    return b;
+            function getTrusted(type, maybeTrusted) {
+                if (maybeTrusted === null || maybeTrusted === undefined || maybeTrusted === "") {
+                    return maybeTrusted;
                 }
-                var d = l.hasOwnProperty(a) ? l[a] : null;
-                if (d && b instanceof d) {
-                    return b.$$unwrapTrustedValue();
+                var constructor = byType.hasOwnProperty(type) ? byType[type] : null;
+                if (constructor && maybeTrusted instanceof constructor) {
+                    return maybeTrusted.$$unwrapTrustedValue();
                 }
-                if (a === wd.RESOURCE_URL) {
-                    if (i(b)) {
-                        return b;
+                if (type === SCE_CONTEXTS.RESOURCE_URL) {
+                    if (isResourceUrlAllowedByPolicy(maybeTrusted)) {
+                        return maybeTrusted;
                     } else {
-                        throw vd("insecurl", "Blocked loading resource from url not allowed by $sceDelegate policy.  URL: {0}", b.toString());
+                        throw $sceMinErr("insecurl", "Blocked loading resource from url not allowed by $sceDelegate policy.  URL: {0}", maybeTrusted.toString());
                     }
-                } else if (a === wd.HTML) {
-                    return g(b);
+                } else if (type === SCE_CONTEXTS.HTML) {
+                    return htmlSanitizer(maybeTrusted);
                 }
-                throw vd("unsafe", "Attempting to use an unsafe value in a safe context.");
+                throw $sceMinErr("unsafe", "Attempting to use an unsafe value in a safe context.");
             }
             return {
-                trustAs: m,
-                getTrusted: o,
-                valueOf: n
+                trustAs: trustAs,
+                getTrusted: getTrusted,
+                valueOf: valueOf
             };
         } ];
     }
-    function Bd() {
-        var a = true;
-        this.enabled = function(b) {
+    function $SceProvider() {
+        var enabled = true;
+        this.enabled = function(value) {
             if (arguments.length) {
-                a = !!b;
+                enabled = !!value;
             }
-            return a;
+            return enabled;
         };
-        this.$get = [ "$parse", "$document", "$sceDelegate", function(b, d, f) {
-            if (a && i) {
-                var g = d[0].documentMode;
-                if (g !== c && g < 8) {
-                    throw vd("iequirks", "Strict Contextual Escaping does not support Internet Explorer version < 9 in quirks " + "mode.  You can fix this by adding the text <!doctype html> to the top of your HTML " + "document.  See http://docs.angularjs.org/api/ng.$sce for more information.");
+        this.$get = [ "$parse", "$document", "$sceDelegate", function($parse, $document, $sceDelegate) {
+            if (enabled && msie) {
+                var documentMode = $document[0].documentMode;
+                if (documentMode !== undefined && documentMode < 8) {
+                    throw $sceMinErr("iequirks", "Strict Contextual Escaping does not support Internet Explorer version < 9 in quirks " + "mode.  You can fix this by adding the text <!doctype html> to the top of your HTML " + "document.  See http://docs.angularjs.org/api/ng.$sce for more information.");
                 }
             }
-            var h = bb(wd);
-            h.isEnabled = function() {
-                return a;
+            var sce = copy(SCE_CONTEXTS);
+            sce.isEnabled = function() {
+                return enabled;
             };
-            h.trustAs = f.trustAs;
-            h.getTrusted = f.getTrusted;
-            h.valueOf = f.valueOf;
-            if (!a) {
-                h.trustAs = h.getTrusted = function(a, b) {
-                    return b;
-                }, h.valueOf = F;
+            sce.trustAs = $sceDelegate.trustAs;
+            sce.getTrusted = $sceDelegate.getTrusted;
+            sce.valueOf = $sceDelegate.valueOf;
+            if (!enabled) {
+                sce.trustAs = sce.getTrusted = function(type, value) {
+                    return value;
+                }, sce.valueOf = identity;
             }
-            h.parseAs = function m(a, c) {
-                var d = b(c);
-                if (d.literal && d.constant) {
-                    return d;
+            sce.parseAs = function sceParseAs(type, expr) {
+                var parsed = $parse(expr);
+                if (parsed.literal && parsed.constant) {
+                    return parsed;
                 } else {
-                    return function e(b, c) {
-                        return h.getTrusted(a, d(b, c));
+                    return function sceParseAsTrusted(self, locals) {
+                        return sce.getTrusted(type, parsed(self, locals));
                     };
                 }
             };
-            var j = h.parseAs, k = h.getTrusted, l = h.trustAs;
-            v(wd, function(a, b) {
-                var c = e(b);
-                h[Mb("parse_as_" + c)] = function(b) {
-                    return j(a, b);
+            var parse = sce.parseAs, getTrusted = sce.getTrusted, trustAs = sce.trustAs;
+            forEach(SCE_CONTEXTS, function(enumValue, name) {
+                var lName = lowercase(name);
+                sce[camelCase("parse_as_" + lName)] = function(expr) {
+                    return parse(enumValue, expr);
                 };
-                h[Mb("get_trusted_" + c)] = function(b) {
-                    return k(a, b);
+                sce[camelCase("get_trusted_" + lName)] = function(value) {
+                    return getTrusted(enumValue, value);
                 };
-                h[Mb("trust_as_" + c)] = function(b) {
-                    return l(a, b);
+                sce[camelCase("trust_as_" + lName)] = function(value) {
+                    return trustAs(enumValue, value);
                 };
             });
-            return h;
+            return sce;
         } ];
     }
-    function Cd() {
-        this.$get = [ "$window", "$document", function(a, b) {
-            var c = {}, d = C((/android (\d+)/.exec(e((a.navigator || {}).userAgent)) || [])[1]), f = /Boxee/i.test((a.navigator || {}).userAgent), g = b[0] || {}, h, j = /^(Moz|webkit|O|ms)(?=[A-Z])/, k = g.body && g.body.style, l = false, m = false, n;
-            if (k) {
-                for (var o in k) {
-                    if (n = j.exec(o)) {
-                        h = n[0];
-                        h = h.substr(0, 1).toUpperCase() + h.substr(1);
+    function $SnifferProvider() {
+        this.$get = [ "$window", "$document", function($window, $document) {
+            var eventSupport = {}, android = int((/android (\d+)/.exec(lowercase(($window.navigator || {}).userAgent)) || [])[1]), boxee = /Boxee/i.test(($window.navigator || {}).userAgent), document = $document[0] || {}, vendorPrefix, vendorRegex = /^(Moz|webkit|O|ms)(?=[A-Z])/, bodyStyle = document.body && document.body.style, transitions = false, animations = false, match;
+            if (bodyStyle) {
+                for (var prop in bodyStyle) {
+                    if (match = vendorRegex.exec(prop)) {
+                        vendorPrefix = match[0];
+                        vendorPrefix = vendorPrefix.substr(0, 1).toUpperCase() + vendorPrefix.substr(1);
                         break;
                     }
                 }
-                if (!h) {
-                    h = "WebkitOpacity" in k && "webkit";
+                if (!vendorPrefix) {
+                    vendorPrefix = "WebkitOpacity" in bodyStyle && "webkit";
                 }
-                l = !!("transition" in k || h + "Transition" in k);
-                m = !!("animation" in k || h + "Animation" in k);
-                if (d && (!l || !m)) {
-                    l = K(g.body.style.webkitTransition);
-                    m = K(g.body.style.webkitAnimation);
+                transitions = !!("transition" in bodyStyle || vendorPrefix + "Transition" in bodyStyle);
+                animations = !!("animation" in bodyStyle || vendorPrefix + "Animation" in bodyStyle);
+                if (android && (!transitions || !animations)) {
+                    transitions = isString(document.body.style.webkitTransition);
+                    animations = isString(document.body.style.webkitAnimation);
                 }
             }
             return {
-                history: !!(a.history && a.history.pushState && !(d < 4) && !f),
-                hashchange: "onhashchange" in a && (!g.documentMode || g.documentMode > 7),
-                hasEvent: function(a) {
-                    if (a == "input" && i == 9) return false;
-                    if (H(c[a])) {
-                        var b = g.createElement("div");
-                        c[a] = "on" + a in b;
+                history: !!($window.history && $window.history.pushState && !(android < 4) && !boxee),
+                hashchange: "onhashchange" in $window && (!document.documentMode || document.documentMode > 7),
+                hasEvent: function(event) {
+                    if (event == "input" && msie == 9) return false;
+                    if (isUndefined(eventSupport[event])) {
+                        var divElm = document.createElement("div");
+                        eventSupport[event] = "on" + event in divElm;
                     }
-                    return c[a];
+                    return eventSupport[event];
                 },
-                csp: g.securityPolicy ? g.securityPolicy.isActive : false,
-                vendorPrefix: h,
-                transitions: l,
-                animations: m
+                csp: document.securityPolicy ? document.securityPolicy.isActive : false,
+                vendorPrefix: vendorPrefix,
+                transitions: transitions,
+                animations: animations
             };
         } ];
     }
-    function Dd() {
-        this.$get = [ "$rootScope", "$browser", "$q", "$exceptionHandler", function(a, b, c, d) {
-            var e = {};
-            function f(f, g, h) {
-                var i = c.defer(), j = i.promise, k = I(h) && !h, l;
-                l = b.defer(function() {
+    function $TimeoutProvider() {
+        this.$get = [ "$rootScope", "$browser", "$q", "$exceptionHandler", function($rootScope, $browser, $q, $exceptionHandler) {
+            var deferreds = {};
+            function timeout(fn, delay, invokeApply) {
+                var deferred = $q.defer(), promise = deferred.promise, skipApply = isDefined(invokeApply) && !invokeApply, timeoutId;
+                timeoutId = $browser.defer(function() {
                     try {
-                        i.resolve(f());
-                    } catch (b) {
-                        i.reject(b);
-                        d(b);
+                        deferred.resolve(fn());
+                    } catch (e) {
+                        deferred.reject(e);
+                        $exceptionHandler(e);
                     } finally {
-                        delete e[j.$$timeoutId];
+                        delete deferreds[promise.$$timeoutId];
                     }
-                    if (!k) a.$apply();
-                }, g);
-                j.$$timeoutId = l;
-                e[l] = i;
-                return j;
+                    if (!skipApply) $rootScope.$apply();
+                }, delay);
+                promise.$$timeoutId = timeoutId;
+                deferreds[timeoutId] = deferred;
+                return promise;
             }
-            f.cancel = function(a) {
-                if (a && a.$$timeoutId in e) {
-                    e[a.$$timeoutId].reject("canceled");
-                    delete e[a.$$timeoutId];
-                    return b.defer.cancel(a.$$timeoutId);
+            timeout.cancel = function(promise) {
+                if (promise && promise.$$timeoutId in deferreds) {
+                    deferreds[promise.$$timeoutId].reject("canceled");
+                    delete deferreds[promise.$$timeoutId];
+                    return $browser.defer.cancel(promise.$$timeoutId);
                 }
                 return false;
             };
-            return f;
+            return timeout;
         } ];
     }
-    var Ed = b.createElement("a");
-    var Fd = Gd(a.location.href, true);
-    function Gd(a) {
-        var b = a;
-        if (i) {
-            Ed.setAttribute("href", b);
-            b = Ed.href;
+    var urlParsingNode = document.createElement("a");
+    var originUrl = urlResolve(window.location.href, true);
+    function urlResolve(url) {
+        var href = url;
+        if (msie) {
+            urlParsingNode.setAttribute("href", href);
+            href = urlParsingNode.href;
         }
-        Ed.setAttribute("href", b);
+        urlParsingNode.setAttribute("href", href);
         return {
-            href: Ed.href,
-            protocol: Ed.protocol ? Ed.protocol.replace(/:$/, "") : "",
-            host: Ed.host,
-            search: Ed.search ? Ed.search.replace(/^\?/, "") : "",
-            hash: Ed.hash ? Ed.hash.replace(/^#/, "") : "",
-            hostname: Ed.hostname,
-            port: Ed.port,
-            pathname: Ed.pathname && Ed.pathname.charAt(0) === "/" ? Ed.pathname : "/" + Ed.pathname
+            href: urlParsingNode.href,
+            protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, "") : "",
+            host: urlParsingNode.host,
+            search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, "") : "",
+            hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, "") : "",
+            hostname: urlParsingNode.hostname,
+            port: urlParsingNode.port,
+            pathname: urlParsingNode.pathname && urlParsingNode.pathname.charAt(0) === "/" ? urlParsingNode.pathname : "/" + urlParsingNode.pathname
         };
     }
-    function Hd(a) {
-        var b = K(a) ? Gd(a) : a;
-        return b.protocol === Fd.protocol && b.host === Fd.host;
+    function urlIsSameOrigin(requestUrl) {
+        var parsed = isString(requestUrl) ? urlResolve(requestUrl) : requestUrl;
+        return parsed.protocol === originUrl.protocol && parsed.host === originUrl.host;
     }
-    function Id() {
-        this.$get = G(a);
+    function $WindowProvider() {
+        this.$get = valueFn(window);
     }
-    Jd.$inject = [ "$provide" ];
-    function Jd(a) {
-        var b = "Filter";
-        function c(d, e) {
-            if (J(d)) {
-                var f = {};
-                v(d, function(a, b) {
-                    f[b] = c(b, a);
+    $FilterProvider.$inject = [ "$provide" ];
+    function $FilterProvider($provide) {
+        var suffix = "Filter";
+        function register(name, factory) {
+            if (isObject(name)) {
+                var filters = {};
+                forEach(name, function(filter, key) {
+                    filters[key] = register(key, filter);
                 });
-                return f;
+                return filters;
             } else {
-                return a.factory(d + b, e);
+                return $provide.factory(name + suffix, factory);
             }
         }
-        this.register = c;
-        this.$get = [ "$injector", function(a) {
-            return function(c) {
-                return a.get(c + b);
+        this.register = register;
+        this.$get = [ "$injector", function($injector) {
+            return function(name) {
+                return $injector.get(name + suffix);
             };
         } ];
-        c("currency", Ld);
-        c("date", Xd);
-        c("filter", Kd);
-        c("json", Yd);
-        c("limitTo", _d);
-        c("lowercase", Zd);
-        c("number", Md);
-        c("orderBy", ae);
-        c("uppercase", $d);
+        register("currency", currencyFilter);
+        register("date", dateFilter);
+        register("filter", filterFilter);
+        register("json", jsonFilter);
+        register("limitTo", limitToFilter);
+        register("lowercase", lowercaseFilter);
+        register("number", numberFilter);
+        register("orderBy", orderByFilter);
+        register("uppercase", uppercaseFilter);
     }
-    function Kd() {
-        return function(a, b, c) {
-            if (!N(a)) return a;
-            var d = [];
-            d.check = function(a) {
-                for (var b = 0; b < d.length; b++) {
-                    if (!d[b](a)) {
+    function filterFilter() {
+        return function(array, expression, comperator) {
+            if (!isArray(array)) return array;
+            var predicates = [];
+            predicates.check = function(value) {
+                for (var j = 0; j < predicates.length; j++) {
+                    if (!predicates[j](value)) {
                         return false;
                     }
                 }
                 return true;
             };
-            switch (typeof c) {
+            switch (typeof comperator) {
               case "function":
                 break;
 
               case "boolean":
-                if (c == true) {
-                    c = function(a, b) {
-                        return q.equals(a, b);
+                if (comperator == true) {
+                    comperator = function(obj, text) {
+                        return angular.equals(obj, text);
                     };
                     break;
                 }
 
               default:
-                c = function(a, b) {
-                    b = ("" + b).toLowerCase();
-                    return ("" + a).toLowerCase().indexOf(b) > -1;
+                comperator = function(obj, text) {
+                    text = ("" + text).toLowerCase();
+                    return ("" + obj).toLowerCase().indexOf(text) > -1;
                 };
             }
-            var e = function(a, b) {
-                if (typeof b == "string" && b.charAt(0) === "!") {
-                    return !e(a, b.substr(1));
+            var search = function(obj, text) {
+                if (typeof text == "string" && text.charAt(0) === "!") {
+                    return !search(obj, text.substr(1));
                 }
-                switch (typeof a) {
+                switch (typeof obj) {
                   case "boolean":
                   case "number":
                   case "string":
-                    return c(a, b);
+                    return comperator(obj, text);
 
                   case "object":
-                    switch (typeof b) {
+                    switch (typeof text) {
                       case "object":
-                        return c(a, b);
+                        return comperator(obj, text);
                         break;
 
                       default:
-                        for (var d in a) {
-                            if (d.charAt(0) !== "$" && e(a[d], b)) {
+                        for (var objKey in obj) {
+                            if (objKey.charAt(0) !== "$" && search(obj[objKey], text)) {
                                 return true;
                             }
                         }
@@ -5455,8 +5456,8 @@
                     return false;
 
                   case "array":
-                    for (var f = 0; f < a.length; f++) {
-                        if (e(a[f], b)) {
+                    for (var i = 0; i < obj.length; i++) {
+                        if (search(obj[i], text)) {
                             return true;
                         }
                     }
@@ -5466,32 +5467,32 @@
                     return false;
                 }
             };
-            switch (typeof b) {
+            switch (typeof expression) {
               case "boolean":
               case "number":
               case "string":
-                b = {
-                    $: b
+                expression = {
+                    $: expression
                 };
 
               case "object":
-                for (var f in b) {
-                    if (f == "$") {
+                for (var key in expression) {
+                    if (key == "$") {
                         (function() {
-                            if (!b[f]) return;
-                            var a = f;
-                            d.push(function(c) {
-                                return e(c, b[a]);
+                            if (!expression[key]) return;
+                            var path = key;
+                            predicates.push(function(value) {
+                                return search(value, expression[path]);
                             });
                         })();
                     } else {
                         (function() {
-                            if (typeof b[f] == "undefined") {
+                            if (typeof expression[key] == "undefined") {
                                 return;
                             }
-                            var a = f;
-                            d.push(function(c) {
-                                return e(zb(c, a), b[a]);
+                            var path = key;
+                            predicates.push(function(value) {
+                                return search(getter(value, path), expression[path]);
                             });
                         })();
                     }
@@ -5499,725 +5500,725 @@
                 break;
 
               case "function":
-                d.push(b);
+                predicates.push(expression);
                 break;
 
               default:
-                return a;
+                return array;
             }
-            var g = [];
-            for (var h = 0; h < a.length; h++) {
-                var i = a[h];
-                if (d.check(i)) {
-                    g.push(i);
+            var filtered = [];
+            for (var j = 0; j < array.length; j++) {
+                var value = array[j];
+                if (predicates.check(value)) {
+                    filtered.push(value);
                 }
             }
-            return g;
+            return filtered;
         };
     }
-    Ld.$inject = [ "$locale" ];
-    function Ld(a) {
-        var b = a.NUMBER_FORMATS;
-        return function(a, c) {
-            if (H(c)) c = b.CURRENCY_SYM;
-            return Od(a, b.PATTERNS[1], b.GROUP_SEP, b.DECIMAL_SEP, 2).replace(/\u00A4/g, c);
+    currencyFilter.$inject = [ "$locale" ];
+    function currencyFilter($locale) {
+        var formats = $locale.NUMBER_FORMATS;
+        return function(amount, currencySymbol) {
+            if (isUndefined(currencySymbol)) currencySymbol = formats.CURRENCY_SYM;
+            return formatNumber(amount, formats.PATTERNS[1], formats.GROUP_SEP, formats.DECIMAL_SEP, 2).replace(/\u00A4/g, currencySymbol);
         };
     }
-    Md.$inject = [ "$locale" ];
-    function Md(a) {
-        var b = a.NUMBER_FORMATS;
-        return function(a, c) {
-            return Od(a, b.PATTERNS[0], b.GROUP_SEP, b.DECIMAL_SEP, c);
+    numberFilter.$inject = [ "$locale" ];
+    function numberFilter($locale) {
+        var formats = $locale.NUMBER_FORMATS;
+        return function(number, fractionSize) {
+            return formatNumber(number, formats.PATTERNS[0], formats.GROUP_SEP, formats.DECIMAL_SEP, fractionSize);
         };
     }
-    var Nd = ".";
-    function Od(a, b, c, d, e) {
-        if (isNaN(a) || !isFinite(a)) return "";
-        var f = a < 0;
-        a = Math.abs(a);
-        var g = a + "", h = "", i = [];
-        var j = false;
-        if (g.indexOf("e") !== -1) {
-            var k = g.match(/([\d\.]+)e(-?)(\d+)/);
-            if (k && k[2] == "-" && k[3] > e + 1) {
-                g = "0";
+    var DECIMAL_SEP = ".";
+    function formatNumber(number, pattern, groupSep, decimalSep, fractionSize) {
+        if (isNaN(number) || !isFinite(number)) return "";
+        var isNegative = number < 0;
+        number = Math.abs(number);
+        var numStr = number + "", formatedText = "", parts = [];
+        var hasExponent = false;
+        if (numStr.indexOf("e") !== -1) {
+            var match = numStr.match(/([\d\.]+)e(-?)(\d+)/);
+            if (match && match[2] == "-" && match[3] > fractionSize + 1) {
+                numStr = "0";
             } else {
-                h = g;
-                j = true;
+                formatedText = numStr;
+                hasExponent = true;
             }
         }
-        if (!j) {
-            var l = (g.split(Nd)[1] || "").length;
-            if (H(e)) {
-                e = Math.min(Math.max(b.minFrac, l), b.maxFrac);
+        if (!hasExponent) {
+            var fractionLen = (numStr.split(DECIMAL_SEP)[1] || "").length;
+            if (isUndefined(fractionSize)) {
+                fractionSize = Math.min(Math.max(pattern.minFrac, fractionLen), pattern.maxFrac);
             }
-            var m = Math.pow(10, e);
-            a = Math.round(a * m) / m;
-            var n = ("" + a).split(Nd);
-            var o = n[0];
-            n = n[1] || "";
-            var p = 0, q = b.lgSize, r = b.gSize;
-            if (o.length >= q + r) {
-                p = o.length - q;
-                for (var s = 0; s < p; s++) {
-                    if ((p - s) % r === 0 && s !== 0) {
-                        h += c;
+            var pow = Math.pow(10, fractionSize);
+            number = Math.round(number * pow) / pow;
+            var fraction = ("" + number).split(DECIMAL_SEP);
+            var whole = fraction[0];
+            fraction = fraction[1] || "";
+            var pos = 0, lgroup = pattern.lgSize, group = pattern.gSize;
+            if (whole.length >= lgroup + group) {
+                pos = whole.length - lgroup;
+                for (var i = 0; i < pos; i++) {
+                    if ((pos - i) % group === 0 && i !== 0) {
+                        formatedText += groupSep;
                     }
-                    h += o.charAt(s);
+                    formatedText += whole.charAt(i);
                 }
             }
-            for (s = p; s < o.length; s++) {
-                if ((o.length - s) % q === 0 && s !== 0) {
-                    h += c;
+            for (i = pos; i < whole.length; i++) {
+                if ((whole.length - i) % lgroup === 0 && i !== 0) {
+                    formatedText += groupSep;
                 }
-                h += o.charAt(s);
+                formatedText += whole.charAt(i);
             }
-            while (n.length < e) {
-                n += "0";
+            while (fraction.length < fractionSize) {
+                fraction += "0";
             }
-            if (e && e !== "0") h += d + n.substr(0, e);
+            if (fractionSize && fractionSize !== "0") formatedText += decimalSep + fraction.substr(0, fractionSize);
         } else {
-            if (e > 0 && a > -1 && a < 1) {
-                h = a.toFixed(e);
+            if (fractionSize > 0 && number > -1 && number < 1) {
+                formatedText = number.toFixed(fractionSize);
             }
         }
-        i.push(f ? b.negPre : b.posPre);
-        i.push(h);
-        i.push(f ? b.negSuf : b.posSuf);
-        return i.join("");
+        parts.push(isNegative ? pattern.negPre : pattern.posPre);
+        parts.push(formatedText);
+        parts.push(isNegative ? pattern.negSuf : pattern.posSuf);
+        return parts.join("");
     }
-    function Pd(a, b, c) {
-        var d = "";
-        if (a < 0) {
-            d = "-";
-            a = -a;
+    function padNumber(num, digits, trim) {
+        var neg = "";
+        if (num < 0) {
+            neg = "-";
+            num = -num;
         }
-        a = "" + a;
-        while (a.length < b) a = "0" + a;
-        if (c) a = a.substr(a.length - b);
-        return d + a;
+        num = "" + num;
+        while (num.length < digits) num = "0" + num;
+        if (trim) num = num.substr(num.length - digits);
+        return neg + num;
     }
-    function Qd(a, b, c, d) {
-        c = c || 0;
-        return function(e) {
-            var f = e["get" + a]();
-            if (c > 0 || f > -c) f += c;
-            if (f === 0 && c == -12) f = 12;
-            return Pd(f, b, d);
+    function dateGetter(name, size, offset, trim) {
+        offset = offset || 0;
+        return function(date) {
+            var value = date["get" + name]();
+            if (offset > 0 || value > -offset) value += offset;
+            if (value === 0 && offset == -12) value = 12;
+            return padNumber(value, size, trim);
         };
     }
-    function Rd(a, b) {
-        return function(c, d) {
-            var e = c["get" + a]();
-            var g = f(b ? "SHORT" + a : a);
-            return d[g][e];
+    function dateStrGetter(name, shortForm) {
+        return function(date, formats) {
+            var value = date["get" + name]();
+            var get = uppercase(shortForm ? "SHORT" + name : name);
+            return formats[get][value];
         };
     }
-    function Sd(a) {
-        var b = -1 * a.getTimezoneOffset();
-        var c = b >= 0 ? "+" : "";
-        c += Pd(Math[b > 0 ? "floor" : "ceil"](b / 60), 2) + Pd(Math.abs(b % 60), 2);
-        return c;
+    function timeZoneGetter(date) {
+        var zone = -1 * date.getTimezoneOffset();
+        var paddedZone = zone >= 0 ? "+" : "";
+        paddedZone += padNumber(Math[zone > 0 ? "floor" : "ceil"](zone / 60), 2) + padNumber(Math.abs(zone % 60), 2);
+        return paddedZone;
     }
-    function Td(a, b) {
-        return a.getHours() < 12 ? b.AMPMS[0] : b.AMPMS[1];
+    function ampmGetter(date, formats) {
+        return date.getHours() < 12 ? formats.AMPMS[0] : formats.AMPMS[1];
     }
-    var Ud = {
-        yyyy: Qd("FullYear", 4),
-        yy: Qd("FullYear", 2, 0, true),
-        y: Qd("FullYear", 1),
-        MMMM: Rd("Month"),
-        MMM: Rd("Month", true),
-        MM: Qd("Month", 2, 1),
-        M: Qd("Month", 1, 1),
-        dd: Qd("Date", 2),
-        d: Qd("Date", 1),
-        HH: Qd("Hours", 2),
-        H: Qd("Hours", 1),
-        hh: Qd("Hours", 2, -12),
-        h: Qd("Hours", 1, -12),
-        mm: Qd("Minutes", 2),
-        m: Qd("Minutes", 1),
-        ss: Qd("Seconds", 2),
-        s: Qd("Seconds", 1),
-        sss: Qd("Milliseconds", 3),
-        EEEE: Rd("Day"),
-        EEE: Rd("Day", true),
-        a: Td,
-        Z: Sd
+    var DATE_FORMATS = {
+        yyyy: dateGetter("FullYear", 4),
+        yy: dateGetter("FullYear", 2, 0, true),
+        y: dateGetter("FullYear", 1),
+        MMMM: dateStrGetter("Month"),
+        MMM: dateStrGetter("Month", true),
+        MM: dateGetter("Month", 2, 1),
+        M: dateGetter("Month", 1, 1),
+        dd: dateGetter("Date", 2),
+        d: dateGetter("Date", 1),
+        HH: dateGetter("Hours", 2),
+        H: dateGetter("Hours", 1),
+        hh: dateGetter("Hours", 2, -12),
+        h: dateGetter("Hours", 1, -12),
+        mm: dateGetter("Minutes", 2),
+        m: dateGetter("Minutes", 1),
+        ss: dateGetter("Seconds", 2),
+        s: dateGetter("Seconds", 1),
+        sss: dateGetter("Milliseconds", 3),
+        EEEE: dateStrGetter("Day"),
+        EEE: dateStrGetter("Day", true),
+        a: ampmGetter,
+        Z: timeZoneGetter
     };
-    var Vd = /((?:[^yMdHhmsaZE']+)|(?:'(?:[^']|'')*')|(?:E+|y+|M+|d+|H+|h+|m+|s+|a|Z))(.*)/, Wd = /^\-?\d+$/;
-    Xd.$inject = [ "$locale" ];
-    function Xd(a) {
-        var b = /^(\d{4})-?(\d\d)-?(\d\d)(?:T(\d\d)(?::?(\d\d)(?::?(\d\d)(?:\.(\d+))?)?)?(Z|([+-])(\d\d):?(\d\d))?)?$/;
-        function c(a) {
-            var c;
-            if (c = a.match(b)) {
-                var d = new Date(0), e = 0, f = 0, g = c[8] ? d.setUTCFullYear : d.setFullYear, h = c[8] ? d.setUTCHours : d.setHours;
-                if (c[9]) {
-                    e = C(c[9] + c[10]);
-                    f = C(c[9] + c[11]);
+    var DATE_FORMATS_SPLIT = /((?:[^yMdHhmsaZE']+)|(?:'(?:[^']|'')*')|(?:E+|y+|M+|d+|H+|h+|m+|s+|a|Z))(.*)/, NUMBER_STRING = /^\-?\d+$/;
+    dateFilter.$inject = [ "$locale" ];
+    function dateFilter($locale) {
+        var R_ISO8601_STR = /^(\d{4})-?(\d\d)-?(\d\d)(?:T(\d\d)(?::?(\d\d)(?::?(\d\d)(?:\.(\d+))?)?)?(Z|([+-])(\d\d):?(\d\d))?)?$/;
+        function jsonStringToDate(string) {
+            var match;
+            if (match = string.match(R_ISO8601_STR)) {
+                var date = new Date(0), tzHour = 0, tzMin = 0, dateSetter = match[8] ? date.setUTCFullYear : date.setFullYear, timeSetter = match[8] ? date.setUTCHours : date.setHours;
+                if (match[9]) {
+                    tzHour = int(match[9] + match[10]);
+                    tzMin = int(match[9] + match[11]);
                 }
-                g.call(d, C(c[1]), C(c[2]) - 1, C(c[3]));
-                var i = C(c[4] || 0) - e;
-                var j = C(c[5] || 0) - f;
-                var k = C(c[6] || 0);
-                var l = Math.round(parseFloat("0." + (c[7] || 0)) * 1e3);
-                h.call(d, i, j, k, l);
-                return d;
+                dateSetter.call(date, int(match[1]), int(match[2]) - 1, int(match[3]));
+                var h = int(match[4] || 0) - tzHour;
+                var m = int(match[5] || 0) - tzMin;
+                var s = int(match[6] || 0);
+                var ms = Math.round(parseFloat("0." + (match[7] || 0)) * 1e3);
+                timeSetter.call(date, h, m, s, ms);
+                return date;
             }
-            return a;
+            return string;
         }
-        return function(b, d) {
-            var e = "", f = [], g, h;
-            d = d || "mediumDate";
-            d = a.DATETIME_FORMATS[d] || d;
-            if (K(b)) {
-                if (Wd.test(b)) {
-                    b = C(b);
+        return function(date, format) {
+            var text = "", parts = [], fn, match;
+            format = format || "mediumDate";
+            format = $locale.DATETIME_FORMATS[format] || format;
+            if (isString(date)) {
+                if (NUMBER_STRING.test(date)) {
+                    date = int(date);
                 } else {
-                    b = c(b);
+                    date = jsonStringToDate(date);
                 }
             }
-            if (L(b)) {
-                b = new Date(b);
+            if (isNumber(date)) {
+                date = new Date(date);
             }
-            if (!M(b)) {
-                return b;
+            if (!isDate(date)) {
+                return date;
             }
-            while (d) {
-                h = Vd.exec(d);
-                if (h) {
-                    f = eb(f, h, 1);
-                    d = f.pop();
+            while (format) {
+                match = DATE_FORMATS_SPLIT.exec(format);
+                if (match) {
+                    parts = concat(parts, match, 1);
+                    format = parts.pop();
                 } else {
-                    f.push(d);
-                    d = null;
+                    parts.push(format);
+                    format = null;
                 }
             }
-            v(f, function(c) {
-                g = Ud[c];
-                e += g ? g(b, a.DATETIME_FORMATS) : c.replace(/(^'|'$)/g, "").replace(/''/g, "'");
+            forEach(parts, function(value) {
+                fn = DATE_FORMATS[value];
+                text += fn ? fn(date, $locale.DATETIME_FORMATS) : value.replace(/(^'|'$)/g, "").replace(/''/g, "'");
             });
-            return e;
+            return text;
         };
     }
-    function Yd() {
-        return function(a) {
-            return ib(a, true);
+    function jsonFilter() {
+        return function(object) {
+            return toJson(object, true);
         };
     }
-    var Zd = G(e);
-    var $d = G(f);
-    function _d() {
-        return function(a, b) {
-            if (!N(a) && !K(a)) return a;
-            b = C(b);
-            if (K(a)) {
-                if (b) {
-                    return b >= 0 ? a.slice(0, b) : a.slice(b, a.length);
+    var lowercaseFilter = valueFn(lowercase);
+    var uppercaseFilter = valueFn(uppercase);
+    function limitToFilter() {
+        return function(input, limit) {
+            if (!isArray(input) && !isString(input)) return input;
+            limit = int(limit);
+            if (isString(input)) {
+                if (limit) {
+                    return limit >= 0 ? input.slice(0, limit) : input.slice(limit, input.length);
                 } else {
                     return "";
                 }
             }
-            var c = [], d, e;
-            if (b > a.length) b = a.length; else if (b < -a.length) b = -a.length;
-            if (b > 0) {
-                d = 0;
-                e = b;
+            var out = [], i, n;
+            if (limit > input.length) limit = input.length; else if (limit < -input.length) limit = -input.length;
+            if (limit > 0) {
+                i = 0;
+                n = limit;
             } else {
-                d = a.length + b;
-                e = a.length;
+                i = input.length + limit;
+                n = input.length;
             }
-            for (;d < e; d++) {
-                c.push(a[d]);
+            for (;i < n; i++) {
+                out.push(input[i]);
             }
-            return c;
+            return out;
         };
     }
-    ae.$inject = [ "$parse" ];
-    function ae(a) {
-        return function(b, c, d) {
-            if (!N(b)) return b;
-            if (!c) return b;
-            c = N(c) ? c : [ c ];
-            c = X(c, function(b) {
-                var c = false, d = b || F;
-                if (K(b)) {
-                    if (b.charAt(0) == "+" || b.charAt(0) == "-") {
-                        c = b.charAt(0) == "-";
-                        b = b.substring(1);
+    orderByFilter.$inject = [ "$parse" ];
+    function orderByFilter($parse) {
+        return function(array, sortPredicate, reverseOrder) {
+            if (!isArray(array)) return array;
+            if (!sortPredicate) return array;
+            sortPredicate = isArray(sortPredicate) ? sortPredicate : [ sortPredicate ];
+            sortPredicate = map(sortPredicate, function(predicate) {
+                var descending = false, get = predicate || identity;
+                if (isString(predicate)) {
+                    if (predicate.charAt(0) == "+" || predicate.charAt(0) == "-") {
+                        descending = predicate.charAt(0) == "-";
+                        predicate = predicate.substring(1);
                     }
-                    d = a(b);
+                    get = $parse(predicate);
                 }
-                return h(function(a, b) {
-                    return i(d(a), d(b));
-                }, c);
+                return reverseComparator(function(a, b) {
+                    return compare(get(a), get(b));
+                }, descending);
             });
-            var e = [];
-            for (var f = 0; f < b.length; f++) {
-                e.push(b[f]);
+            var arrayCopy = [];
+            for (var i = 0; i < array.length; i++) {
+                arrayCopy.push(array[i]);
             }
-            return e.sort(h(g, d));
-            function g(a, b) {
-                for (var d = 0; d < c.length; d++) {
-                    var e = c[d](a, b);
-                    if (e !== 0) return e;
+            return arrayCopy.sort(reverseComparator(comparator, reverseOrder));
+            function comparator(o1, o2) {
+                for (var i = 0; i < sortPredicate.length; i++) {
+                    var comp = sortPredicate[i](o1, o2);
+                    if (comp !== 0) return comp;
                 }
                 return 0;
             }
-            function h(a, b) {
-                return kb(b) ? function(b, c) {
-                    return a(c, b);
-                } : a;
+            function reverseComparator(comp, descending) {
+                return toBoolean(descending) ? function(a, b) {
+                    return comp(b, a);
+                } : comp;
             }
-            function i(a, b) {
-                var c = typeof a;
-                var d = typeof b;
-                if (c == d) {
-                    if (c == "string") {
-                        a = a.toLowerCase();
-                        b = b.toLowerCase();
+            function compare(v1, v2) {
+                var t1 = typeof v1;
+                var t2 = typeof v2;
+                if (t1 == t2) {
+                    if (t1 == "string") {
+                        v1 = v1.toLowerCase();
+                        v2 = v2.toLowerCase();
                     }
-                    if (a === b) return 0;
-                    return a < b ? -1 : 1;
+                    if (v1 === v2) return 0;
+                    return v1 < v2 ? -1 : 1;
                 } else {
-                    return c < d ? -1 : 1;
+                    return t1 < t2 ? -1 : 1;
                 }
             }
         };
     }
-    function be(a) {
-        if (O(a)) {
-            a = {
-                link: a
+    function ngDirective(directive) {
+        if (isFunction(directive)) {
+            directive = {
+                link: directive
             };
         }
-        a.restrict = a.restrict || "AC";
-        return G(a);
+        directive.restrict = directive.restrict || "AC";
+        return valueFn(directive);
     }
-    var ce = G({
+    var htmlAnchorDirective = valueFn({
         restrict: "E",
-        compile: function(a, c) {
-            if (i <= 8) {
-                if (!c.href && !c.name) {
-                    c.$set("href", "");
+        compile: function(element, attr) {
+            if (msie <= 8) {
+                if (!attr.href && !attr.name) {
+                    attr.$set("href", "");
                 }
-                a.append(b.createComment("IE fix"));
+                element.append(document.createComment("IE fix"));
             }
-            return function(a, b) {
-                b.on("click", function(a) {
-                    if (!b.attr("href")) {
-                        a.preventDefault();
+            return function(scope, element) {
+                element.on("click", function(event) {
+                    if (!element.attr("href")) {
+                        event.preventDefault();
                     }
                 });
             };
         }
     });
-    var de = {};
-    v(ac, function(a, b) {
-        if (a == "multiple") return;
-        var c = xc("ng-" + b);
-        de[c] = function() {
+    var ngAttributeAliasDirectives = {};
+    forEach(BOOLEAN_ATTR, function(propName, attrName) {
+        if (propName == "multiple") return;
+        var normalized = directiveNormalize("ng-" + attrName);
+        ngAttributeAliasDirectives[normalized] = function() {
             return {
                 priority: 100,
                 compile: function() {
-                    return function(a, d, e) {
-                        a.$watch(e[c], function f(a) {
-                            e.$set(b, !!a);
+                    return function(scope, element, attr) {
+                        scope.$watch(attr[normalized], function ngBooleanAttrWatchAction(value) {
+                            attr.$set(attrName, !!value);
                         });
                     };
                 }
             };
         };
     });
-    v([ "src", "srcset", "href" ], function(a) {
-        var b = xc("ng-" + a);
-        de[b] = function() {
+    forEach([ "src", "srcset", "href" ], function(attrName) {
+        var normalized = directiveNormalize("ng-" + attrName);
+        ngAttributeAliasDirectives[normalized] = function() {
             return {
                 priority: 99,
-                link: function(c, d, e) {
-                    e.$observe(b, function(b) {
-                        if (!b) return;
-                        e.$set(a, b);
-                        if (i) d.prop(a, e[a]);
+                link: function(scope, element, attr) {
+                    attr.$observe(normalized, function(value) {
+                        if (!value) return;
+                        attr.$set(attrName, value);
+                        if (msie) element.prop(attrName, attr[attrName]);
                     });
                 }
             };
         };
     });
-    var ee = {
-        $addControl: E,
-        $removeControl: E,
-        $setValidity: E,
-        $setDirty: E,
-        $setPristine: E
+    var nullFormCtrl = {
+        $addControl: noop,
+        $removeControl: noop,
+        $setValidity: noop,
+        $setDirty: noop,
+        $setPristine: noop
     };
-    fe.$inject = [ "$element", "$attrs", "$scope" ];
-    function fe(a, b) {
-        var c = this, d = a.parent().controller("form") || ee, e = 0, f = c.$error = {}, g = [];
-        c.$name = b.name || b.ngForm;
-        c.$dirty = false;
-        c.$pristine = true;
-        c.$valid = true;
-        c.$invalid = false;
-        d.$addControl(c);
-        a.addClass(we);
-        h(true);
-        function h(b, c) {
-            c = c ? "-" + ub(c, "-") : "";
-            a.removeClass((b ? ve : ue) + c).addClass((b ? ue : ve) + c);
+    FormController.$inject = [ "$element", "$attrs", "$scope" ];
+    function FormController(element, attrs) {
+        var form = this, parentForm = element.parent().controller("form") || nullFormCtrl, invalidCount = 0, errors = form.$error = {}, controls = [];
+        form.$name = attrs.name || attrs.ngForm;
+        form.$dirty = false;
+        form.$pristine = true;
+        form.$valid = true;
+        form.$invalid = false;
+        parentForm.$addControl(form);
+        element.addClass(PRISTINE_CLASS);
+        toggleValidCss(true);
+        function toggleValidCss(isValid, validationErrorKey) {
+            validationErrorKey = validationErrorKey ? "-" + snake_case(validationErrorKey, "-") : "";
+            element.removeClass((isValid ? INVALID_CLASS : VALID_CLASS) + validationErrorKey).addClass((isValid ? VALID_CLASS : INVALID_CLASS) + validationErrorKey);
         }
-        c.$addControl = function(a) {
-            yb(a.$name, "input");
-            g.push(a);
-            if (a.$name) {
-                c[a.$name] = a;
+        form.$addControl = function(control) {
+            assertNotHasOwnProperty(control.$name, "input");
+            controls.push(control);
+            if (control.$name) {
+                form[control.$name] = control;
             }
         };
-        c.$removeControl = function(a) {
-            if (a.$name && c[a.$name] === a) {
-                delete c[a.$name];
+        form.$removeControl = function(control) {
+            if (control.$name && form[control.$name] === control) {
+                delete form[control.$name];
             }
-            v(f, function(b, d) {
-                c.$setValidity(d, true, a);
+            forEach(errors, function(queue, validationToken) {
+                form.$setValidity(validationToken, true, control);
             });
-            _(g, a);
+            arrayRemove(controls, control);
         };
-        c.$setValidity = function(a, b, g) {
-            var i = f[a];
-            if (b) {
-                if (i) {
-                    _(i, g);
-                    if (!i.length) {
-                        e--;
-                        if (!e) {
-                            h(b);
-                            c.$valid = true;
-                            c.$invalid = false;
+        form.$setValidity = function(validationToken, isValid, control) {
+            var queue = errors[validationToken];
+            if (isValid) {
+                if (queue) {
+                    arrayRemove(queue, control);
+                    if (!queue.length) {
+                        invalidCount--;
+                        if (!invalidCount) {
+                            toggleValidCss(isValid);
+                            form.$valid = true;
+                            form.$invalid = false;
                         }
-                        f[a] = false;
-                        h(true, a);
-                        d.$setValidity(a, true, c);
+                        errors[validationToken] = false;
+                        toggleValidCss(true, validationToken);
+                        parentForm.$setValidity(validationToken, true, form);
                     }
                 }
             } else {
-                if (!e) {
-                    h(b);
+                if (!invalidCount) {
+                    toggleValidCss(isValid);
                 }
-                if (i) {
-                    if (Z(i, g)) return;
+                if (queue) {
+                    if (includes(queue, control)) return;
                 } else {
-                    f[a] = i = [];
-                    e++;
-                    h(false, a);
-                    d.$setValidity(a, false, c);
+                    errors[validationToken] = queue = [];
+                    invalidCount++;
+                    toggleValidCss(false, validationToken);
+                    parentForm.$setValidity(validationToken, false, form);
                 }
-                i.push(g);
-                c.$valid = false;
-                c.$invalid = true;
+                queue.push(control);
+                form.$valid = false;
+                form.$invalid = true;
             }
         };
-        c.$setDirty = function() {
-            a.removeClass(we).addClass(xe);
-            c.$dirty = true;
-            c.$pristine = false;
-            d.$setDirty();
+        form.$setDirty = function() {
+            element.removeClass(PRISTINE_CLASS).addClass(DIRTY_CLASS);
+            form.$dirty = true;
+            form.$pristine = false;
+            parentForm.$setDirty();
         };
-        c.$setPristine = function() {
-            a.removeClass(xe).addClass(we);
-            c.$dirty = false;
-            c.$pristine = true;
-            v(g, function(a) {
-                a.$setPristine();
+        form.$setPristine = function() {
+            element.removeClass(DIRTY_CLASS).addClass(PRISTINE_CLASS);
+            form.$dirty = false;
+            form.$pristine = true;
+            forEach(controls, function(control) {
+                control.$setPristine();
             });
         };
     }
-    var ge = function(a) {
-        return [ "$timeout", function(b) {
-            var d = {
+    var formDirectiveFactory = function(isNgForm) {
+        return [ "$timeout", function($timeout) {
+            var formDirective = {
                 name: "form",
-                restrict: a ? "EAC" : "E",
-                controller: fe,
+                restrict: isNgForm ? "EAC" : "E",
+                controller: FormController,
                 compile: function() {
                     return {
-                        pre: function(a, d, e, f) {
-                            if (!e.action) {
-                                var g = function(a) {
-                                    a.preventDefault ? a.preventDefault() : a.returnValue = false;
+                        pre: function(scope, formElement, attr, controller) {
+                            if (!attr.action) {
+                                var preventDefaultListener = function(event) {
+                                    event.preventDefault ? event.preventDefault() : event.returnValue = false;
                                 };
-                                Gb(d[0], "submit", g);
-                                d.on("$destroy", function() {
-                                    b(function() {
-                                        Hb(d[0], "submit", g);
+                                addEventListenerFn(formElement[0], "submit", preventDefaultListener);
+                                formElement.on("$destroy", function() {
+                                    $timeout(function() {
+                                        removeEventListenerFn(formElement[0], "submit", preventDefaultListener);
                                     }, 0, false);
                                 });
                             }
-                            var h = d.parent().controller("form"), i = e.name || e.ngForm;
-                            if (i) {
-                                nd(a, i, f, i);
+                            var parentFormCtrl = formElement.parent().controller("form"), alias = attr.name || attr.ngForm;
+                            if (alias) {
+                                setter(scope, alias, controller, alias);
                             }
-                            if (h) {
-                                d.on("$destroy", function() {
-                                    h.$removeControl(f);
-                                    if (i) {
-                                        nd(a, i, c, i);
+                            if (parentFormCtrl) {
+                                formElement.on("$destroy", function() {
+                                    parentFormCtrl.$removeControl(controller);
+                                    if (alias) {
+                                        setter(scope, alias, undefined, alias);
                                     }
-                                    B(f, ee);
+                                    extend(controller, nullFormCtrl);
                                 });
                             }
                         }
                     };
                 }
             };
-            return d;
+            return formDirective;
         } ];
     };
-    var he = ge();
-    var ie = ge(true);
-    var je = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/;
-    var ke = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}$/;
-    var le = /^\s*(\-|\+)?(\d+|(\d*(\.\d*)))\s*$/;
-    var me = {
-        text: ne,
-        number: oe,
-        url: pe,
-        email: qe,
-        radio: re,
-        checkbox: se,
-        hidden: E,
-        button: E,
-        submit: E,
-        reset: E
+    var formDirective = formDirectiveFactory();
+    var ngFormDirective = formDirectiveFactory(true);
+    var URL_REGEXP = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/;
+    var EMAIL_REGEXP = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}$/;
+    var NUMBER_REGEXP = /^\s*(\-|\+)?(\d+|(\d*(\.\d*)))\s*$/;
+    var inputType = {
+        text: textInputType,
+        number: numberInputType,
+        url: urlInputType,
+        email: emailInputType,
+        radio: radioInputType,
+        checkbox: checkboxInputType,
+        hidden: noop,
+        button: noop,
+        submit: noop,
+        reset: noop
     };
-    function ne(a, b, e, f, g, h) {
-        var i = function() {
-            var c = b.val();
-            if (kb(e.ngTrim || "T")) {
-                c = U(c);
+    function textInputType(scope, element, attr, ctrl, $sniffer, $browser) {
+        var listener = function() {
+            var value = element.val();
+            if (toBoolean(attr.ngTrim || "T")) {
+                value = trim(value);
             }
-            if (f.$viewValue !== c) {
-                a.$apply(function() {
-                    f.$setViewValue(c);
+            if (ctrl.$viewValue !== value) {
+                scope.$apply(function() {
+                    ctrl.$setViewValue(value);
                 });
             }
         };
-        if (g.hasEvent("input")) {
-            b.on("input", i);
+        if ($sniffer.hasEvent("input")) {
+            element.on("input", listener);
         } else {
-            var j;
-            var k = function() {
-                if (!j) {
-                    j = h.defer(function() {
-                        i();
-                        j = null;
+            var timeout;
+            var deferListener = function() {
+                if (!timeout) {
+                    timeout = $browser.defer(function() {
+                        listener();
+                        timeout = null;
                     });
                 }
             };
-            b.on("keydown", function(a) {
-                var b = a.keyCode;
-                if (b === 91 || 15 < b && b < 19 || 37 <= b && b <= 40) return;
-                k();
+            element.on("keydown", function(event) {
+                var key = event.keyCode;
+                if (key === 91 || 15 < key && key < 19 || 37 <= key && key <= 40) return;
+                deferListener();
             });
-            b.on("change", i);
-            if (g.hasEvent("paste")) {
-                b.on("paste cut", k);
+            element.on("change", listener);
+            if ($sniffer.hasEvent("paste")) {
+                element.on("paste cut", deferListener);
             }
         }
-        f.$render = function() {
-            b.val(f.$isEmpty(f.$viewValue) ? "" : f.$viewValue);
+        ctrl.$render = function() {
+            element.val(ctrl.$isEmpty(ctrl.$viewValue) ? "" : ctrl.$viewValue);
         };
-        var l = e.ngPattern, m, n;
-        var o = function(a, b) {
-            if (f.$isEmpty(b) || a.test(b)) {
-                f.$setValidity("pattern", true);
-                return b;
+        var pattern = attr.ngPattern, patternValidator, match;
+        var validate = function(regexp, value) {
+            if (ctrl.$isEmpty(value) || regexp.test(value)) {
+                ctrl.$setValidity("pattern", true);
+                return value;
             } else {
-                f.$setValidity("pattern", false);
-                return c;
+                ctrl.$setValidity("pattern", false);
+                return undefined;
             }
         };
-        if (l) {
-            n = l.match(/^\/(.*)\/([gim]*)$/);
-            if (n) {
-                l = new RegExp(n[1], n[2]);
-                m = function(a) {
-                    return o(l, a);
+        if (pattern) {
+            match = pattern.match(/^\/(.*)\/([gim]*)$/);
+            if (match) {
+                pattern = new RegExp(match[1], match[2]);
+                patternValidator = function(value) {
+                    return validate(pattern, value);
                 };
             } else {
-                m = function(c) {
-                    var e = a.$eval(l);
-                    if (!e || !e.test) {
-                        throw d("ngPattern")("noregexp", "Expected {0} to be a RegExp but was {1}. Element: {2}", l, e, lb(b));
+                patternValidator = function(value) {
+                    var patternObj = scope.$eval(pattern);
+                    if (!patternObj || !patternObj.test) {
+                        throw minErr("ngPattern")("noregexp", "Expected {0} to be a RegExp but was {1}. Element: {2}", pattern, patternObj, startingTag(element));
                     }
-                    return o(e, c);
+                    return validate(patternObj, value);
                 };
             }
-            f.$formatters.push(m);
-            f.$parsers.push(m);
+            ctrl.$formatters.push(patternValidator);
+            ctrl.$parsers.push(patternValidator);
         }
-        if (e.ngMinlength) {
-            var p = C(e.ngMinlength);
-            var q = function(a) {
-                if (!f.$isEmpty(a) && a.length < p) {
-                    f.$setValidity("minlength", false);
-                    return c;
+        if (attr.ngMinlength) {
+            var minlength = int(attr.ngMinlength);
+            var minLengthValidator = function(value) {
+                if (!ctrl.$isEmpty(value) && value.length < minlength) {
+                    ctrl.$setValidity("minlength", false);
+                    return undefined;
                 } else {
-                    f.$setValidity("minlength", true);
-                    return a;
+                    ctrl.$setValidity("minlength", true);
+                    return value;
                 }
             };
-            f.$parsers.push(q);
-            f.$formatters.push(q);
+            ctrl.$parsers.push(minLengthValidator);
+            ctrl.$formatters.push(minLengthValidator);
         }
-        if (e.ngMaxlength) {
-            var r = C(e.ngMaxlength);
-            var s = function(a) {
-                if (!f.$isEmpty(a) && a.length > r) {
-                    f.$setValidity("maxlength", false);
-                    return c;
+        if (attr.ngMaxlength) {
+            var maxlength = int(attr.ngMaxlength);
+            var maxLengthValidator = function(value) {
+                if (!ctrl.$isEmpty(value) && value.length > maxlength) {
+                    ctrl.$setValidity("maxlength", false);
+                    return undefined;
                 } else {
-                    f.$setValidity("maxlength", true);
-                    return a;
+                    ctrl.$setValidity("maxlength", true);
+                    return value;
                 }
             };
-            f.$parsers.push(s);
-            f.$formatters.push(s);
+            ctrl.$parsers.push(maxLengthValidator);
+            ctrl.$formatters.push(maxLengthValidator);
         }
     }
-    function oe(a, b, d, e, f, g) {
-        ne(a, b, d, e, f, g);
-        e.$parsers.push(function(a) {
-            var b = e.$isEmpty(a);
-            if (b || le.test(a)) {
-                e.$setValidity("number", true);
-                return a === "" ? null : b ? a : parseFloat(a);
+    function numberInputType(scope, element, attr, ctrl, $sniffer, $browser) {
+        textInputType(scope, element, attr, ctrl, $sniffer, $browser);
+        ctrl.$parsers.push(function(value) {
+            var empty = ctrl.$isEmpty(value);
+            if (empty || NUMBER_REGEXP.test(value)) {
+                ctrl.$setValidity("number", true);
+                return value === "" ? null : empty ? value : parseFloat(value);
             } else {
-                e.$setValidity("number", false);
-                return c;
+                ctrl.$setValidity("number", false);
+                return undefined;
             }
         });
-        e.$formatters.push(function(a) {
-            return e.$isEmpty(a) ? "" : "" + a;
+        ctrl.$formatters.push(function(value) {
+            return ctrl.$isEmpty(value) ? "" : "" + value;
         });
-        if (d.min) {
-            var h = parseFloat(d.min);
-            var i = function(a) {
-                if (!e.$isEmpty(a) && a < h) {
-                    e.$setValidity("min", false);
-                    return c;
+        if (attr.min) {
+            var min = parseFloat(attr.min);
+            var minValidator = function(value) {
+                if (!ctrl.$isEmpty(value) && value < min) {
+                    ctrl.$setValidity("min", false);
+                    return undefined;
                 } else {
-                    e.$setValidity("min", true);
-                    return a;
+                    ctrl.$setValidity("min", true);
+                    return value;
                 }
             };
-            e.$parsers.push(i);
-            e.$formatters.push(i);
+            ctrl.$parsers.push(minValidator);
+            ctrl.$formatters.push(minValidator);
         }
-        if (d.max) {
-            var j = parseFloat(d.max);
-            var k = function(a) {
-                if (!e.$isEmpty(a) && a > j) {
-                    e.$setValidity("max", false);
-                    return c;
+        if (attr.max) {
+            var max = parseFloat(attr.max);
+            var maxValidator = function(value) {
+                if (!ctrl.$isEmpty(value) && value > max) {
+                    ctrl.$setValidity("max", false);
+                    return undefined;
                 } else {
-                    e.$setValidity("max", true);
-                    return a;
+                    ctrl.$setValidity("max", true);
+                    return value;
                 }
             };
-            e.$parsers.push(k);
-            e.$formatters.push(k);
+            ctrl.$parsers.push(maxValidator);
+            ctrl.$formatters.push(maxValidator);
         }
-        e.$formatters.push(function(a) {
-            if (e.$isEmpty(a) || L(a)) {
-                e.$setValidity("number", true);
-                return a;
+        ctrl.$formatters.push(function(value) {
+            if (ctrl.$isEmpty(value) || isNumber(value)) {
+                ctrl.$setValidity("number", true);
+                return value;
             } else {
-                e.$setValidity("number", false);
-                return c;
+                ctrl.$setValidity("number", false);
+                return undefined;
             }
         });
     }
-    function pe(a, b, d, e, f, g) {
-        ne(a, b, d, e, f, g);
-        var h = function(a) {
-            if (e.$isEmpty(a) || je.test(a)) {
-                e.$setValidity("url", true);
-                return a;
+    function urlInputType(scope, element, attr, ctrl, $sniffer, $browser) {
+        textInputType(scope, element, attr, ctrl, $sniffer, $browser);
+        var urlValidator = function(value) {
+            if (ctrl.$isEmpty(value) || URL_REGEXP.test(value)) {
+                ctrl.$setValidity("url", true);
+                return value;
             } else {
-                e.$setValidity("url", false);
-                return c;
+                ctrl.$setValidity("url", false);
+                return undefined;
             }
         };
-        e.$formatters.push(h);
-        e.$parsers.push(h);
+        ctrl.$formatters.push(urlValidator);
+        ctrl.$parsers.push(urlValidator);
     }
-    function qe(a, b, d, e, f, g) {
-        ne(a, b, d, e, f, g);
-        var h = function(a) {
-            if (e.$isEmpty(a) || ke.test(a)) {
-                e.$setValidity("email", true);
-                return a;
+    function emailInputType(scope, element, attr, ctrl, $sniffer, $browser) {
+        textInputType(scope, element, attr, ctrl, $sniffer, $browser);
+        var emailValidator = function(value) {
+            if (ctrl.$isEmpty(value) || EMAIL_REGEXP.test(value)) {
+                ctrl.$setValidity("email", true);
+                return value;
             } else {
-                e.$setValidity("email", false);
-                return c;
+                ctrl.$setValidity("email", false);
+                return undefined;
             }
         };
-        e.$formatters.push(h);
-        e.$parsers.push(h);
+        ctrl.$formatters.push(emailValidator);
+        ctrl.$parsers.push(emailValidator);
     }
-    function re(a, b, c, d) {
-        if (H(c.name)) {
-            b.attr("name", z());
+    function radioInputType(scope, element, attr, ctrl) {
+        if (isUndefined(attr.name)) {
+            element.attr("name", nextUid());
         }
-        b.on("click", function() {
-            if (b[0].checked) {
-                a.$apply(function() {
-                    d.$setViewValue(c.value);
+        element.on("click", function() {
+            if (element[0].checked) {
+                scope.$apply(function() {
+                    ctrl.$setViewValue(attr.value);
                 });
             }
         });
-        d.$render = function() {
-            var a = c.value;
-            b[0].checked = a == d.$viewValue;
+        ctrl.$render = function() {
+            var value = attr.value;
+            element[0].checked = value == ctrl.$viewValue;
         };
-        c.$observe("value", d.$render);
+        attr.$observe("value", ctrl.$render);
     }
-    function se(a, b, c, d) {
-        var e = c.ngTrueValue, f = c.ngFalseValue;
-        if (!K(e)) e = true;
-        if (!K(f)) f = false;
-        b.on("click", function() {
-            a.$apply(function() {
-                d.$setViewValue(b[0].checked);
+    function checkboxInputType(scope, element, attr, ctrl) {
+        var trueValue = attr.ngTrueValue, falseValue = attr.ngFalseValue;
+        if (!isString(trueValue)) trueValue = true;
+        if (!isString(falseValue)) falseValue = false;
+        element.on("click", function() {
+            scope.$apply(function() {
+                ctrl.$setViewValue(element[0].checked);
             });
         });
-        d.$render = function() {
-            b[0].checked = d.$viewValue;
+        ctrl.$render = function() {
+            element[0].checked = ctrl.$viewValue;
         };
-        d.$isEmpty = function(a) {
-            return a !== e;
+        ctrl.$isEmpty = function(value) {
+            return value !== trueValue;
         };
-        d.$formatters.push(function(a) {
-            return a === e;
+        ctrl.$formatters.push(function(value) {
+            return value === trueValue;
         });
-        d.$parsers.push(function(a) {
-            return a ? e : f;
+        ctrl.$parsers.push(function(value) {
+            return value ? trueValue : falseValue;
         });
     }
-    var te = [ "$browser", "$sniffer", function(a, b) {
+    var inputDirective = [ "$browser", "$sniffer", function($browser, $sniffer) {
         return {
             restrict: "E",
             require: "?ngModel",
-            link: function(c, d, f, g) {
-                if (g) {
-                    (me[e(f.type)] || me.text)(c, d, f, g, b, a);
+            link: function(scope, element, attr, ctrl) {
+                if (ctrl) {
+                    (inputType[lowercase(attr.type)] || inputType.text)(scope, element, attr, ctrl, $sniffer, $browser);
                 }
             }
         };
     } ];
-    var ue = "ng-valid", ve = "ng-invalid", we = "ng-pristine", xe = "ng-dirty";
-    var ye = [ "$scope", "$exceptionHandler", "$attrs", "$element", "$parse", function(a, b, c, e, f) {
+    var VALID_CLASS = "ng-valid", INVALID_CLASS = "ng-invalid", PRISTINE_CLASS = "ng-pristine", DIRTY_CLASS = "ng-dirty";
+    var NgModelController = [ "$scope", "$exceptionHandler", "$attrs", "$element", "$parse", function($scope, $exceptionHandler, $attr, $element, $parse) {
         this.$viewValue = Number.NaN;
         this.$modelValue = Number.NaN;
         this.$parsers = [];
@@ -6227,321 +6228,321 @@
         this.$dirty = false;
         this.$valid = true;
         this.$invalid = false;
-        this.$name = c.name;
-        var g = f(c.ngModel), h = g.assign;
-        if (!h) {
-            throw d("ngModel")("nonassign", "Expression '{0}' is non-assignable. Element: {1}", c.ngModel, lb(e));
+        this.$name = $attr.name;
+        var ngModelGet = $parse($attr.ngModel), ngModelSet = ngModelGet.assign;
+        if (!ngModelSet) {
+            throw minErr("ngModel")("nonassign", "Expression '{0}' is non-assignable. Element: {1}", $attr.ngModel, startingTag($element));
         }
-        this.$render = E;
-        this.$isEmpty = function(a) {
-            return H(a) || a === "" || a === null || a !== a;
+        this.$render = noop;
+        this.$isEmpty = function(value) {
+            return isUndefined(value) || value === "" || value === null || value !== value;
         };
-        var i = e.inheritedData("$formController") || ee, j = 0, k = this.$error = {};
-        e.addClass(we);
-        l(true);
-        function l(a, b) {
-            b = b ? "-" + ub(b, "-") : "";
-            e.removeClass((a ? ve : ue) + b).addClass((a ? ue : ve) + b);
+        var parentForm = $element.inheritedData("$formController") || nullFormCtrl, invalidCount = 0, $error = this.$error = {};
+        $element.addClass(PRISTINE_CLASS);
+        toggleValidCss(true);
+        function toggleValidCss(isValid, validationErrorKey) {
+            validationErrorKey = validationErrorKey ? "-" + snake_case(validationErrorKey, "-") : "";
+            $element.removeClass((isValid ? INVALID_CLASS : VALID_CLASS) + validationErrorKey).addClass((isValid ? VALID_CLASS : INVALID_CLASS) + validationErrorKey);
         }
-        this.$setValidity = function(a, b) {
-            if (k[a] === !b) return;
-            if (b) {
-                if (k[a]) j--;
-                if (!j) {
-                    l(true);
+        this.$setValidity = function(validationErrorKey, isValid) {
+            if ($error[validationErrorKey] === !isValid) return;
+            if (isValid) {
+                if ($error[validationErrorKey]) invalidCount--;
+                if (!invalidCount) {
+                    toggleValidCss(true);
                     this.$valid = true;
                     this.$invalid = false;
                 }
             } else {
-                l(false);
+                toggleValidCss(false);
                 this.$invalid = true;
                 this.$valid = false;
-                j++;
+                invalidCount++;
             }
-            k[a] = !b;
-            l(b, a);
-            i.$setValidity(a, b, this);
+            $error[validationErrorKey] = !isValid;
+            toggleValidCss(isValid, validationErrorKey);
+            parentForm.$setValidity(validationErrorKey, isValid, this);
         };
         this.$setPristine = function() {
             this.$dirty = false;
             this.$pristine = true;
-            e.removeClass(xe).addClass(we);
+            $element.removeClass(DIRTY_CLASS).addClass(PRISTINE_CLASS);
         };
-        this.$setViewValue = function(c) {
-            this.$viewValue = c;
+        this.$setViewValue = function(value) {
+            this.$viewValue = value;
             if (this.$pristine) {
                 this.$dirty = true;
                 this.$pristine = false;
-                e.removeClass(we).addClass(xe);
-                i.$setDirty();
+                $element.removeClass(PRISTINE_CLASS).addClass(DIRTY_CLASS);
+                parentForm.$setDirty();
             }
-            v(this.$parsers, function(a) {
-                c = a(c);
+            forEach(this.$parsers, function(fn) {
+                value = fn(value);
             });
-            if (this.$modelValue !== c) {
-                this.$modelValue = c;
-                h(a, c);
-                v(this.$viewChangeListeners, function(a) {
+            if (this.$modelValue !== value) {
+                this.$modelValue = value;
+                ngModelSet($scope, value);
+                forEach(this.$viewChangeListeners, function(listener) {
                     try {
-                        a();
-                    } catch (c) {
-                        b(c);
+                        listener();
+                    } catch (e) {
+                        $exceptionHandler(e);
                     }
                 });
             }
         };
-        var m = this;
-        a.$watch(function n() {
-            var b = g(a);
-            if (m.$modelValue !== b) {
-                var c = m.$formatters, d = c.length;
-                m.$modelValue = b;
-                while (d--) {
-                    b = c[d](b);
+        var ctrl = this;
+        $scope.$watch(function ngModelWatch() {
+            var value = ngModelGet($scope);
+            if (ctrl.$modelValue !== value) {
+                var formatters = ctrl.$formatters, idx = formatters.length;
+                ctrl.$modelValue = value;
+                while (idx--) {
+                    value = formatters[idx](value);
                 }
-                if (m.$viewValue !== b) {
-                    m.$viewValue = b;
-                    m.$render();
+                if (ctrl.$viewValue !== value) {
+                    ctrl.$viewValue = value;
+                    ctrl.$render();
                 }
             }
         });
     } ];
-    var ze = function() {
+    var ngModelDirective = function() {
         return {
             require: [ "ngModel", "^?form" ],
-            controller: ye,
-            link: function(a, b, c, d) {
-                var e = d[0], f = d[1] || ee;
-                f.$addControl(e);
-                b.on("$destroy", function() {
-                    f.$removeControl(e);
+            controller: NgModelController,
+            link: function(scope, element, attr, ctrls) {
+                var modelCtrl = ctrls[0], formCtrl = ctrls[1] || nullFormCtrl;
+                formCtrl.$addControl(modelCtrl);
+                element.on("$destroy", function() {
+                    formCtrl.$removeControl(modelCtrl);
                 });
             }
         };
     };
-    var Ae = G({
+    var ngChangeDirective = valueFn({
         require: "ngModel",
-        link: function(a, b, c, d) {
-            d.$viewChangeListeners.push(function() {
-                a.$eval(c.ngChange);
+        link: function(scope, element, attr, ctrl) {
+            ctrl.$viewChangeListeners.push(function() {
+                scope.$eval(attr.ngChange);
             });
         }
     });
-    var Be = function() {
+    var requiredDirective = function() {
         return {
             require: "?ngModel",
-            link: function(a, b, c, d) {
-                if (!d) return;
-                c.required = true;
-                var e = function(a) {
-                    if (c.required && d.$isEmpty(a)) {
-                        d.$setValidity("required", false);
+            link: function(scope, elm, attr, ctrl) {
+                if (!ctrl) return;
+                attr.required = true;
+                var validator = function(value) {
+                    if (attr.required && ctrl.$isEmpty(value)) {
+                        ctrl.$setValidity("required", false);
                         return;
                     } else {
-                        d.$setValidity("required", true);
-                        return a;
+                        ctrl.$setValidity("required", true);
+                        return value;
                     }
                 };
-                d.$formatters.push(e);
-                d.$parsers.unshift(e);
-                c.$observe("required", function() {
-                    e(d.$viewValue);
+                ctrl.$formatters.push(validator);
+                ctrl.$parsers.unshift(validator);
+                attr.$observe("required", function() {
+                    validator(ctrl.$viewValue);
                 });
             }
         };
     };
-    var Ce = function() {
+    var ngListDirective = function() {
         return {
             require: "ngModel",
-            link: function(a, b, d, e) {
-                var f = /\/(.*)\//.exec(d.ngList), g = f && new RegExp(f[1]) || d.ngList || ",";
-                var h = function(a) {
-                    if (H(a)) return;
-                    var b = [];
-                    if (a) {
-                        v(a.split(g), function(a) {
-                            if (a) b.push(U(a));
+            link: function(scope, element, attr, ctrl) {
+                var match = /\/(.*)\//.exec(attr.ngList), separator = match && new RegExp(match[1]) || attr.ngList || ",";
+                var parse = function(viewValue) {
+                    if (isUndefined(viewValue)) return;
+                    var list = [];
+                    if (viewValue) {
+                        forEach(viewValue.split(separator), function(value) {
+                            if (value) list.push(trim(value));
                         });
                     }
-                    return b;
+                    return list;
                 };
-                e.$parsers.push(h);
-                e.$formatters.push(function(a) {
-                    if (N(a)) {
-                        return a.join(", ");
+                ctrl.$parsers.push(parse);
+                ctrl.$formatters.push(function(value) {
+                    if (isArray(value)) {
+                        return value.join(", ");
                     }
-                    return c;
+                    return undefined;
                 });
-                e.$isEmpty = function(a) {
-                    return !a || !a.length;
+                ctrl.$isEmpty = function(value) {
+                    return !value || !value.length;
                 };
             }
         };
     };
-    var De = /^(true|false|\d+)$/;
-    var Ee = function() {
+    var CONSTANT_VALUE_REGEXP = /^(true|false|\d+)$/;
+    var ngValueDirective = function() {
         return {
             priority: 100,
-            compile: function(a, b) {
-                if (De.test(b.ngValue)) {
-                    return function c(a, b, c) {
-                        c.$set("value", a.$eval(c.ngValue));
+            compile: function(tpl, tplAttr) {
+                if (CONSTANT_VALUE_REGEXP.test(tplAttr.ngValue)) {
+                    return function ngValueConstantLink(scope, elm, attr) {
+                        attr.$set("value", scope.$eval(attr.ngValue));
                     };
                 } else {
-                    return function d(a, b, c) {
-                        a.$watch(c.ngValue, function d(a) {
-                            c.$set("value", a);
+                    return function ngValueLink(scope, elm, attr) {
+                        scope.$watch(attr.ngValue, function valueWatchAction(value) {
+                            attr.$set("value", value);
                         });
                     };
                 }
             }
         };
     };
-    var Fe = be(function(a, b, d) {
-        b.addClass("ng-binding").data("$binding", d.ngBind);
-        a.$watch(d.ngBind, function e(a) {
-            b.text(a == c ? "" : a);
+    var ngBindDirective = ngDirective(function(scope, element, attr) {
+        element.addClass("ng-binding").data("$binding", attr.ngBind);
+        scope.$watch(attr.ngBind, function ngBindWatchAction(value) {
+            element.text(value == undefined ? "" : value);
         });
     });
-    var Ge = [ "$interpolate", function(a) {
-        return function(b, c, d) {
-            var e = a(c.attr(d.$attr.ngBindTemplate));
-            c.addClass("ng-binding").data("$binding", e);
-            d.$observe("ngBindTemplate", function(a) {
-                c.text(a);
+    var ngBindTemplateDirective = [ "$interpolate", function($interpolate) {
+        return function(scope, element, attr) {
+            var interpolateFn = $interpolate(element.attr(attr.$attr.ngBindTemplate));
+            element.addClass("ng-binding").data("$binding", interpolateFn);
+            attr.$observe("ngBindTemplate", function(value) {
+                element.text(value);
             });
         };
     } ];
-    var He = [ "$sce", "$parse", function(a, b) {
-        return function(c, d, e) {
-            d.addClass("ng-binding").data("$binding", e.ngBindHtml);
-            var f = b(e.ngBindHtml);
-            function g() {
-                return (f(c) || "").toString();
+    var ngBindHtmlDirective = [ "$sce", "$parse", function($sce, $parse) {
+        return function(scope, element, attr) {
+            element.addClass("ng-binding").data("$binding", attr.ngBindHtml);
+            var parsed = $parse(attr.ngBindHtml);
+            function getStringValue() {
+                return (parsed(scope) || "").toString();
             }
-            c.$watch(g, function h(b) {
-                d.html(a.getTrustedHtml(f(c)) || "");
+            scope.$watch(getStringValue, function ngBindHtmlWatchAction(value) {
+                element.html($sce.getTrustedHtml(parsed(scope)) || "");
             });
         };
     } ];
-    function Ie(a, b) {
-        a = "ngClass" + a;
+    function classDirective(name, selector) {
+        name = "ngClass" + name;
         return function() {
             return {
                 restrict: "AC",
-                link: function(d, e, f) {
-                    var g = c;
-                    d.$watch(f[a], h, true);
-                    f.$observe("class", function(b) {
-                        h(d.$eval(f[a]));
+                link: function(scope, element, attr) {
+                    var oldVal = undefined;
+                    scope.$watch(attr[name], ngClassWatchAction, true);
+                    attr.$observe("class", function(value) {
+                        ngClassWatchAction(scope.$eval(attr[name]));
                     });
-                    if (a !== "ngClass") {
-                        d.$watch("$index", function(c, e) {
-                            var g = c & 1;
-                            if (g !== e & 1) {
-                                if (g === b) {
-                                    j(d.$eval(f[a]));
+                    if (name !== "ngClass") {
+                        scope.$watch("$index", function($index, old$index) {
+                            var mod = $index & 1;
+                            if (mod !== old$index & 1) {
+                                if (mod === selector) {
+                                    addClass(scope.$eval(attr[name]));
                                 } else {
-                                    i(d.$eval(f[a]));
+                                    removeClass(scope.$eval(attr[name]));
                                 }
                             }
                         });
                     }
-                    function h(a) {
-                        if (b === true || d.$index % 2 === b) {
-                            if (g && !db(a, g)) {
-                                i(g);
+                    function ngClassWatchAction(newVal) {
+                        if (selector === true || scope.$index % 2 === selector) {
+                            if (oldVal && !equals(newVal, oldVal)) {
+                                removeClass(oldVal);
                             }
-                            j(a);
+                            addClass(newVal);
                         }
-                        g = bb(a);
+                        oldVal = copy(newVal);
                     }
-                    function i(a) {
-                        f.$removeClass(k(a));
+                    function removeClass(classVal) {
+                        attr.$removeClass(flattenClasses(classVal));
                     }
-                    function j(a) {
-                        f.$addClass(k(a));
+                    function addClass(classVal) {
+                        attr.$addClass(flattenClasses(classVal));
                     }
-                    function k(a) {
-                        if (N(a)) {
-                            return a.join(" ");
-                        } else if (J(a)) {
-                            var b = [], c = 0;
-                            v(a, function(a, c) {
-                                if (a) {
-                                    b.push(c);
+                    function flattenClasses(classVal) {
+                        if (isArray(classVal)) {
+                            return classVal.join(" ");
+                        } else if (isObject(classVal)) {
+                            var classes = [], i = 0;
+                            forEach(classVal, function(v, k) {
+                                if (v) {
+                                    classes.push(k);
                                 }
                             });
-                            return b.join(" ");
+                            return classes.join(" ");
                         }
-                        return a;
+                        return classVal;
                     }
                 }
             };
         };
     }
-    var Je = Ie("", true);
-    var Ke = Ie("Odd", 0);
-    var Le = Ie("Even", 1);
-    var Me = be({
-        compile: function(a, b) {
-            b.$set("ngCloak", c);
-            a.removeClass("ng-cloak");
+    var ngClassDirective = classDirective("", true);
+    var ngClassOddDirective = classDirective("Odd", 0);
+    var ngClassEvenDirective = classDirective("Even", 1);
+    var ngCloakDirective = ngDirective({
+        compile: function(element, attr) {
+            attr.$set("ngCloak", undefined);
+            element.removeClass("ng-cloak");
         }
     });
-    var Ne = [ function() {
+    var ngControllerDirective = [ function() {
         return {
             scope: true,
             controller: "@"
         };
     } ];
-    var Oe = [ "$sniffer", function(a) {
+    var ngCspDirective = [ "$sniffer", function($sniffer) {
         return {
             priority: 1e3,
             compile: function() {
-                a.csp = true;
+                $sniffer.csp = true;
             }
         };
     } ];
-    var Pe = {};
-    v("click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste".split(" "), function(a) {
-        var b = xc("ng-" + a);
-        Pe[b] = [ "$parse", function(c) {
-            return function(d, f, g) {
-                var h = c(g[b]);
-                f.on(e(a), function(a) {
-                    d.$apply(function() {
-                        h(d, {
-                            $event: a
+    var ngEventDirectives = {};
+    forEach("click dblclick mousedown mouseup mouseover mouseout mousemove mouseenter mouseleave keydown keyup keypress submit focus blur copy cut paste".split(" "), function(name) {
+        var directiveName = directiveNormalize("ng-" + name);
+        ngEventDirectives[directiveName] = [ "$parse", function($parse) {
+            return function(scope, element, attr) {
+                var fn = $parse(attr[directiveName]);
+                element.on(lowercase(name), function(event) {
+                    scope.$apply(function() {
+                        fn(scope, {
+                            $event: event
                         });
                     });
                 });
             };
         } ];
     });
-    var Qe = [ "$animate", function(a) {
+    var ngIfDirective = [ "$animate", function($animate) {
         return {
             transclude: "element",
             priority: 600,
             terminal: true,
             restrict: "A",
-            compile: function(b, d, e) {
-                return function(b, d, f) {
-                    var g, h;
-                    b.$watch(f.ngIf, function i(f) {
-                        if (g) {
-                            a.leave(g);
-                            g = c;
+            compile: function(element, attr, transclude) {
+                return function($scope, $element, $attr) {
+                    var childElement, childScope;
+                    $scope.$watch($attr.ngIf, function ngIfWatchAction(value) {
+                        if (childElement) {
+                            $animate.leave(childElement);
+                            childElement = undefined;
                         }
-                        if (h) {
-                            h.$destroy();
-                            h = c;
+                        if (childScope) {
+                            childScope.$destroy();
+                            childScope = undefined;
                         }
-                        if (kb(f)) {
-                            h = b.$new();
-                            e(h, function(b) {
-                                g = b;
-                                a.enter(b, d.parent(), d);
+                        if (toBoolean(value)) {
+                            childScope = $scope.$new();
+                            transclude(childScope, function(clone) {
+                                childElement = clone;
+                                $animate.enter(clone, $element.parent(), $element);
                             });
                         }
                     });
@@ -6549,297 +6550,297 @@
             }
         };
     } ];
-    var Re = [ "$http", "$templateCache", "$anchorScroll", "$compile", "$animate", "$sce", function(a, b, c, d, e, f) {
+    var ngIncludeDirective = [ "$http", "$templateCache", "$anchorScroll", "$compile", "$animate", "$sce", function($http, $templateCache, $anchorScroll, $compile, $animate, $sce) {
         return {
             restrict: "ECA",
             priority: 400,
             terminal: true,
             transclude: "element",
-            compile: function(g, h, i) {
-                var j = h.ngInclude || h.src, k = h.onload || "", l = h.autoscroll;
-                return function(g, h) {
-                    var m = 0, n, o;
-                    var p = function() {
-                        if (n) {
-                            n.$destroy();
-                            n = null;
+            compile: function(element, attr, transclusion) {
+                var srcExp = attr.ngInclude || attr.src, onloadExp = attr.onload || "", autoScrollExp = attr.autoscroll;
+                return function(scope, $element) {
+                    var changeCounter = 0, currentScope, currentElement;
+                    var cleanupLastIncludeContent = function() {
+                        if (currentScope) {
+                            currentScope.$destroy();
+                            currentScope = null;
                         }
-                        if (o) {
-                            e.leave(o);
-                            o = null;
+                        if (currentElement) {
+                            $animate.leave(currentElement);
+                            currentElement = null;
                         }
                     };
-                    g.$watch(f.parseAsResourceUrl(j), function q(f) {
-                        var j = ++m;
-                        if (f) {
-                            a.get(f, {
-                                cache: b
-                            }).success(function(a) {
-                                if (j !== m) return;
-                                var b = g.$new();
-                                i(b, function(f) {
-                                    p();
-                                    n = b;
-                                    o = f;
-                                    o.html(a);
-                                    e.enter(o, null, h);
-                                    d(o.contents())(n);
-                                    if (I(l) && (!l || g.$eval(l))) {
-                                        c();
+                    scope.$watch($sce.parseAsResourceUrl(srcExp), function ngIncludeWatchAction(src) {
+                        var thisChangeId = ++changeCounter;
+                        if (src) {
+                            $http.get(src, {
+                                cache: $templateCache
+                            }).success(function(response) {
+                                if (thisChangeId !== changeCounter) return;
+                                var newScope = scope.$new();
+                                transclusion(newScope, function(clone) {
+                                    cleanupLastIncludeContent();
+                                    currentScope = newScope;
+                                    currentElement = clone;
+                                    currentElement.html(response);
+                                    $animate.enter(currentElement, null, $element);
+                                    $compile(currentElement.contents())(currentScope);
+                                    if (isDefined(autoScrollExp) && (!autoScrollExp || scope.$eval(autoScrollExp))) {
+                                        $anchorScroll();
                                     }
-                                    n.$emit("$includeContentLoaded");
-                                    g.$eval(k);
+                                    currentScope.$emit("$includeContentLoaded");
+                                    scope.$eval(onloadExp);
                                 });
                             }).error(function() {
-                                if (j === m) p();
+                                if (thisChangeId === changeCounter) cleanupLastIncludeContent();
                             });
-                            g.$emit("$includeContentRequested");
+                            scope.$emit("$includeContentRequested");
                         } else {
-                            p();
+                            cleanupLastIncludeContent();
                         }
                     });
                 };
             }
         };
     } ];
-    var Se = be({
+    var ngInitDirective = ngDirective({
         compile: function() {
             return {
-                pre: function(a, b, c) {
-                    a.$eval(c.ngInit);
+                pre: function(scope, element, attrs) {
+                    scope.$eval(attrs.ngInit);
                 }
             };
         }
     });
-    var Te = be({
+    var ngNonBindableDirective = ngDirective({
         terminal: true,
         priority: 1e3
     });
-    var Ue = [ "$locale", "$interpolate", function(a, b) {
-        var c = /{}/g;
+    var ngPluralizeDirective = [ "$locale", "$interpolate", function($locale, $interpolate) {
+        var BRACE = /{}/g;
         return {
             restrict: "EA",
-            link: function(d, f, g) {
-                var h = g.count, i = g.$attr.when && f.attr(g.$attr.when), j = g.offset || 0, k = d.$eval(i) || {}, l = {}, m = b.startSymbol(), n = b.endSymbol(), o = /^when(Minus)?(.+)$/;
-                v(g, function(a, b) {
-                    if (o.test(b)) {
-                        k[e(b.replace("when", "").replace("Minus", "-"))] = f.attr(g.$attr[b]);
+            link: function(scope, element, attr) {
+                var numberExp = attr.count, whenExp = attr.$attr.when && element.attr(attr.$attr.when), offset = attr.offset || 0, whens = scope.$eval(whenExp) || {}, whensExpFns = {}, startSymbol = $interpolate.startSymbol(), endSymbol = $interpolate.endSymbol(), isWhen = /^when(Minus)?(.+)$/;
+                forEach(attr, function(expression, attributeName) {
+                    if (isWhen.test(attributeName)) {
+                        whens[lowercase(attributeName.replace("when", "").replace("Minus", "-"))] = element.attr(attr.$attr[attributeName]);
                     }
                 });
-                v(k, function(a, d) {
-                    l[d] = b(a.replace(c, m + h + "-" + j + n));
+                forEach(whens, function(expression, key) {
+                    whensExpFns[key] = $interpolate(expression.replace(BRACE, startSymbol + numberExp + "-" + offset + endSymbol));
                 });
-                d.$watch(function p() {
-                    var b = parseFloat(d.$eval(h));
-                    if (!isNaN(b)) {
-                        if (!(b in k)) b = a.pluralCat(b - j);
-                        return l[b](d, f, true);
+                scope.$watch(function ngPluralizeWatch() {
+                    var value = parseFloat(scope.$eval(numberExp));
+                    if (!isNaN(value)) {
+                        if (!(value in whens)) value = $locale.pluralCat(value - offset);
+                        return whensExpFns[value](scope, element, true);
                     } else {
                         return "";
                     }
-                }, function q(a) {
-                    f.text(a);
+                }, function ngPluralizeWatchAction(newVal) {
+                    element.text(newVal);
                 });
             }
         };
     } ];
-    var Ve = [ "$parse", "$animate", function(a, c) {
-        var e = "$$NG_REMOVED";
-        var f = d("ngRepeat");
+    var ngRepeatDirective = [ "$parse", "$animate", function($parse, $animate) {
+        var NG_REMOVED = "$$NG_REMOVED";
+        var ngRepeatMinErr = minErr("ngRepeat");
         return {
             transclude: "element",
             priority: 1e3,
             terminal: true,
-            compile: function(d, h, i) {
-                return function(d, h, k) {
-                    var l = k.ngRepeat;
-                    var m = l.match(/^\s*(.+)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/), n, o, p, q, r, s, t, w, x, y = {
-                        $id: ec
+            compile: function(element, attr, linker) {
+                return function($scope, $element, $attr) {
+                    var expression = $attr.ngRepeat;
+                    var match = expression.match(/^\s*(.+)\s+in\s+(.*?)\s*(\s+track\s+by\s+(.+)\s*)?$/), trackByExp, trackByExpGetter, trackByIdExpFn, trackByIdArrayFn, trackByIdObjFn, lhs, rhs, valueIdentifier, keyIdentifier, hashFnLocals = {
+                        $id: hashKey
                     };
-                    if (!m) {
-                        throw f("iexp", "Expected expression in form of '_item_ in _collection_[ track by _id_]' but got '{0}'.", l);
+                    if (!match) {
+                        throw ngRepeatMinErr("iexp", "Expected expression in form of '_item_ in _collection_[ track by _id_]' but got '{0}'.", expression);
                     }
-                    s = m[1];
-                    t = m[2];
-                    n = m[4];
-                    if (n) {
-                        o = a(n);
-                        p = function(a, b, c) {
-                            if (x) y[x] = a;
-                            y[w] = b;
-                            y.$index = c;
-                            return o(d, y);
+                    lhs = match[1];
+                    rhs = match[2];
+                    trackByExp = match[4];
+                    if (trackByExp) {
+                        trackByExpGetter = $parse(trackByExp);
+                        trackByIdExpFn = function(key, value, index) {
+                            if (keyIdentifier) hashFnLocals[keyIdentifier] = key;
+                            hashFnLocals[valueIdentifier] = value;
+                            hashFnLocals.$index = index;
+                            return trackByExpGetter($scope, hashFnLocals);
                         };
                     } else {
-                        q = function(a, b) {
-                            return ec(b);
+                        trackByIdArrayFn = function(key, value) {
+                            return hashKey(value);
                         };
-                        r = function(a) {
-                            return a;
+                        trackByIdObjFn = function(key) {
+                            return key;
                         };
                     }
-                    m = s.match(/^(?:([\$\w]+)|\(([\$\w]+)\s*,\s*([\$\w]+)\))$/);
-                    if (!m) {
-                        throw f("iidexp", "'_item_' in '_item_ in _collection_' should be an identifier or '(_key_, _value_)' expression, but got '{0}'.", s);
+                    match = lhs.match(/^(?:([\$\w]+)|\(([\$\w]+)\s*,\s*([\$\w]+)\))$/);
+                    if (!match) {
+                        throw ngRepeatMinErr("iidexp", "'_item_' in '_item_ in _collection_' should be an identifier or '(_key_, _value_)' expression, but got '{0}'.", lhs);
                     }
-                    w = m[3] || m[1];
-                    x = m[2];
-                    var z = {};
-                    d.$watchCollection(t, function A(a) {
-                        var k, m, n = h[0], o, s = {}, t, y, A, B, C, D, E, F, G = [], H;
-                        if (u(a)) {
-                            E = a;
-                            D = p || q;
+                    valueIdentifier = match[3] || match[1];
+                    keyIdentifier = match[2];
+                    var lastBlockMap = {};
+                    $scope.$watchCollection(rhs, function ngRepeatAction(collection) {
+                        var index, length, previousNode = $element[0], nextNode, nextBlockMap = {}, arrayLength, childScope, key, value, trackById, trackByIdFn, collectionKeys, block, nextBlockOrder = [], elementsToRemove;
+                        if (isArrayLike(collection)) {
+                            collectionKeys = collection;
+                            trackByIdFn = trackByIdExpFn || trackByIdArrayFn;
                         } else {
-                            D = p || r;
-                            E = [];
-                            for (A in a) {
-                                if (a.hasOwnProperty(A) && A.charAt(0) != "$") {
-                                    E.push(A);
+                            trackByIdFn = trackByIdExpFn || trackByIdObjFn;
+                            collectionKeys = [];
+                            for (key in collection) {
+                                if (collection.hasOwnProperty(key) && key.charAt(0) != "$") {
+                                    collectionKeys.push(key);
                                 }
                             }
-                            E.sort();
+                            collectionKeys.sort();
                         }
-                        t = E.length;
-                        m = G.length = E.length;
-                        for (k = 0; k < m; k++) {
-                            A = a === E ? k : E[k];
-                            B = a[A];
-                            C = D(A, B, k);
-                            yb(C, "`track by` id");
-                            if (z.hasOwnProperty(C)) {
-                                F = z[C];
-                                delete z[C];
-                                s[C] = F;
-                                G[k] = F;
-                            } else if (s.hasOwnProperty(C)) {
-                                v(G, function(a) {
-                                    if (a && a.startNode) z[a.id] = a;
+                        arrayLength = collectionKeys.length;
+                        length = nextBlockOrder.length = collectionKeys.length;
+                        for (index = 0; index < length; index++) {
+                            key = collection === collectionKeys ? index : collectionKeys[index];
+                            value = collection[key];
+                            trackById = trackByIdFn(key, value, index);
+                            assertNotHasOwnProperty(trackById, "`track by` id");
+                            if (lastBlockMap.hasOwnProperty(trackById)) {
+                                block = lastBlockMap[trackById];
+                                delete lastBlockMap[trackById];
+                                nextBlockMap[trackById] = block;
+                                nextBlockOrder[index] = block;
+                            } else if (nextBlockMap.hasOwnProperty(trackById)) {
+                                forEach(nextBlockOrder, function(block) {
+                                    if (block && block.startNode) lastBlockMap[block.id] = block;
                                 });
-                                throw f("dupes", "Duplicates in a repeater are not allowed. Use 'track by' expression to specify unique keys. Repeater: {0}, Duplicate key: {1}", l, C);
+                                throw ngRepeatMinErr("dupes", "Duplicates in a repeater are not allowed. Use 'track by' expression to specify unique keys. Repeater: {0}, Duplicate key: {1}", expression, trackById);
                             } else {
-                                G[k] = {
-                                    id: C
+                                nextBlockOrder[index] = {
+                                    id: trackById
                                 };
-                                s[C] = false;
+                                nextBlockMap[trackById] = false;
                             }
                         }
-                        for (A in z) {
-                            if (z.hasOwnProperty(A)) {
-                                F = z[A];
-                                H = g(F);
-                                c.leave(H);
-                                v(H, function(a) {
-                                    a[e] = true;
+                        for (key in lastBlockMap) {
+                            if (lastBlockMap.hasOwnProperty(key)) {
+                                block = lastBlockMap[key];
+                                elementsToRemove = getBlockElements(block);
+                                $animate.leave(elementsToRemove);
+                                forEach(elementsToRemove, function(element) {
+                                    element[NG_REMOVED] = true;
                                 });
-                                F.scope.$destroy();
+                                block.scope.$destroy();
                             }
                         }
-                        for (k = 0, m = E.length; k < m; k++) {
-                            A = a === E ? k : E[k];
-                            B = a[A];
-                            F = G[k];
-                            if (G[k - 1]) n = G[k - 1].endNode;
-                            if (F.startNode) {
-                                y = F.scope;
-                                o = n;
+                        for (index = 0, length = collectionKeys.length; index < length; index++) {
+                            key = collection === collectionKeys ? index : collectionKeys[index];
+                            value = collection[key];
+                            block = nextBlockOrder[index];
+                            if (nextBlockOrder[index - 1]) previousNode = nextBlockOrder[index - 1].endNode;
+                            if (block.startNode) {
+                                childScope = block.scope;
+                                nextNode = previousNode;
                                 do {
-                                    o = o.nextSibling;
-                                } while (o && o[e]);
-                                if (F.startNode == o) {} else {
-                                    c.move(g(F), null, j(n));
+                                    nextNode = nextNode.nextSibling;
+                                } while (nextNode && nextNode[NG_REMOVED]);
+                                if (block.startNode == nextNode) {} else {
+                                    $animate.move(getBlockElements(block), null, jqLite(previousNode));
                                 }
-                                n = F.endNode;
+                                previousNode = block.endNode;
                             } else {
-                                y = d.$new();
+                                childScope = $scope.$new();
                             }
-                            y[w] = B;
-                            if (x) y[x] = A;
-                            y.$index = k;
-                            y.$first = k === 0;
-                            y.$last = k === t - 1;
-                            y.$middle = !(y.$first || y.$last);
-                            y.$odd = !(y.$even = k % 2 == 0);
-                            if (!F.startNode) {
-                                i(y, function(a) {
-                                    a[a.length++] = b.createComment(" end ngRepeat: " + l + " ");
-                                    c.enter(a, null, j(n));
-                                    n = a;
-                                    F.scope = y;
-                                    F.startNode = n && n.endNode ? n.endNode : a[0];
-                                    F.endNode = a[a.length - 1];
-                                    s[F.id] = F;
+                            childScope[valueIdentifier] = value;
+                            if (keyIdentifier) childScope[keyIdentifier] = key;
+                            childScope.$index = index;
+                            childScope.$first = index === 0;
+                            childScope.$last = index === arrayLength - 1;
+                            childScope.$middle = !(childScope.$first || childScope.$last);
+                            childScope.$odd = !(childScope.$even = index % 2 == 0);
+                            if (!block.startNode) {
+                                linker(childScope, function(clone) {
+                                    clone[clone.length++] = document.createComment(" end ngRepeat: " + expression + " ");
+                                    $animate.enter(clone, null, jqLite(previousNode));
+                                    previousNode = clone;
+                                    block.scope = childScope;
+                                    block.startNode = previousNode && previousNode.endNode ? previousNode.endNode : clone[0];
+                                    block.endNode = clone[clone.length - 1];
+                                    nextBlockMap[block.id] = block;
                                 });
                             }
                         }
-                        z = s;
+                        lastBlockMap = nextBlockMap;
                     });
                 };
             }
         };
-        function g(a) {
-            if (a.startNode === a.endNode) {
-                return j(a.startNode);
+        function getBlockElements(block) {
+            if (block.startNode === block.endNode) {
+                return jqLite(block.startNode);
             }
-            var b = a.startNode;
-            var c = [ b ];
+            var element = block.startNode;
+            var elements = [ element ];
             do {
-                b = b.nextSibling;
-                if (!b) break;
-                c.push(b);
-            } while (b !== a.endNode);
-            return j(c);
+                element = element.nextSibling;
+                if (!element) break;
+                elements.push(element);
+            } while (element !== block.endNode);
+            return jqLite(elements);
         }
     } ];
-    var We = [ "$animate", function(a) {
-        return function(b, c, d) {
-            b.$watch(d.ngShow, function e(b) {
-                a[kb(b) ? "removeClass" : "addClass"](c, "ng-hide");
+    var ngShowDirective = [ "$animate", function($animate) {
+        return function(scope, element, attr) {
+            scope.$watch(attr.ngShow, function ngShowWatchAction(value) {
+                $animate[toBoolean(value) ? "removeClass" : "addClass"](element, "ng-hide");
             });
         };
     } ];
-    var Xe = [ "$animate", function(a) {
-        return function(b, c, d) {
-            b.$watch(d.ngHide, function e(b) {
-                a[kb(b) ? "addClass" : "removeClass"](c, "ng-hide");
+    var ngHideDirective = [ "$animate", function($animate) {
+        return function(scope, element, attr) {
+            scope.$watch(attr.ngHide, function ngHideWatchAction(value) {
+                $animate[toBoolean(value) ? "addClass" : "removeClass"](element, "ng-hide");
             });
         };
     } ];
-    var Ye = be(function(a, b, c) {
-        a.$watch(c.ngStyle, function d(a, c) {
-            if (c && a !== c) {
-                v(c, function(a, c) {
-                    b.css(c, "");
+    var ngStyleDirective = ngDirective(function(scope, element, attr) {
+        scope.$watch(attr.ngStyle, function ngStyleWatchAction(newStyles, oldStyles) {
+            if (oldStyles && newStyles !== oldStyles) {
+                forEach(oldStyles, function(val, style) {
+                    element.css(style, "");
                 });
             }
-            if (a) b.css(a);
+            if (newStyles) element.css(newStyles);
         }, true);
     });
-    var Ze = [ "$animate", function(a) {
+    var ngSwitchDirective = [ "$animate", function($animate) {
         return {
             restrict: "EA",
             require: "ngSwitch",
-            controller: [ "$scope", function b() {
+            controller: [ "$scope", function ngSwitchController() {
                 this.cases = {};
             } ],
-            link: function(b, c, d, e) {
-                var f = d.ngSwitch || d.on, g, h, i = [];
-                b.$watch(f, function j(c) {
-                    for (var f = 0, j = i.length; f < j; f++) {
-                        i[f].$destroy();
-                        a.leave(h[f]);
+            link: function(scope, element, attr, ngSwitchController) {
+                var watchExpr = attr.ngSwitch || attr.on, selectedTranscludes, selectedElements, selectedScopes = [];
+                scope.$watch(watchExpr, function ngSwitchWatchAction(value) {
+                    for (var i = 0, ii = selectedScopes.length; i < ii; i++) {
+                        selectedScopes[i].$destroy();
+                        $animate.leave(selectedElements[i]);
                     }
-                    h = [];
-                    i = [];
-                    if (g = e.cases["!" + c] || e.cases["?"]) {
-                        b.$eval(d.change);
-                        v(g, function(c) {
-                            var d = b.$new();
-                            i.push(d);
-                            c.transclude(d, function(b) {
-                                var d = c.element;
-                                h.push(b);
-                                a.enter(b, d.parent(), d);
+                    selectedElements = [];
+                    selectedScopes = [];
+                    if (selectedTranscludes = ngSwitchController.cases["!" + value] || ngSwitchController.cases["?"]) {
+                        scope.$eval(attr.change);
+                        forEach(selectedTranscludes, function(selectedTransclude) {
+                            var selectedScope = scope.$new();
+                            selectedScopes.push(selectedScope);
+                            selectedTransclude.transclude(selectedScope, function(caseElement) {
+                                var anchor = selectedTransclude.element;
+                                selectedElements.push(caseElement);
+                                $animate.enter(caseElement, anchor.parent(), anchor);
                             });
                         });
                     }
@@ -6847,643 +6848,643 @@
             }
         };
     } ];
-    var $e = be({
+    var ngSwitchWhenDirective = ngDirective({
         transclude: "element",
         priority: 800,
         require: "^ngSwitch",
-        compile: function(a, b, c) {
-            return function(a, d, e, f) {
-                f.cases["!" + b.ngSwitchWhen] = f.cases["!" + b.ngSwitchWhen] || [];
-                f.cases["!" + b.ngSwitchWhen].push({
-                    transclude: c,
-                    element: d
+        compile: function(element, attrs, transclude) {
+            return function(scope, element, attr, ctrl) {
+                ctrl.cases["!" + attrs.ngSwitchWhen] = ctrl.cases["!" + attrs.ngSwitchWhen] || [];
+                ctrl.cases["!" + attrs.ngSwitchWhen].push({
+                    transclude: transclude,
+                    element: element
                 });
             };
         }
     });
-    var _e = be({
+    var ngSwitchDefaultDirective = ngDirective({
         transclude: "element",
         priority: 800,
         require: "^ngSwitch",
-        compile: function(a, b, c) {
-            return function(a, b, d, e) {
-                e.cases["?"] = e.cases["?"] || [];
-                e.cases["?"].push({
-                    transclude: c,
-                    element: b
+        compile: function(element, attrs, transclude) {
+            return function(scope, element, attr, ctrl) {
+                ctrl.cases["?"] = ctrl.cases["?"] || [];
+                ctrl.cases["?"].push({
+                    transclude: transclude,
+                    element: element
                 });
             };
         }
     });
-    var af = be({
-        controller: [ "$element", "$transclude", function(a, b) {
-            if (!b) {
-                throw d("ngTransclude")("orphan", "Illegal use of ngTransclude directive in the template! " + "No parent directive that requires a transclusion found. " + "Element: {0}", lb(a));
+    var ngTranscludeDirective = ngDirective({
+        controller: [ "$element", "$transclude", function($element, $transclude) {
+            if (!$transclude) {
+                throw minErr("ngTransclude")("orphan", "Illegal use of ngTransclude directive in the template! " + "No parent directive that requires a transclusion found. " + "Element: {0}", startingTag($element));
             }
-            this.$transclude = b;
+            this.$transclude = $transclude;
         } ],
-        link: function(a, b, c, d) {
-            d.$transclude(function(a) {
-                b.html("");
-                b.append(a);
+        link: function($scope, $element, $attrs, controller) {
+            controller.$transclude(function(clone) {
+                $element.html("");
+                $element.append(clone);
             });
         }
     });
-    var bf = [ "$templateCache", function(a) {
+    var scriptDirective = [ "$templateCache", function($templateCache) {
         return {
             restrict: "E",
             terminal: true,
-            compile: function(b, c) {
-                if (c.type == "text/ng-template") {
-                    var d = c.id, e = b[0].text;
-                    a.put(d, e);
+            compile: function(element, attr) {
+                if (attr.type == "text/ng-template") {
+                    var templateUrl = attr.id, text = element[0].text;
+                    $templateCache.put(templateUrl, text);
                 }
             }
         };
     } ];
-    var cf = d("ngOptions");
-    var df = G({
+    var ngOptionsMinErr = minErr("ngOptions");
+    var ngOptionsDirective = valueFn({
         terminal: true
     });
-    var ef = [ "$compile", "$parse", function(a, d) {
-        var e = /^\s*(.*?)(?:\s+as\s+(.*?))?(?:\s+group\s+by\s+(.*))?\s+for\s+(?:([\$\w][\$\w]*)|(?:\(\s*([\$\w][\$\w]*)\s*,\s*([\$\w][\$\w]*)\s*\)))\s+in\s+(.*?)(?:\s+track\s+by\s+(.*?))?$/, f = {
-            $setViewValue: E
+    var selectDirective = [ "$compile", "$parse", function($compile, $parse) {
+        var NG_OPTIONS_REGEXP = /^\s*(.*?)(?:\s+as\s+(.*?))?(?:\s+group\s+by\s+(.*))?\s+for\s+(?:([\$\w][\$\w]*)|(?:\(\s*([\$\w][\$\w]*)\s*,\s*([\$\w][\$\w]*)\s*\)))\s+in\s+(.*?)(?:\s+track\s+by\s+(.*?))?$/, nullModelCtrl = {
+            $setViewValue: noop
         };
         return {
             restrict: "E",
             require: [ "select", "?ngModel" ],
-            controller: [ "$element", "$scope", "$attrs", function(a, b, c) {
-                var d = this, e = {}, g = f, h, i;
-                d.databound = c.ngModel;
-                d.init = function(a, b, c) {
-                    g = a;
-                    h = b;
-                    i = c;
+            controller: [ "$element", "$scope", "$attrs", function($element, $scope, $attrs) {
+                var self = this, optionsMap = {}, ngModelCtrl = nullModelCtrl, nullOption, unknownOption;
+                self.databound = $attrs.ngModel;
+                self.init = function(ngModelCtrl_, nullOption_, unknownOption_) {
+                    ngModelCtrl = ngModelCtrl_;
+                    nullOption = nullOption_;
+                    unknownOption = unknownOption_;
                 };
-                d.addOption = function(b) {
-                    yb(b, '"option value"');
-                    e[b] = true;
-                    if (g.$viewValue == b) {
-                        a.val(b);
-                        if (i.parent()) i.remove();
+                self.addOption = function(value) {
+                    assertNotHasOwnProperty(value, '"option value"');
+                    optionsMap[value] = true;
+                    if (ngModelCtrl.$viewValue == value) {
+                        $element.val(value);
+                        if (unknownOption.parent()) unknownOption.remove();
                     }
                 };
-                d.removeOption = function(a) {
-                    if (this.hasOption(a)) {
-                        delete e[a];
-                        if (g.$viewValue == a) {
-                            this.renderUnknownOption(a);
+                self.removeOption = function(value) {
+                    if (this.hasOption(value)) {
+                        delete optionsMap[value];
+                        if (ngModelCtrl.$viewValue == value) {
+                            this.renderUnknownOption(value);
                         }
                     }
                 };
-                d.renderUnknownOption = function(b) {
-                    var c = "? " + ec(b) + " ?";
-                    i.val(c);
-                    a.prepend(i);
-                    a.val(c);
-                    i.prop("selected", true);
+                self.renderUnknownOption = function(val) {
+                    var unknownVal = "? " + hashKey(val) + " ?";
+                    unknownOption.val(unknownVal);
+                    $element.prepend(unknownOption);
+                    $element.val(unknownVal);
+                    unknownOption.prop("selected", true);
                 };
-                d.hasOption = function(a) {
-                    return e.hasOwnProperty(a);
+                self.hasOption = function(value) {
+                    return optionsMap.hasOwnProperty(value);
                 };
-                b.$on("$destroy", function() {
-                    d.renderUnknownOption = E;
+                $scope.$on("$destroy", function() {
+                    self.renderUnknownOption = noop;
                 });
             } ],
-            link: function(f, g, h, i) {
-                if (!i[1]) return;
-                var k = i[0], l = i[1], m = h.multiple, n = h.ngOptions, o = false, p, q = j(b.createElement("option")), r = j(b.createElement("optgroup")), s = q.clone();
-                for (var t = 0, u = g.children(), x = u.length; t < x; t++) {
-                    if (u[t].value == "") {
-                        p = o = u.eq(t);
+            link: function(scope, element, attr, ctrls) {
+                if (!ctrls[1]) return;
+                var selectCtrl = ctrls[0], ngModelCtrl = ctrls[1], multiple = attr.multiple, optionsExp = attr.ngOptions, nullOption = false, emptyOption, optionTemplate = jqLite(document.createElement("option")), optGroupTemplate = jqLite(document.createElement("optgroup")), unknownOption = optionTemplate.clone();
+                for (var i = 0, children = element.children(), ii = children.length; i < ii; i++) {
+                    if (children[i].value == "") {
+                        emptyOption = nullOption = children.eq(i);
                         break;
                     }
                 }
-                k.init(l, o, s);
-                if (m && (h.required || h.ngRequired)) {
-                    var y = function(a) {
-                        l.$setValidity("required", !h.required || a && a.length);
-                        return a;
+                selectCtrl.init(ngModelCtrl, nullOption, unknownOption);
+                if (multiple && (attr.required || attr.ngRequired)) {
+                    var requiredValidator = function(value) {
+                        ngModelCtrl.$setValidity("required", !attr.required || value && value.length);
+                        return value;
                     };
-                    l.$parsers.push(y);
-                    l.$formatters.unshift(y);
-                    h.$observe("required", function() {
-                        y(l.$viewValue);
+                    ngModelCtrl.$parsers.push(requiredValidator);
+                    ngModelCtrl.$formatters.unshift(requiredValidator);
+                    attr.$observe("required", function() {
+                        requiredValidator(ngModelCtrl.$viewValue);
                     });
                 }
-                if (n) B(f, g, l); else if (m) A(f, g, l); else z(f, g, l, k);
-                function z(a, b, c, d) {
-                    c.$render = function() {
-                        var a = c.$viewValue;
-                        if (d.hasOption(a)) {
-                            if (s.parent()) s.remove();
-                            b.val(a);
-                            if (a === "") p.prop("selected", true);
+                if (optionsExp) Options(scope, element, ngModelCtrl); else if (multiple) Multiple(scope, element, ngModelCtrl); else Single(scope, element, ngModelCtrl, selectCtrl);
+                function Single(scope, selectElement, ngModelCtrl, selectCtrl) {
+                    ngModelCtrl.$render = function() {
+                        var viewValue = ngModelCtrl.$viewValue;
+                        if (selectCtrl.hasOption(viewValue)) {
+                            if (unknownOption.parent()) unknownOption.remove();
+                            selectElement.val(viewValue);
+                            if (viewValue === "") emptyOption.prop("selected", true);
                         } else {
-                            if (H(a) && p) {
-                                b.val("");
+                            if (isUndefined(viewValue) && emptyOption) {
+                                selectElement.val("");
                             } else {
-                                d.renderUnknownOption(a);
+                                selectCtrl.renderUnknownOption(viewValue);
                             }
                         }
                     };
-                    b.on("change", function() {
-                        a.$apply(function() {
-                            if (s.parent()) s.remove();
-                            c.$setViewValue(b.val());
+                    selectElement.on("change", function() {
+                        scope.$apply(function() {
+                            if (unknownOption.parent()) unknownOption.remove();
+                            ngModelCtrl.$setViewValue(selectElement.val());
                         });
                     });
                 }
-                function A(a, b, c) {
-                    var d;
-                    c.$render = function() {
-                        var a = new fc(c.$viewValue);
-                        v(b.find("option"), function(b) {
-                            b.selected = I(a.get(b.value));
+                function Multiple(scope, selectElement, ctrl) {
+                    var lastView;
+                    ctrl.$render = function() {
+                        var items = new HashMap(ctrl.$viewValue);
+                        forEach(selectElement.find("option"), function(option) {
+                            option.selected = isDefined(items.get(option.value));
                         });
                     };
-                    a.$watch(function e() {
-                        if (!db(d, c.$viewValue)) {
-                            d = bb(c.$viewValue);
-                            c.$render();
+                    scope.$watch(function selectMultipleWatch() {
+                        if (!equals(lastView, ctrl.$viewValue)) {
+                            lastView = copy(ctrl.$viewValue);
+                            ctrl.$render();
                         }
                     });
-                    b.on("change", function() {
-                        a.$apply(function() {
-                            var a = [];
-                            v(b.find("option"), function(b) {
-                                if (b.selected) {
-                                    a.push(b.value);
+                    selectElement.on("change", function() {
+                        scope.$apply(function() {
+                            var array = [];
+                            forEach(selectElement.find("option"), function(option) {
+                                if (option.selected) {
+                                    array.push(option.value);
                                 }
                             });
-                            c.$setViewValue(a);
+                            ctrl.$setViewValue(array);
                         });
                     });
                 }
-                function B(b, f, g) {
-                    var h;
-                    if (!(h = n.match(e))) {
-                        throw cf("iexp", "Expected expression in form of '_select_ (as _label_)? for (_key_,)?_value_ in _collection_' but got '{0}'. Element: {1}", n, lb(f));
+                function Options(scope, selectElement, ctrl) {
+                    var match;
+                    if (!(match = optionsExp.match(NG_OPTIONS_REGEXP))) {
+                        throw ngOptionsMinErr("iexp", "Expected expression in form of '_select_ (as _label_)? for (_key_,)?_value_ in _collection_' but got '{0}'. Element: {1}", optionsExp, startingTag(selectElement));
                     }
-                    var i = d(h[2] || h[1]), j = h[4] || h[6], k = h[5], l = d(h[3] || ""), p = d(h[2] ? h[1] : j), s = d(h[7]), t = h[8], u = t ? d(h[8]) : null, v = [ [ {
-                        element: f,
+                    var displayFn = $parse(match[2] || match[1]), valueName = match[4] || match[6], keyName = match[5], groupByFn = $parse(match[3] || ""), valueFn = $parse(match[2] ? match[1] : valueName), valuesFn = $parse(match[7]), track = match[8], trackFn = track ? $parse(match[8]) : null, optionGroupsCache = [ [ {
+                        element: selectElement,
                         label: ""
                     } ] ];
-                    if (o) {
-                        a(o)(b);
-                        o.removeClass("ng-scope");
-                        o.remove();
+                    if (nullOption) {
+                        $compile(nullOption)(scope);
+                        nullOption.removeClass("ng-scope");
+                        nullOption.remove();
                     }
-                    f.html("");
-                    f.on("change", function() {
-                        b.$apply(function() {
-                            var a, d = s(b) || [], e = {}, h, i, l, n, o, q, r, t;
-                            if (m) {
-                                i = [];
-                                for (o = 0, r = v.length; o < r; o++) {
-                                    a = v[o];
-                                    for (n = 1, q = a.length; n < q; n++) {
-                                        if ((l = a[n].element)[0].selected) {
-                                            h = l.val();
-                                            if (k) e[k] = h;
-                                            if (u) {
-                                                for (t = 0; t < d.length; t++) {
-                                                    e[j] = d[t];
-                                                    if (u(b, e) == h) break;
+                    selectElement.html("");
+                    selectElement.on("change", function() {
+                        scope.$apply(function() {
+                            var optionGroup, collection = valuesFn(scope) || [], locals = {}, key, value, optionElement, index, groupIndex, length, groupLength, trackIndex;
+                            if (multiple) {
+                                value = [];
+                                for (groupIndex = 0, groupLength = optionGroupsCache.length; groupIndex < groupLength; groupIndex++) {
+                                    optionGroup = optionGroupsCache[groupIndex];
+                                    for (index = 1, length = optionGroup.length; index < length; index++) {
+                                        if ((optionElement = optionGroup[index].element)[0].selected) {
+                                            key = optionElement.val();
+                                            if (keyName) locals[keyName] = key;
+                                            if (trackFn) {
+                                                for (trackIndex = 0; trackIndex < collection.length; trackIndex++) {
+                                                    locals[valueName] = collection[trackIndex];
+                                                    if (trackFn(scope, locals) == key) break;
                                                 }
                                             } else {
-                                                e[j] = d[h];
+                                                locals[valueName] = collection[key];
                                             }
-                                            i.push(p(b, e));
+                                            value.push(valueFn(scope, locals));
                                         }
                                     }
                                 }
                             } else {
-                                h = f.val();
-                                if (h == "?") {
-                                    i = c;
-                                } else if (h == "") {
-                                    i = null;
+                                key = selectElement.val();
+                                if (key == "?") {
+                                    value = undefined;
+                                } else if (key == "") {
+                                    value = null;
                                 } else {
-                                    if (u) {
-                                        for (t = 0; t < d.length; t++) {
-                                            e[j] = d[t];
-                                            if (u(b, e) == h) {
-                                                i = p(b, e);
+                                    if (trackFn) {
+                                        for (trackIndex = 0; trackIndex < collection.length; trackIndex++) {
+                                            locals[valueName] = collection[trackIndex];
+                                            if (trackFn(scope, locals) == key) {
+                                                value = valueFn(scope, locals);
                                                 break;
                                             }
                                         }
                                     } else {
-                                        e[j] = d[h];
-                                        if (k) e[k] = h;
-                                        i = p(b, e);
+                                        locals[valueName] = collection[key];
+                                        if (keyName) locals[keyName] = key;
+                                        value = valueFn(scope, locals);
                                     }
                                 }
                             }
-                            g.$setViewValue(i);
+                            ctrl.$setViewValue(value);
                         });
                     });
-                    g.$render = x;
-                    b.$watch(x);
-                    function x() {
-                        var a = {
+                    ctrl.$render = render;
+                    scope.$watch(render);
+                    function render() {
+                        var optionGroups = {
                             "": []
-                        }, d = [ "" ], e, h, n, t, x, y, z = g.$modelValue, A = s(b) || [], B = k ? w(A) : A, C, D, E, F, G, H = {}, I, J = false, K, L, M;
-                        if (m) {
-                            if (u && N(z)) {
-                                J = new fc([]);
-                                for (var O = 0; O < z.length; O++) {
-                                    H[j] = z[O];
-                                    J.put(u(b, H), z[O]);
+                        }, optionGroupNames = [ "" ], optionGroupName, optionGroup, option, existingParent, existingOptions, existingOption, modelValue = ctrl.$modelValue, values = valuesFn(scope) || [], keys = keyName ? sortedKeys(values) : values, key, groupLength, length, groupIndex, index, locals = {}, selected, selectedSet = false, lastElement, element, label;
+                        if (multiple) {
+                            if (trackFn && isArray(modelValue)) {
+                                selectedSet = new HashMap([]);
+                                for (var trackIndex = 0; trackIndex < modelValue.length; trackIndex++) {
+                                    locals[valueName] = modelValue[trackIndex];
+                                    selectedSet.put(trackFn(scope, locals), modelValue[trackIndex]);
                                 }
                             } else {
-                                J = new fc(z);
+                                selectedSet = new HashMap(modelValue);
                             }
                         }
-                        for (G = 0; E = B.length, G < E; G++) {
-                            C = G;
-                            if (k) {
-                                C = B[G];
-                                if (C.charAt(0) === "$") continue;
-                                H[k] = C;
+                        for (index = 0; length = keys.length, index < length; index++) {
+                            key = index;
+                            if (keyName) {
+                                key = keys[index];
+                                if (key.charAt(0) === "$") continue;
+                                locals[keyName] = key;
                             }
-                            H[j] = A[C];
-                            e = l(b, H) || "";
-                            if (!(h = a[e])) {
-                                h = a[e] = [];
-                                d.push(e);
+                            locals[valueName] = values[key];
+                            optionGroupName = groupByFn(scope, locals) || "";
+                            if (!(optionGroup = optionGroups[optionGroupName])) {
+                                optionGroup = optionGroups[optionGroupName] = [];
+                                optionGroupNames.push(optionGroupName);
                             }
-                            if (m) {
-                                I = J.remove(u ? u(b, H) : p(b, H)) !== c;
+                            if (multiple) {
+                                selected = selectedSet.remove(trackFn ? trackFn(scope, locals) : valueFn(scope, locals)) !== undefined;
                             } else {
-                                if (u) {
-                                    var P = {};
-                                    P[j] = z;
-                                    I = u(b, P) === u(b, H);
+                                if (trackFn) {
+                                    var modelCast = {};
+                                    modelCast[valueName] = modelValue;
+                                    selected = trackFn(scope, modelCast) === trackFn(scope, locals);
                                 } else {
-                                    I = z === p(b, H);
+                                    selected = modelValue === valueFn(scope, locals);
                                 }
-                                J = J || I;
+                                selectedSet = selectedSet || selected;
                             }
-                            M = i(b, H);
-                            M = M === c ? "" : M;
-                            h.push({
-                                id: u ? u(b, H) : k ? B[G] : G,
-                                label: M,
-                                selected: I
+                            label = displayFn(scope, locals);
+                            label = label === undefined ? "" : label;
+                            optionGroup.push({
+                                id: trackFn ? trackFn(scope, locals) : keyName ? keys[index] : index,
+                                label: label,
+                                selected: selected
                             });
                         }
-                        if (!m) {
-                            if (o || z === null) {
-                                a[""].unshift({
+                        if (!multiple) {
+                            if (nullOption || modelValue === null) {
+                                optionGroups[""].unshift({
                                     id: "",
                                     label: "",
-                                    selected: !J
+                                    selected: !selectedSet
                                 });
-                            } else if (!J) {
-                                a[""].unshift({
+                            } else if (!selectedSet) {
+                                optionGroups[""].unshift({
                                     id: "?",
                                     label: "",
                                     selected: true
                                 });
                             }
                         }
-                        for (F = 0, D = d.length; F < D; F++) {
-                            e = d[F];
-                            h = a[e];
-                            if (v.length <= F) {
-                                t = {
-                                    element: r.clone().attr("label", e),
-                                    label: h.label
+                        for (groupIndex = 0, groupLength = optionGroupNames.length; groupIndex < groupLength; groupIndex++) {
+                            optionGroupName = optionGroupNames[groupIndex];
+                            optionGroup = optionGroups[optionGroupName];
+                            if (optionGroupsCache.length <= groupIndex) {
+                                existingParent = {
+                                    element: optGroupTemplate.clone().attr("label", optionGroupName),
+                                    label: optionGroup.label
                                 };
-                                x = [ t ];
-                                v.push(x);
-                                f.append(t.element);
+                                existingOptions = [ existingParent ];
+                                optionGroupsCache.push(existingOptions);
+                                selectElement.append(existingParent.element);
                             } else {
-                                x = v[F];
-                                t = x[0];
-                                if (t.label != e) {
-                                    t.element.attr("label", t.label = e);
+                                existingOptions = optionGroupsCache[groupIndex];
+                                existingParent = existingOptions[0];
+                                if (existingParent.label != optionGroupName) {
+                                    existingParent.element.attr("label", existingParent.label = optionGroupName);
                                 }
                             }
-                            K = null;
-                            for (G = 0, E = h.length; G < E; G++) {
-                                n = h[G];
-                                if (y = x[G + 1]) {
-                                    K = y.element;
-                                    if (y.label !== n.label) {
-                                        K.text(y.label = n.label);
+                            lastElement = null;
+                            for (index = 0, length = optionGroup.length; index < length; index++) {
+                                option = optionGroup[index];
+                                if (existingOption = existingOptions[index + 1]) {
+                                    lastElement = existingOption.element;
+                                    if (existingOption.label !== option.label) {
+                                        lastElement.text(existingOption.label = option.label);
                                     }
-                                    if (y.id !== n.id) {
-                                        K.val(y.id = n.id);
+                                    if (existingOption.id !== option.id) {
+                                        lastElement.val(existingOption.id = option.id);
                                     }
-                                    if (K[0].selected !== n.selected) {
-                                        K.prop("selected", y.selected = n.selected);
+                                    if (lastElement[0].selected !== option.selected) {
+                                        lastElement.prop("selected", existingOption.selected = option.selected);
                                     }
                                 } else {
-                                    if (n.id === "" && o) {
-                                        L = o;
+                                    if (option.id === "" && nullOption) {
+                                        element = nullOption;
                                     } else {
-                                        (L = q.clone()).val(n.id).attr("selected", n.selected).text(n.label);
+                                        (element = optionTemplate.clone()).val(option.id).attr("selected", option.selected).text(option.label);
                                     }
-                                    x.push(y = {
-                                        element: L,
-                                        label: n.label,
-                                        id: n.id,
-                                        selected: n.selected
+                                    existingOptions.push(existingOption = {
+                                        element: element,
+                                        label: option.label,
+                                        id: option.id,
+                                        selected: option.selected
                                     });
-                                    if (K) {
-                                        K.after(L);
+                                    if (lastElement) {
+                                        lastElement.after(element);
                                     } else {
-                                        t.element.append(L);
+                                        existingParent.element.append(element);
                                     }
-                                    K = L;
+                                    lastElement = element;
                                 }
                             }
-                            G++;
-                            while (x.length > G) {
-                                x.pop().element.remove();
+                            index++;
+                            while (existingOptions.length > index) {
+                                existingOptions.pop().element.remove();
                             }
                         }
-                        while (v.length > F) {
-                            v.pop()[0].element.remove();
+                        while (optionGroupsCache.length > groupIndex) {
+                            optionGroupsCache.pop()[0].element.remove();
                         }
                     }
                 }
             }
         };
     } ];
-    var ff = [ "$interpolate", function(a) {
-        var b = {
-            addOption: E,
-            removeOption: E
+    var optionDirective = [ "$interpolate", function($interpolate) {
+        var nullSelectCtrl = {
+            addOption: noop,
+            removeOption: noop
         };
         return {
             restrict: "E",
             priority: 100,
-            compile: function(c, d) {
-                if (H(d.value)) {
-                    var e = a(c.text(), true);
-                    if (!e) {
-                        d.$set("value", c.text());
+            compile: function(element, attr) {
+                if (isUndefined(attr.value)) {
+                    var interpolateFn = $interpolate(element.text(), true);
+                    if (!interpolateFn) {
+                        attr.$set("value", element.text());
                     }
                 }
-                return function(a, c, d) {
-                    var f = "$selectController", g = c.parent(), h = g.data(f) || g.parent().data(f);
-                    if (h && h.databound) {
-                        c.prop("selected", false);
+                return function(scope, element, attr) {
+                    var selectCtrlName = "$selectController", parent = element.parent(), selectCtrl = parent.data(selectCtrlName) || parent.parent().data(selectCtrlName);
+                    if (selectCtrl && selectCtrl.databound) {
+                        element.prop("selected", false);
                     } else {
-                        h = b;
+                        selectCtrl = nullSelectCtrl;
                     }
-                    if (e) {
-                        a.$watch(e, function i(a, b) {
-                            d.$set("value", a);
-                            if (a !== b) h.removeOption(b);
-                            h.addOption(a);
+                    if (interpolateFn) {
+                        scope.$watch(interpolateFn, function interpolateWatchAction(newVal, oldVal) {
+                            attr.$set("value", newVal);
+                            if (newVal !== oldVal) selectCtrl.removeOption(oldVal);
+                            selectCtrl.addOption(newVal);
                         });
                     } else {
-                        h.addOption(d.value);
+                        selectCtrl.addOption(attr.value);
                     }
-                    c.on("$destroy", function() {
-                        h.removeOption(d.value);
+                    element.on("$destroy", function() {
+                        selectCtrl.removeOption(attr.value);
                     });
                 };
             }
         };
     } ];
-    var gf = G({
+    var styleDirective = valueFn({
         restrict: "E",
         terminal: true
     });
-    vb();
-    Cb(q);
-    j(b).ready(function() {
-        rb(b, sb);
+    bindJQuery();
+    publishExternalAPI(angular);
+    jqLite(document).ready(function() {
+        angularInit(document, bootstrap);
     });
 })(window, document);
 
 angular.element(document).find("head").prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide{display:none !important;}ng\\:form{display:block;}</style>');
 
-(function(a, b, c) {
+(function(window, angular, undefined) {
     "use strict";
-    var d = b.module("ngRoute", [ "ng" ]).provider("$route", e);
-    function e() {
-        function a(a, c) {
-            return b.extend(new (b.extend(function() {}, {
-                prototype: a
-            }))(), c);
+    var ngRouteModule = angular.module("ngRoute", [ "ng" ]).provider("$route", $RouteProvider);
+    function $RouteProvider() {
+        function inherit(parent, extra) {
+            return angular.extend(new (angular.extend(function() {}, {
+                prototype: parent
+            }))(), extra);
         }
-        var c = {};
-        this.when = function(a, e) {
-            c[a] = b.extend({
+        var routes = {};
+        this.when = function(path, route) {
+            routes[path] = angular.extend({
                 reloadOnSearch: true
-            }, e, a && d(a, e));
-            if (a) {
-                var f = a[a.length - 1] == "/" ? a.substr(0, a.length - 1) : a + "/";
-                c[f] = b.extend({
-                    redirectTo: a
-                }, d(f, e));
+            }, route, path && pathRegExp(path, route));
+            if (path) {
+                var redirectPath = path[path.length - 1] == "/" ? path.substr(0, path.length - 1) : path + "/";
+                routes[redirectPath] = angular.extend({
+                    redirectTo: path
+                }, pathRegExp(redirectPath, route));
             }
             return this;
         };
-        function d(a, b) {
-            var c = b.caseInsensitiveMatch, d = {
-                originalPath: a,
-                regexp: a
-            }, e = d.keys = [];
-            a = a.replace(/([().])/g, "\\$1").replace(/(\/)?:(\w+)([\?|\*])?/g, function(a, b, c, d) {
-                var f = d === "?" ? d : null;
-                var g = d === "*" ? d : null;
-                e.push({
-                    name: c,
-                    optional: !!f
+        function pathRegExp(path, opts) {
+            var insensitive = opts.caseInsensitiveMatch, ret = {
+                originalPath: path,
+                regexp: path
+            }, keys = ret.keys = [];
+            path = path.replace(/([().])/g, "\\$1").replace(/(\/)?:(\w+)([\?|\*])?/g, function(_, slash, key, option) {
+                var optional = option === "?" ? option : null;
+                var star = option === "*" ? option : null;
+                keys.push({
+                    name: key,
+                    optional: !!optional
                 });
-                b = b || "";
-                return "" + (f ? "" : b) + "(?:" + (f ? b : "") + (g && "(.+?)" || "([^/]+)") + (f || "") + ")" + (f || "");
+                slash = slash || "";
+                return "" + (optional ? "" : slash) + "(?:" + (optional ? slash : "") + (star && "(.+?)" || "([^/]+)") + (optional || "") + ")" + (optional || "");
             }).replace(/([\/$\*])/g, "\\$1");
-            d.regexp = new RegExp("^" + a + "$", c ? "i" : "");
-            return d;
+            ret.regexp = new RegExp("^" + path + "$", insensitive ? "i" : "");
+            return ret;
         }
-        this.otherwise = function(a) {
-            this.when(null, a);
+        this.otherwise = function(params) {
+            this.when(null, params);
             return this;
         };
-        this.$get = [ "$rootScope", "$location", "$routeParams", "$q", "$injector", "$http", "$templateCache", "$sce", function(d, e, f, g, h, i, j, k) {
-            var l = false, m = {
-                routes: c,
+        this.$get = [ "$rootScope", "$location", "$routeParams", "$q", "$injector", "$http", "$templateCache", "$sce", function($rootScope, $location, $routeParams, $q, $injector, $http, $templateCache, $sce) {
+            var forceReload = false, $route = {
+                routes: routes,
                 reload: function() {
-                    l = true;
-                    d.$evalAsync(o);
+                    forceReload = true;
+                    $rootScope.$evalAsync(updateRoute);
                 }
             };
-            d.$on("$locationChangeSuccess", o);
-            return m;
-            function n(a, b) {
-                var c = b.keys, d = {};
-                if (!b.regexp) return null;
-                var e = b.regexp.exec(a);
-                if (!e) return null;
-                for (var f = 1, g = e.length; f < g; ++f) {
-                    var h = c[f - 1];
-                    var i = "string" == typeof e[f] ? decodeURIComponent(e[f]) : e[f];
-                    if (h && i) {
-                        d[h.name] = i;
+            $rootScope.$on("$locationChangeSuccess", updateRoute);
+            return $route;
+            function switchRouteMatcher(on, route) {
+                var keys = route.keys, params = {};
+                if (!route.regexp) return null;
+                var m = route.regexp.exec(on);
+                if (!m) return null;
+                for (var i = 1, len = m.length; i < len; ++i) {
+                    var key = keys[i - 1];
+                    var val = "string" == typeof m[i] ? decodeURIComponent(m[i]) : m[i];
+                    if (key && val) {
+                        params[key.name] = val;
                     }
                 }
-                return d;
+                return params;
             }
-            function o() {
-                var a = p(), c = m.current;
-                if (a && c && a.$$route === c.$$route && b.equals(a.pathParams, c.pathParams) && !a.reloadOnSearch && !l) {
-                    c.params = a.params;
-                    b.copy(c.params, f);
-                    d.$broadcast("$routeUpdate", c);
-                } else if (a || c) {
-                    l = false;
-                    d.$broadcast("$routeChangeStart", a, c);
-                    m.current = a;
-                    if (a) {
-                        if (a.redirectTo) {
-                            if (b.isString(a.redirectTo)) {
-                                e.path(q(a.redirectTo, a.params)).search(a.params).replace();
+            function updateRoute() {
+                var next = parseRoute(), last = $route.current;
+                if (next && last && next.$$route === last.$$route && angular.equals(next.pathParams, last.pathParams) && !next.reloadOnSearch && !forceReload) {
+                    last.params = next.params;
+                    angular.copy(last.params, $routeParams);
+                    $rootScope.$broadcast("$routeUpdate", last);
+                } else if (next || last) {
+                    forceReload = false;
+                    $rootScope.$broadcast("$routeChangeStart", next, last);
+                    $route.current = next;
+                    if (next) {
+                        if (next.redirectTo) {
+                            if (angular.isString(next.redirectTo)) {
+                                $location.path(interpolate(next.redirectTo, next.params)).search(next.params).replace();
                             } else {
-                                e.url(a.redirectTo(a.pathParams, e.path(), e.search())).replace();
+                                $location.url(next.redirectTo(next.pathParams, $location.path(), $location.search())).replace();
                             }
                         }
                     }
-                    g.when(a).then(function() {
-                        if (a) {
-                            var c = b.extend({}, a.resolve), d, e;
-                            b.forEach(c, function(a, d) {
-                                c[d] = b.isString(a) ? h.get(a) : h.invoke(a);
+                    $q.when(next).then(function() {
+                        if (next) {
+                            var locals = angular.extend({}, next.resolve), template, templateUrl;
+                            angular.forEach(locals, function(value, key) {
+                                locals[key] = angular.isString(value) ? $injector.get(value) : $injector.invoke(value);
                             });
-                            if (b.isDefined(d = a.template)) {
-                                if (b.isFunction(d)) {
-                                    d = d(a.params);
+                            if (angular.isDefined(template = next.template)) {
+                                if (angular.isFunction(template)) {
+                                    template = template(next.params);
                                 }
-                            } else if (b.isDefined(e = a.templateUrl)) {
-                                if (b.isFunction(e)) {
-                                    e = e(a.params);
+                            } else if (angular.isDefined(templateUrl = next.templateUrl)) {
+                                if (angular.isFunction(templateUrl)) {
+                                    templateUrl = templateUrl(next.params);
                                 }
-                                e = k.getTrustedResourceUrl(e);
-                                if (b.isDefined(e)) {
-                                    a.loadedTemplateUrl = e;
-                                    d = i.get(e, {
-                                        cache: j
-                                    }).then(function(a) {
-                                        return a.data;
+                                templateUrl = $sce.getTrustedResourceUrl(templateUrl);
+                                if (angular.isDefined(templateUrl)) {
+                                    next.loadedTemplateUrl = templateUrl;
+                                    template = $http.get(templateUrl, {
+                                        cache: $templateCache
+                                    }).then(function(response) {
+                                        return response.data;
                                     });
                                 }
                             }
-                            if (b.isDefined(d)) {
-                                c["$template"] = d;
+                            if (angular.isDefined(template)) {
+                                locals["$template"] = template;
                             }
-                            return g.all(c);
+                            return $q.all(locals);
                         }
-                    }).then(function(e) {
-                        if (a == m.current) {
-                            if (a) {
-                                a.locals = e;
-                                b.copy(a.params, f);
+                    }).then(function(locals) {
+                        if (next == $route.current) {
+                            if (next) {
+                                next.locals = locals;
+                                angular.copy(next.params, $routeParams);
                             }
-                            d.$broadcast("$routeChangeSuccess", a, c);
+                            $rootScope.$broadcast("$routeChangeSuccess", next, last);
                         }
-                    }, function(b) {
-                        if (a == m.current) {
-                            d.$broadcast("$routeChangeError", a, c, b);
+                    }, function(error) {
+                        if (next == $route.current) {
+                            $rootScope.$broadcast("$routeChangeError", next, last, error);
                         }
                     });
                 }
             }
-            function p() {
-                var d, f;
-                b.forEach(c, function(c, g) {
-                    if (!f && (d = n(e.path(), c))) {
-                        f = a(c, {
-                            params: b.extend({}, e.search(), d),
-                            pathParams: d
+            function parseRoute() {
+                var params, match;
+                angular.forEach(routes, function(route, path) {
+                    if (!match && (params = switchRouteMatcher($location.path(), route))) {
+                        match = inherit(route, {
+                            params: angular.extend({}, $location.search(), params),
+                            pathParams: params
                         });
-                        f.$$route = c;
+                        match.$$route = route;
                     }
                 });
-                return f || c[null] && a(c[null], {
+                return match || routes[null] && inherit(routes[null], {
                     params: {},
                     pathParams: {}
                 });
             }
-            function q(a, c) {
-                var d = [];
-                b.forEach((a || "").split(":"), function(a, b) {
-                    if (b === 0) {
-                        d.push(a);
+            function interpolate(string, params) {
+                var result = [];
+                angular.forEach((string || "").split(":"), function(segment, i) {
+                    if (i === 0) {
+                        result.push(segment);
                     } else {
-                        var e = a.match(/(\w+)(.*)/);
-                        var f = e[1];
-                        d.push(c[f]);
-                        d.push(e[2] || "");
-                        delete c[f];
+                        var segmentMatch = segment.match(/(\w+)(.*)/);
+                        var key = segmentMatch[1];
+                        result.push(params[key]);
+                        result.push(segmentMatch[2] || "");
+                        delete params[key];
                     }
                 });
-                return d.join("");
+                return result.join("");
             }
         } ];
     }
-    d.provider("$routeParams", f);
-    function f() {
+    ngRouteModule.provider("$routeParams", $RouteParamsProvider);
+    function $RouteParamsProvider() {
         this.$get = function() {
             return {};
         };
     }
-    d.directive("ngView", g);
-    g.$inject = [ "$route", "$anchorScroll", "$compile", "$controller", "$animate" ];
-    function g(a, b, c, d, e) {
+    ngRouteModule.directive("ngView", ngViewFactory);
+    ngViewFactory.$inject = [ "$route", "$anchorScroll", "$compile", "$controller", "$animate" ];
+    function ngViewFactory($route, $anchorScroll, $compile, $controller, $animate) {
         return {
             restrict: "ECA",
             terminal: true,
             priority: 400,
             transclude: "element",
-            compile: function(f, g, h) {
-                return function(f, g, i) {
-                    var j, k, l = i.onload || "";
-                    f.$on("$routeChangeSuccess", n);
-                    n();
-                    function m() {
-                        if (j) {
-                            j.$destroy();
-                            j = null;
+            compile: function(element, attr, linker) {
+                return function(scope, $element, attr) {
+                    var currentScope, currentElement, onloadExp = attr.onload || "";
+                    scope.$on("$routeChangeSuccess", update);
+                    update();
+                    function cleanupLastView() {
+                        if (currentScope) {
+                            currentScope.$destroy();
+                            currentScope = null;
                         }
-                        if (k) {
-                            e.leave(k);
-                            k = null;
+                        if (currentElement) {
+                            $animate.leave(currentElement);
+                            currentElement = null;
                         }
                     }
-                    function n() {
-                        var i = a.current && a.current.locals, n = i && i.$template;
-                        if (n) {
-                            var o = f.$new();
-                            h(o, function(f) {
-                                m();
-                                f.html(n);
-                                e.enter(f, null, g);
-                                var h = c(f.contents()), p = a.current;
-                                j = p.scope = o;
-                                k = f;
-                                if (p.controller) {
-                                    i.$scope = j;
-                                    var q = d(p.controller, i);
-                                    if (p.controllerAs) {
-                                        j[p.controllerAs] = q;
+                    function update() {
+                        var locals = $route.current && $route.current.locals, template = locals && locals.$template;
+                        if (template) {
+                            var newScope = scope.$new();
+                            linker(newScope, function(clone) {
+                                cleanupLastView();
+                                clone.html(template);
+                                $animate.enter(clone, null, $element);
+                                var link = $compile(clone.contents()), current = $route.current;
+                                currentScope = current.scope = newScope;
+                                currentElement = clone;
+                                if (current.controller) {
+                                    locals.$scope = currentScope;
+                                    var controller = $controller(current.controller, locals);
+                                    if (current.controllerAs) {
+                                        currentScope[current.controllerAs] = controller;
                                     }
-                                    f.data("$ngControllerController", q);
-                                    f.children().data("$ngControllerController", q);
+                                    clone.data("$ngControllerController", controller);
+                                    clone.children().data("$ngControllerController", controller);
                                 }
-                                h(j);
-                                j.$emit("$viewContentLoaded");
-                                j.$eval(l);
-                                b();
+                                link(currentScope);
+                                currentScope.$emit("$viewContentLoaded");
+                                currentScope.$eval(onloadExp);
+                                $anchorScroll();
                             });
                         } else {
-                            m();
+                            cleanupLastView();
                         }
                     }
                 };
@@ -7493,52 +7494,52 @@ angular.element(document).find("head").prepend('<style type="text/css">@charset 
 })(window, window.angular);
 
 (function() {
-    function a(a, b, c) {
-        c = (c || 0) - 1;
-        for (var d = a ? a.length : 0; ++c < d; ) if (a[c] === b) return c;
+    function n(n, t, e) {
+        e = (e || 0) - 1;
+        for (var r = n ? n.length : 0; ++e < r; ) if (n[e] === t) return e;
         return -1;
     }
-    function b(b, c) {
-        var d = typeof c;
-        if (b = b.k, "boolean" == d || null == c) return b[c] ? 0 : -1;
-        "number" != d && "string" != d && (d = "object");
-        var e = "number" == d ? c : r + c;
-        return b = (b = b[d]) && b[e], "object" == d ? b && -1 < a(b, c) ? 0 : -1 : b ? 0 : -1;
+    function t(t, e) {
+        var r = typeof e;
+        if (t = t.k, "boolean" == r || null == e) return t[e] ? 0 : -1;
+        "number" != r && "string" != r && (r = "object");
+        var u = "number" == r ? e : m + e;
+        return t = (t = t[r]) && t[u], "object" == r ? t && -1 < n(t, e) ? 0 : -1 : t ? 0 : -1;
     }
-    function c(a) {
-        var b = this.k, c = typeof a;
-        if ("boolean" == c || null == a) b[a] = !0; else {
-            "number" != c && "string" != c && (c = "object");
-            var d = "number" == c ? a : r + a, b = b[c] || (b[c] = {});
-            "object" == c ? (b[d] || (b[d] = [])).push(a) : b[d] = !0;
+    function e(n) {
+        var t = this.k, e = typeof n;
+        if ("boolean" == e || null == n) t[n] = !0; else {
+            "number" != e && "string" != e && (e = "object");
+            var r = "number" == e ? n : m + n, t = t[e] || (t[e] = {});
+            "object" == e ? (t[r] || (t[r] = [])).push(n) : t[r] = !0;
         }
     }
-    function d(a) {
-        return a.charCodeAt(0);
+    function r(n) {
+        return n.charCodeAt(0);
     }
-    function e(a, b) {
-        var c = a.l, d = b.l;
-        if (c !== d) {
-            if (c > d || typeof c == "undefined") return 1;
-            if (c < d || typeof d == "undefined") return -1;
+    function u(n, t) {
+        var e = n.l, r = t.l;
+        if (e !== r) {
+            if (e > r || typeof e == "undefined") return 1;
+            if (e < r || typeof r == "undefined") return -1;
         }
-        return a.m - b.m;
+        return n.m - t.m;
     }
-    function f(a) {
-        var b = -1, d = a.length, e = a[0], f = a[d - 1];
-        if (e && typeof e == "object" && f && typeof f == "object") return !1;
-        for (e = i(), e["false"] = e["null"] = e["true"] = e.undefined = !1, f = i(), f.b = a, 
-        f.k = e, f.push = c; ++b < d; ) f.push(a[b]);
-        return f;
+    function o(n) {
+        var t = -1, r = n.length, u = n[0], o = n[r - 1];
+        if (u && typeof u == "object" && o && typeof o == "object") return !1;
+        for (u = f(), u["false"] = u["null"] = u["true"] = u.undefined = !1, o = f(), o.b = n, 
+        o.k = u, o.push = e; ++t < r; ) o.push(n[t]);
+        return o;
     }
-    function g(a) {
-        return "\\" + S[a];
-    }
-    function h() {
-        return o.pop() || [];
+    function a(n) {
+        return "\\" + M[n];
     }
     function i() {
-        return p.pop() || {
+        return h.pop() || [];
+    }
+    function f() {
+        return g.pop() || {
             b: null,
             k: null,
             configurable: !1,
@@ -7560,916 +7561,916 @@ angular.element(document).find("head").prepend('<style type="text/css">@charset 
             writable: !1
         };
     }
-    function j(a) {
-        a.length = 0, o.length < t && o.push(a);
+    function l(n) {
+        n.length = 0, h.length < b && h.push(n);
     }
-    function k(a) {
-        var b = a.k;
-        b && k(b), a.b = a.k = a.l = a.object = a.number = a.string = a.n = null, p.length < t && p.push(a);
+    function c(n) {
+        var t = n.k;
+        t && c(t), n.b = n.k = n.l = n.object = n.number = n.string = n.n = null, g.length < b && g.push(n);
     }
-    function l(a, b, c) {
-        b || (b = 0), typeof c == "undefined" && (c = a ? a.length : 0);
-        var d = -1;
-        c = c - b || 0;
-        for (var e = Array(0 > c ? 0 : c); ++d < c; ) e[d] = a[b + d];
-        return e;
+    function p(n, t, e) {
+        t || (t = 0), typeof e == "undefined" && (e = n ? n.length : 0);
+        var r = -1;
+        e = e - t || 0;
+        for (var u = Array(0 > e ? 0 : e); ++r < e; ) u[r] = n[t + r];
+        return u;
     }
-    function m(c) {
-        function o(a) {
-            if (!a || tc.call(a) != N) return !1;
-            var b = a.valueOf, c = typeof b == "function" && (c = mc(b)) && mc(c);
-            return c ? a == c || mc(a) == c : jb(a);
+    function s(e) {
+        function h(n) {
+            if (!n || be.call(n) != q) return !1;
+            var t = n.valueOf, e = typeof t == "function" && (e = se(t)) && se(e);
+            return e ? n == e || se(n) == e : lt(n);
         }
-        function p(a, b, c) {
-            if (!a || !R[typeof a]) return a;
-            b = b && typeof c == "undefined" ? b : ab(b, c, 3);
-            for (var d = -1, e = R[typeof a] && Mc(a), f = e ? e.length : 0; ++d < f && (c = e[d], 
-            false !== b(a[c], c, a)); ) ;
-            return a;
+        function g(n, t, e) {
+            if (!n || !L[typeof n]) return n;
+            t = t && typeof e == "undefined" ? t : nt(t, e, 3);
+            for (var r = -1, u = L[typeof n] && ze(n), o = u ? u.length : 0; ++r < o && (e = u[r], 
+            false !== t(n[e], e, n)); ) ;
+            return n;
         }
-        function t(a, b, c) {
-            var d;
-            if (!a || !R[typeof a]) return a;
-            b = b && typeof c == "undefined" ? b : ab(b, c, 3);
-            for (d in a) if (false === b(a[d], d, a)) break;
-            return a;
+        function b(n, t, e) {
+            var r;
+            if (!n || !L[typeof n]) return n;
+            t = t && typeof e == "undefined" ? t : nt(t, e, 3);
+            for (r in n) if (false === t(n[r], r, n)) break;
+            return n;
         }
-        function S(a, b, c) {
-            var d, e = a, f = e;
-            if (!e) return f;
-            for (var g = arguments, h = 0, i = typeof c == "number" ? 2 : g.length; ++h < i; ) if ((e = g[h]) && R[typeof e]) for (var j = -1, k = R[typeof e] && Mc(e), l = k ? k.length : 0; ++j < l; ) d = k[j], 
-            "undefined" == typeof f[d] && (f[d] = e[d]);
-            return f;
+        function M(n, t, e) {
+            var r, u = n, o = u;
+            if (!u) return o;
+            for (var a = arguments, i = 0, f = typeof e == "number" ? 2 : a.length; ++i < f; ) if ((u = a[i]) && L[typeof u]) for (var l = -1, c = L[typeof u] && ze(u), p = c ? c.length : 0; ++l < p; ) r = c[l], 
+            "undefined" == typeof o[r] && (o[r] = u[r]);
+            return o;
         }
-        function U(a, b, c) {
-            var d, e = a, f = e;
-            if (!e) return f;
-            var g = arguments, h = 0, i = typeof c == "number" ? 2 : g.length;
-            if (3 < i && "function" == typeof g[i - 2]) var j = ab(g[--i - 1], g[i--], 2); else 2 < i && "function" == typeof g[i - 1] && (j = g[--i]);
-            for (;++h < i; ) if ((e = g[h]) && R[typeof e]) for (var k = -1, l = R[typeof e] && Mc(e), m = l ? l.length : 0; ++k < m; ) d = l[k], 
-            f[d] = j ? j(f[d], e[d]) : e[d];
-            return f;
+        function V(n, t, e) {
+            var r, u = n, o = u;
+            if (!u) return o;
+            var a = arguments, i = 0, f = typeof e == "number" ? 2 : a.length;
+            if (3 < f && "function" == typeof a[f - 2]) var l = nt(a[--f - 1], a[f--], 2); else 2 < f && "function" == typeof a[f - 1] && (l = a[--f]);
+            for (;++i < f; ) if ((u = a[i]) && L[typeof u]) for (var c = -1, p = L[typeof u] && ze(u), s = p ? p.length : 0; ++c < s; ) r = p[c], 
+            o[r] = l ? l(o[r], u[r]) : u[r];
+            return o;
         }
-        function W(a) {
-            var b, c = [];
-            if (!a || !R[typeof a]) return c;
-            for (b in a) nc.call(a, b) && c.push(b);
-            return c;
+        function H(n) {
+            var t, e = [];
+            if (!n || !L[typeof n]) return e;
+            for (t in n) ve.call(n, t) && e.push(t);
+            return e;
         }
-        function Y(a, b) {
-            var c = i();
-            c.value = b, vc(a, "__bindData__", c), k(c);
+        function Q(n, t) {
+            var e = f();
+            e.value = t, we(n, "__bindData__", e), c(e);
         }
-        function Z(a) {
-            return a && typeof a == "object" && !Lc(a) && nc.call(a, "__wrapped__") ? a : new $(a);
+        function X(n) {
+            return n && typeof n == "object" && !Te(n) && ve.call(n, "__wrapped__") ? n : new Y(n);
         }
-        function $(a, b) {
-            this.__chain__ = !!b, this.__wrapped__ = a;
+        function Y(n, t) {
+            this.__chain__ = !!t, this.__wrapped__ = n;
         }
-        function _(a, b, c, d, e) {
-            var f = a;
-            if (c) {
-                if (f = c(f), typeof f != "undefined") return f;
-                f = a;
+        function Z(n, t, e, r, u) {
+            var o = n;
+            if (e) {
+                if (o = e(o), typeof o != "undefined") return o;
+                o = n;
             }
-            var g = qb(f);
-            if (g) {
-                var i = tc.call(f);
-                if (!Q[i]) return f;
-                var k = Lc(f);
+            var a = yt(o);
+            if (a) {
+                var f = be.call(o);
+                if (!K[f]) return o;
+                var c = Te(o);
             }
-            if (!g || !b) return g ? k ? l(f) : U({}, f) : f;
-            switch (g = Jc[i], i) {
-              case J:
-              case K:
-                return new g(+f);
+            if (!a || !t) return a ? c ? p(o) : V({}, o) : o;
+            switch (a = De[f], f) {
+              case D:
+              case F:
+                return new a(+o);
 
-              case M:
+              case z:
               case P:
-                return new g(f);
+                return new a(o);
 
-              case O:
-                return g(f.source, z.exec(f));
+              case W:
+                return a(o.source, C.exec(o));
             }
-            i = !d, d || (d = h()), e || (e = h());
-            for (var m = d.length; m--; ) if (d[m] == a) return e[m];
-            return f = k ? g(f.length) : {}, k && (nc.call(a, "index") && (f.index = a.index), 
-            nc.call(a, "input") && (f.input = a.input)), d.push(a), e.push(f), (k ? yb : p)(a, function(a, g) {
-                f[g] = _(a, b, c, d, e);
-            }), i && (j(d), j(e)), f;
+            f = !r, r || (r = i()), u || (u = i());
+            for (var s = r.length; s--; ) if (r[s] == n) return u[s];
+            return o = c ? a(o.length) : {}, c && (ve.call(n, "index") && (o.index = n.index), 
+            ve.call(n, "input") && (o.input = n.input)), r.push(n), u.push(o), (c ? xt : g)(n, function(n, a) {
+                o[a] = Z(n, t, e, r, u);
+            }), f && (l(r), l(u)), o;
         }
-        function ab(a, b, c) {
-            if (typeof a != "function") return Sb;
-            if (typeof b == "undefined") return a;
-            var d = a.__bindData__ || Kc.a && !a.name;
-            if (typeof d == "undefined") {
-                var e = E && lc.call(a);
-                Kc.a || !e || A.test(e) || (d = !0), (Kc.a || !d) && (d = !E || E.test(e), Y(a, d));
+        function nt(n, t, e) {
+            if (typeof n != "function") return Mt;
+            if (typeof t == "undefined") return n;
+            var r = n.__bindData__ || Fe.a && !n.name;
+            if (typeof r == "undefined") {
+                var u = S && pe.call(n);
+                Fe.a || !u || O.test(u) || (r = !0), (Fe.a || !r) && (r = !S || S.test(u), Q(n, r));
             }
-            if (true !== d && d && 1 & d[1]) return a;
-            switch (c) {
+            if (true !== r && r && 1 & r[1]) return n;
+            switch (e) {
               case 1:
-                return function(c) {
-                    return a.call(b, c);
+                return function(e) {
+                    return n.call(t, e);
                 };
 
               case 2:
-                return function(c, d) {
-                    return a.call(b, c, d);
+                return function(e, r) {
+                    return n.call(t, e, r);
                 };
 
               case 3:
-                return function(c, d, e) {
-                    return a.call(b, c, d, e);
+                return function(e, r, u) {
+                    return n.call(t, e, r, u);
                 };
 
               case 4:
-                return function(c, d, e, f) {
-                    return a.call(b, c, d, e, f);
+                return function(e, r, u, o) {
+                    return n.call(t, e, r, u, o);
                 };
             }
-            return Pb(a, b);
+            return Pt(n, t);
         }
-        function bb(a, b, c, d) {
-            d = (d || 0) - 1;
-            for (var e = a ? a.length : 0, f = []; ++d < e; ) {
-                var g = a[d];
-                g && typeof g == "object" && (Lc(g) || lb(g)) ? pc.apply(f, b ? g : bb(g, b, c)) : c || f.push(g);
+        function tt(n, t, e, r) {
+            r = (r || 0) - 1;
+            for (var u = n ? n.length : 0, o = []; ++r < u; ) {
+                var a = n[r];
+                a && typeof a == "object" && (Te(a) || pt(a)) ? ge.apply(o, t ? a : tt(a, t, e)) : e || o.push(a);
             }
-            return f;
+            return o;
         }
-        function cb(a, b, c, d, e, f) {
-            if (c) {
-                var g = c(a, b);
-                if (typeof g != "undefined") return !!g;
+        function et(n, t, e, r, u, o) {
+            if (e) {
+                var a = e(n, t);
+                if (typeof a != "undefined") return !!a;
             }
-            if (a === b) return 0 !== a || 1 / a == 1 / b;
-            if (a === a && !(a && R[typeof a] || b && R[typeof b])) return !1;
-            if (null == a || null == b) return a === b;
-            var i = tc.call(a), k = tc.call(b);
-            if (i == H && (i = N), k == H && (k = N), i != k) return !1;
-            switch (i) {
-              case J:
-              case K:
-                return +a == +b;
+            if (n === t) return 0 !== n || 1 / n == 1 / t;
+            if (n === n && !(n && L[typeof n] || t && L[typeof t])) return !1;
+            if (null == n || null == t) return n === t;
+            var f = be.call(n), c = be.call(t);
+            if (f == B && (f = q), c == B && (c = q), f != c) return !1;
+            switch (f) {
+              case D:
+              case F:
+                return +n == +t;
 
-              case M:
-                return a != +a ? b != +b : 0 == a ? 1 / a == 1 / b : a == +b;
+              case z:
+                return n != +n ? t != +t : 0 == n ? 1 / n == 1 / t : n == +t;
 
-              case O:
+              case W:
               case P:
-                return a == cc(b);
+                return n == ee(t);
             }
-            if (k = i == I, !k) {
-                if (nc.call(a, "__wrapped__") || nc.call(b, "__wrapped__")) return cb(a.__wrapped__ || a, b.__wrapped__ || b, c, d, e, f);
-                if (i != N) return !1;
-                var i = a.constructor, l = b.constructor;
-                if (i != l && !(pb(i) && i instanceof i && pb(l) && l instanceof l)) return !1;
+            if (c = f == $, !c) {
+                if (ve.call(n, "__wrapped__") || ve.call(t, "__wrapped__")) return et(n.__wrapped__ || n, t.__wrapped__ || t, e, r, u, o);
+                if (f != q) return !1;
+                var f = n.constructor, p = t.constructor;
+                if (f != p && !(gt(f) && f instanceof f && gt(p) && p instanceof p)) return !1;
             }
-            for (l = !e, e || (e = h()), f || (f = h()), i = e.length; i--; ) if (e[i] == a) return f[i] == b;
-            var m = 0, g = !0;
-            if (e.push(a), f.push(b), k) {
-                if (i = a.length, m = b.length, g = m == a.length, !g && !d) return g;
-                for (;m--; ) if (k = i, l = b[m], d) for (;k-- && !(g = cb(a[k], l, c, d, e, f)); ) ; else if (!(g = cb(a[m], l, c, d, e, f))) break;
-                return g;
+            for (p = !u, u || (u = i()), o || (o = i()), f = u.length; f--; ) if (u[f] == n) return o[f] == t;
+            var s = 0, a = !0;
+            if (u.push(n), o.push(t), c) {
+                if (f = n.length, s = t.length, a = s == n.length, !a && !r) return a;
+                for (;s--; ) if (c = f, p = t[s], r) for (;c-- && !(a = et(n[c], p, e, r, u, o)); ) ; else if (!(a = et(n[s], p, e, r, u, o))) break;
+                return a;
             }
-            return t(b, function(b, h, i) {
-                return nc.call(i, h) ? (m++, g = nc.call(a, h) && cb(a[h], b, c, d, e, f)) : void 0;
-            }), g && !d && t(a, function(a, b, c) {
-                return nc.call(c, b) ? g = -1 < --m : void 0;
-            }), l && (j(e), j(f)), g;
+            return b(t, function(t, i, f) {
+                return ve.call(f, i) ? (s++, a = ve.call(n, i) && et(n[i], t, e, r, u, o)) : void 0;
+            }), a && !r && b(n, function(n, t, e) {
+                return ve.call(e, t) ? a = -1 < --s : void 0;
+            }), p && (l(u), l(o)), a;
         }
-        function db(a, b, c, d, e) {
-            (Lc(b) ? yb : p)(b, function(b, f) {
-                var g, h, i = b, j = a[f];
-                if (b && ((h = Lc(b)) || o(b))) {
-                    for (i = d.length; i--; ) if (g = d[i] == b) {
-                        j = e[i];
+        function rt(n, t, e, r, u) {
+            (Te(t) ? xt : g)(t, function(t, o) {
+                var a, i, f = t, l = n[o];
+                if (t && ((i = Te(t)) || h(t))) {
+                    for (f = r.length; f--; ) if (a = r[f] == t) {
+                        l = u[f];
                         break;
                     }
-                    if (!g) {
-                        var k;
-                        c && (i = c(j, b), k = typeof i != "undefined") && (j = i), k || (j = h ? Lc(j) ? j : [] : o(j) ? j : {}), 
-                        d.push(b), e.push(j), k || db(j, b, c, d, e);
+                    if (!a) {
+                        var c;
+                        e && (f = e(l, t), c = typeof f != "undefined") && (l = f), c || (l = i ? Te(l) ? l : [] : h(l) ? l : {}), 
+                        r.push(t), u.push(l), c || rt(l, t, e, r, u);
                     }
-                } else c && (i = c(j, b), typeof i == "undefined" && (i = b)), typeof i != "undefined" && (j = i);
-                a[f] = j;
+                } else e && (f = e(l, t), typeof f == "undefined" && (f = t)), typeof f != "undefined" && (l = f);
+                n[o] = l;
             });
         }
-        function eb(c, d, e) {
-            var g = -1, i = ib(), l = c ? c.length : 0, m = [], n = !d && l >= s && i === a, o = e || n ? h() : m;
-            if (n) {
-                var p = f(o);
-                p ? (i = b, o = p) : (n = !1, o = e ? o : (j(o), m));
+        function ut(e, r, u) {
+            var a = -1, f = ft(), p = e ? e.length : 0, s = [], v = !r && p >= _ && f === n, h = u || v ? i() : s;
+            if (v) {
+                var g = o(h);
+                g ? (f = t, h = g) : (v = !1, h = u ? h : (l(h), s));
             }
-            for (;++g < l; ) {
-                var p = c[g], q = e ? e(p, g, c) : p;
-                (d ? !g || o[o.length - 1] !== q : 0 > i(o, q)) && ((e || n) && o.push(q), m.push(p));
+            for (;++a < p; ) {
+                var g = e[a], y = u ? u(g, a, e) : g;
+                (r ? !a || h[h.length - 1] !== y : 0 > f(h, y)) && ((u || v) && h.push(y), s.push(g));
             }
-            return n ? (j(o.b), k(o)) : e && j(o), m;
+            return v ? (l(h.b), c(h)) : u && l(h), s;
         }
-        function fb(a) {
-            return function(b, c, d) {
-                var e = {};
-                c = Z.createCallback(c, d, 3), d = -1;
-                var f = b ? b.length : 0;
-                if (typeof f == "number") for (;++d < f; ) {
-                    var g = b[d];
-                    a(e, g, c(g, d, b), b);
-                } else p(b, function(b, d, f) {
-                    a(e, b, c(b, d, f), f);
+        function ot(n) {
+            return function(t, e, r) {
+                var u = {};
+                e = X.createCallback(e, r, 3), r = -1;
+                var o = t ? t.length : 0;
+                if (typeof o == "number") for (;++r < o; ) {
+                    var a = t[r];
+                    n(u, a, e(a, r, t), t);
+                } else g(t, function(t, r, o) {
+                    n(u, t, e(t, r, o), o);
                 });
-                return e;
+                return u;
             };
         }
-        function gb(a, b, c, d, e, f) {
-            var g = 1 & b, h = 2 & b, i = 4 & b, j = 8 & b, k = 16 & b, l = 32 & b, m = a;
-            if (!h && !pb(a)) throw new dc();
-            k && !c.length && (b &= -17, k = c = !1), l && !d.length && (b &= -33, l = d = !1);
-            var n = a && a.__bindData__;
-            if (n) return !g || 1 & n[1] || (n[4] = e), !g && 1 & n[1] && (b |= 8), !i || 4 & n[1] || (n[5] = f), 
-            k && pc.apply(n[2] || (n[2] = []), c), l && pc.apply(n[3] || (n[3] = []), d), n[1] |= b, 
-            gb.apply(null, n);
-            if (!g || h || i || l || !(Kc.fastBind || wc && k)) p = function() {
-                var n = arguments, o = g ? e : this;
-                return (i || k || l) && (n = Gc.call(n), k && uc.apply(n, c), l && pc.apply(n, d), 
-                i && n.length < f) ? (b |= 16, gb(a, j ? b : -4 & b, n, null, e, f)) : (h && (a = o[m]), 
-                this instanceof p ? (o = qb(a.prototype) ? xc(a.prototype) : {}, n = a.apply(o, n), 
-                qb(n) ? n : o) : a.apply(o, n));
+        function at(n, t, e, r, u, o) {
+            var a = 1 & t, i = 2 & t, f = 4 & t, l = 8 & t, c = 16 & t, p = 32 & t, s = n;
+            if (!i && !gt(n)) throw new re();
+            c && !e.length && (t &= -17, c = e = !1), p && !r.length && (t &= -33, p = r = !1);
+            var v = n && n.__bindData__;
+            if (v) return !a || 1 & v[1] || (v[4] = u), !a && 1 & v[1] && (t |= 8), !f || 4 & v[1] || (v[5] = o), 
+            c && ge.apply(v[2] || (v[2] = []), e), p && ge.apply(v[3] || (v[3] = []), r), v[1] |= t, 
+            at.apply(null, v);
+            if (!a || i || f || p || !(Fe.fastBind || je && c)) g = function() {
+                var v = arguments, h = a ? u : this;
+                return (f || c || p) && (v = Re.call(v), c && de.apply(v, e), p && ge.apply(v, r), 
+                f && v.length < o) ? (t |= 16, at(n, l ? t : -4 & t, v, null, u, o)) : (i && (n = h[s]), 
+                this instanceof g ? (h = yt(n.prototype) ? ke(n.prototype) : {}, v = n.apply(h, v), 
+                yt(v) ? v : h) : n.apply(h, v));
             }; else {
-                if (k) {
-                    var o = [ e ];
-                    pc.apply(o, c);
+                if (c) {
+                    var h = [ u ];
+                    ge.apply(h, e);
                 }
-                var p = k ? wc.apply(a, o) : wc.call(a, e);
+                var g = c ? je.apply(n, h) : je.call(n, u);
             }
-            return Y(p, Gc.call(arguments)), p;
+            return Q(g, Re.call(arguments)), g;
         }
-        function hb(a) {
-            return Nc[a];
+        function it(n) {
+            return qe[n];
         }
-        function ib() {
-            var b = (b = Z.indexOf) === Jb ? a : b;
-            return b;
+        function ft() {
+            var t = (t = X.indexOf) === Dt ? n : t;
+            return t;
         }
-        function jb(a) {
-            var b, c;
-            return a && tc.call(a) == N && (b = a.constructor, !pb(b) || b instanceof b) ? (t(a, function(a, b) {
-                c = b;
-            }), typeof c == "undefined" || nc.call(a, c)) : !1;
+        function lt(n) {
+            var t, e;
+            return n && be.call(n) == q && (t = n.constructor, !gt(t) || t instanceof t) ? (b(n, function(n, t) {
+                e = t;
+            }), typeof e == "undefined" || ve.call(n, e)) : !1;
         }
-        function kb(a) {
-            return Oc[a];
+        function ct(n) {
+            return We[n];
         }
-        function lb(a) {
-            return a && typeof a == "object" ? tc.call(a) == H : !1;
+        function pt(n) {
+            return n && typeof n == "object" ? be.call(n) == B : !1;
         }
-        function mb(a, b, c) {
-            var d = Mc(a), e = d.length;
-            for (b = ab(b, c, 3); e-- && (c = d[e], false !== b(a[c], c, a)); ) ;
-            return a;
+        function st(n, t, e) {
+            var r = ze(n), u = r.length;
+            for (t = nt(t, e, 3); u-- && (e = r[u], false !== t(n[e], e, n)); ) ;
+            return n;
         }
-        function nb(a) {
-            var b = [];
-            return t(a, function(a, c) {
-                pb(a) && b.push(c);
-            }), b.sort();
+        function vt(n) {
+            var t = [];
+            return b(n, function(n, e) {
+                gt(n) && t.push(e);
+            }), t.sort();
         }
-        function ob(a) {
-            for (var b = -1, c = Mc(a), d = c.length, e = {}; ++b < d; ) {
-                var f = c[b];
-                e[a[f]] = f;
+        function ht(n) {
+            for (var t = -1, e = ze(n), r = e.length, u = {}; ++t < r; ) {
+                var o = e[t];
+                u[n[o]] = o;
             }
-            return e;
+            return u;
         }
-        function pb(a) {
-            return typeof a == "function";
+        function gt(n) {
+            return typeof n == "function";
         }
-        function qb(a) {
-            return !(!a || !R[typeof a]);
+        function yt(n) {
+            return !(!n || !L[typeof n]);
         }
-        function rb(a) {
-            return typeof a == "number" || tc.call(a) == M;
+        function mt(n) {
+            return typeof n == "number" || be.call(n) == z;
         }
-        function sb(a) {
-            return typeof a == "string" || tc.call(a) == P;
+        function _t(n) {
+            return typeof n == "string" || be.call(n) == P;
         }
-        function tb(a) {
-            for (var b = -1, c = Mc(a), d = c.length, e = Wb(d); ++b < d; ) e[b] = a[c[b]];
-            return e;
+        function bt(n) {
+            for (var t = -1, e = ze(n), r = e.length, u = Ht(r); ++t < r; ) u[t] = n[e[t]];
+            return u;
         }
-        function ub(a, b, c) {
-            var d = -1, e = ib(), f = a ? a.length : 0, g = !1;
-            return c = (0 > c ? Cc(0, f + c) : c) || 0, Lc(a) ? g = -1 < e(a, b, c) : typeof f == "number" ? g = -1 < (sb(a) ? a.indexOf(b, c) : e(a, b, c)) : p(a, function(a) {
-                return ++d < c ? void 0 : !(g = a === b);
-            }), g;
+        function dt(n, t, e) {
+            var r = -1, u = ft(), o = n ? n.length : 0, a = !1;
+            return e = (0 > e ? Ee(0, o + e) : e) || 0, Te(n) ? a = -1 < u(n, t, e) : typeof o == "number" ? a = -1 < (_t(n) ? n.indexOf(t, e) : u(n, t, e)) : g(n, function(n) {
+                return ++r < e ? void 0 : !(a = n === t);
+            }), a;
         }
-        function vb(a, b, c) {
-            var d = !0;
-            b = Z.createCallback(b, c, 3), c = -1;
-            var e = a ? a.length : 0;
-            if (typeof e == "number") for (;++c < e && (d = !!b(a[c], c, a)); ) ; else p(a, function(a, c, e) {
-                return d = !!b(a, c, e);
+        function wt(n, t, e) {
+            var r = !0;
+            t = X.createCallback(t, e, 3), e = -1;
+            var u = n ? n.length : 0;
+            if (typeof u == "number") for (;++e < u && (r = !!t(n[e], e, n)); ) ; else g(n, function(n, e, u) {
+                return r = !!t(n, e, u);
             });
-            return d;
+            return r;
         }
-        function wb(a, b, c) {
-            var d = [];
-            b = Z.createCallback(b, c, 3), c = -1;
-            var e = a ? a.length : 0;
-            if (typeof e == "number") for (;++c < e; ) {
-                var f = a[c];
-                b(f, c, a) && d.push(f);
-            } else p(a, function(a, c, e) {
-                b(a, c, e) && d.push(a);
+        function jt(n, t, e) {
+            var r = [];
+            t = X.createCallback(t, e, 3), e = -1;
+            var u = n ? n.length : 0;
+            if (typeof u == "number") for (;++e < u; ) {
+                var o = n[e];
+                t(o, e, n) && r.push(o);
+            } else g(n, function(n, e, u) {
+                t(n, e, u) && r.push(n);
             });
-            return d;
+            return r;
         }
-        function xb(a, b, c) {
-            b = Z.createCallback(b, c, 3), c = -1;
-            var d = a ? a.length : 0;
-            if (typeof d != "number") {
-                var e;
-                return p(a, function(a, c, d) {
-                    return b(a, c, d) ? (e = a, !1) : void 0;
-                }), e;
+        function kt(n, t, e) {
+            t = X.createCallback(t, e, 3), e = -1;
+            var r = n ? n.length : 0;
+            if (typeof r != "number") {
+                var u;
+                return g(n, function(n, e, r) {
+                    return t(n, e, r) ? (u = n, !1) : void 0;
+                }), u;
             }
-            for (;++c < d; ) {
-                var f = a[c];
-                if (b(f, c, a)) return f;
+            for (;++e < r; ) {
+                var o = n[e];
+                if (t(o, e, n)) return o;
             }
         }
-        function yb(a, b, c) {
-            var d = -1, e = a ? a.length : 0;
-            if (b = b && typeof c == "undefined" ? b : ab(b, c, 3), typeof e == "number") for (;++d < e && false !== b(a[d], d, a); ) ; else p(a, b);
-            return a;
+        function xt(n, t, e) {
+            var r = -1, u = n ? n.length : 0;
+            if (t = t && typeof e == "undefined" ? t : nt(t, e, 3), typeof u == "number") for (;++r < u && false !== t(n[r], r, n); ) ; else g(n, t);
+            return n;
         }
-        function zb(a, b, c) {
-            var d = a ? a.length : 0;
-            if (b = b && typeof c == "undefined" ? b : ab(b, c, 3), typeof d == "number") for (;d-- && false !== b(a[d], d, a); ) ; else {
-                var e = Mc(a), d = e.length;
-                p(a, function(a, c, f) {
-                    return c = e ? e[--d] : --d, b(f[c], c, f);
+        function Ct(n, t, e) {
+            var r = n ? n.length : 0;
+            if (t = t && typeof e == "undefined" ? t : nt(t, e, 3), typeof r == "number") for (;r-- && false !== t(n[r], r, n); ) ; else {
+                var u = ze(n), r = u.length;
+                g(n, function(n, e, o) {
+                    return e = u ? u[--r] : --r, t(o[e], e, o);
                 });
             }
-            return a;
+            return n;
         }
-        function Ab(a, b, c) {
-            var d = -1, e = a ? a.length : 0;
-            if (b = Z.createCallback(b, c, 3), typeof e == "number") for (var f = Wb(e); ++d < e; ) f[d] = b(a[d], d, a); else f = [], 
-            p(a, function(a, c, e) {
-                f[++d] = b(a, c, e);
+        function Ot(n, t, e) {
+            var r = -1, u = n ? n.length : 0;
+            if (t = X.createCallback(t, e, 3), typeof u == "number") for (var o = Ht(u); ++r < u; ) o[r] = t(n[r], r, n); else o = [], 
+            g(n, function(n, e, u) {
+                o[++r] = t(n, e, u);
             });
-            return f;
+            return o;
         }
-        function Bb(a, b, c) {
-            var e = -1 / 0, f = e;
-            if (!b && Lc(a)) {
-                c = -1;
-                for (var g = a.length; ++c < g; ) {
-                    var h = a[c];
-                    h > f && (f = h);
+        function Nt(n, t, e) {
+            var u = -1 / 0, o = u;
+            if (!t && Te(n)) {
+                e = -1;
+                for (var a = n.length; ++e < a; ) {
+                    var i = n[e];
+                    i > o && (o = i);
                 }
-            } else b = !b && sb(a) ? d : Z.createCallback(b, c, 3), yb(a, function(a, c, d) {
-                c = b(a, c, d), c > e && (e = c, f = a);
+            } else t = !t && _t(n) ? r : X.createCallback(t, e, 3), xt(n, function(n, e, r) {
+                e = t(n, e, r), e > u && (u = e, o = n);
             });
-            return f;
+            return o;
         }
-        function Cb(a, b) {
-            var c = -1, d = a ? a.length : 0;
-            if (typeof d == "number") for (var e = Wb(d); ++c < d; ) e[c] = a[c][b];
-            return e || Ab(a, b);
+        function Et(n, t) {
+            var e = -1, r = n ? n.length : 0;
+            if (typeof r == "number") for (var u = Ht(r); ++e < r; ) u[e] = n[e][t];
+            return u || Ot(n, t);
         }
-        function Db(a, b, c, d) {
-            if (!a) return c;
-            var e = 3 > arguments.length;
-            b = ab(b, d, 4);
-            var f = -1, g = a.length;
-            if (typeof g == "number") for (e && (c = a[++f]); ++f < g; ) c = b(c, a[f], f, a); else p(a, function(a, d, f) {
-                c = e ? (e = !1, a) : b(c, a, d, f);
+        function It(n, t, e, r) {
+            if (!n) return e;
+            var u = 3 > arguments.length;
+            t = nt(t, r, 4);
+            var o = -1, a = n.length;
+            if (typeof a == "number") for (u && (e = n[++o]); ++o < a; ) e = t(e, n[o], o, n); else g(n, function(n, r, o) {
+                e = u ? (u = !1, n) : t(e, n, r, o);
             });
-            return c;
-        }
-        function Eb(a, b, c, d) {
-            var e = 3 > arguments.length;
-            return b = ab(b, d, 4), zb(a, function(a, d, f) {
-                c = e ? (e = !1, a) : b(c, a, d, f);
-            }), c;
-        }
-        function Fb(a) {
-            var b = -1, c = a ? a.length : 0, d = Wb(typeof c == "number" ? c : 0);
-            return yb(a, function(a) {
-                var c = Ub(++b);
-                d[b] = d[c], d[c] = a;
-            }), d;
-        }
-        function Gb(a, b, c) {
-            var d;
-            b = Z.createCallback(b, c, 3), c = -1;
-            var e = a ? a.length : 0;
-            if (typeof e == "number") for (;++c < e && !(d = b(a[c], c, a)); ) ; else p(a, function(a, c, e) {
-                return !(d = b(a, c, e));
-            });
-            return !!d;
-        }
-        function Hb(c) {
-            var d = -1, e = ib(), g = c ? c.length : 0, h = bb(arguments, !0, !0, 1), i = [], j = g >= s && e === a;
-            if (j) {
-                var l = f(h);
-                l ? (e = b, h = l) : j = !1;
-            }
-            for (;++d < g; ) l = c[d], 0 > e(h, l) && i.push(l);
-            return j && k(h), i;
-        }
-        function Ib(a, b, c) {
-            var d = 0, e = a ? a.length : 0;
-            if (typeof b != "number" && null != b) {
-                var f = -1;
-                for (b = Z.createCallback(b, c, 3); ++f < e && b(a[f], f, a); ) d++;
-            } else if (d = b, null == d || c) return a ? a[0] : n;
-            return l(a, 0, Dc(Cc(0, d), e));
-        }
-        function Jb(b, c, d) {
-            if (typeof d == "number") {
-                var e = b ? b.length : 0;
-                d = 0 > d ? Cc(0, e + d) : d || 0;
-            } else if (d) return d = Lb(b, c), b[d] === c ? d : -1;
-            return a(b, c, d);
-        }
-        function Kb(a, b, c) {
-            if (typeof b != "number" && null != b) {
-                var d = 0, e = -1, f = a ? a.length : 0;
-                for (b = Z.createCallback(b, c, 3); ++e < f && b(a[e], e, a); ) d++;
-            } else d = null == b || c ? 1 : Cc(0, b);
-            return l(a, d);
-        }
-        function Lb(a, b, c, d) {
-            var e = 0, f = a ? a.length : e;
-            for (c = c ? Z.createCallback(c, d, 1) : Sb, b = c(b); e < f; ) d = e + f >>> 1, 
-            c(a[d]) < b ? e = d + 1 : f = d;
             return e;
         }
-        function Mb(a, b, c, d) {
-            return typeof b != "boolean" && null != b && (c = (d = c) && d[b] === a ? null : b, 
-            b = !1), null != c && (c = Z.createCallback(c, d, 3)), eb(a, b, c);
+        function St(n, t, e, r) {
+            var u = 3 > arguments.length;
+            return t = nt(t, r, 4), Ct(n, function(n, r, o) {
+                e = u ? (u = !1, n) : t(e, n, r, o);
+            }), e;
         }
-        function Nb() {
-            for (var a = 1 < arguments.length ? arguments : arguments[0], b = -1, c = a ? Bb(Cb(a, "length")) : 0, d = Wb(0 > c ? 0 : c); ++b < c; ) d[b] = Cb(a, b);
-            return d;
+        function At(n) {
+            var t = -1, e = n ? n.length : 0, r = Ht(typeof e == "number" ? e : 0);
+            return xt(n, function(n) {
+                var e = Vt(++t);
+                r[t] = r[e], r[e] = n;
+            }), r;
         }
-        function Ob(a, b) {
-            for (var c = -1, d = a ? a.length : 0, e = {}; ++c < d; ) {
-                var f = a[c];
-                b ? e[f] = b[c] : f && (e[f[0]] = f[1]);
+        function Rt(n, t, e) {
+            var r;
+            t = X.createCallback(t, e, 3), e = -1;
+            var u = n ? n.length : 0;
+            if (typeof u == "number") for (;++e < u && !(r = t(n[e], e, n)); ) ; else g(n, function(n, e, u) {
+                return !(r = t(n, e, u));
+            });
+            return !!r;
+        }
+        function Bt(e) {
+            var r = -1, u = ft(), a = e ? e.length : 0, i = tt(arguments, !0, !0, 1), f = [], l = a >= _ && u === n;
+            if (l) {
+                var p = o(i);
+                p ? (u = t, i = p) : l = !1;
             }
-            return e;
+            for (;++r < a; ) p = e[r], 0 > u(i, p) && f.push(p);
+            return l && c(i), f;
         }
-        function Pb(a, b) {
-            return 2 < arguments.length ? gb(a, 17, Gc.call(arguments, 2), null, b) : gb(a, 1, null, null, b);
+        function $t(n, t, e) {
+            var r = 0, u = n ? n.length : 0;
+            if (typeof t != "number" && null != t) {
+                var o = -1;
+                for (t = X.createCallback(t, e, 3); ++o < u && t(n[o], o, n); ) r++;
+            } else if (r = t, null == r || e) return n ? n[0] : v;
+            return p(n, 0, Ie(Ee(0, r), u));
         }
-        function Qb(a, b, c) {
-            function d() {
-                k && jc(k), g = k = l = n, (p || o !== b) && (m = oc(), h = a.apply(j, f));
+        function Dt(t, e, r) {
+            if (typeof r == "number") {
+                var u = t ? t.length : 0;
+                r = 0 > r ? Ee(0, u + r) : r || 0;
+            } else if (r) return r = Tt(t, e), t[r] === e ? r : -1;
+            return n(t, e, r);
+        }
+        function Ft(n, t, e) {
+            if (typeof t != "number" && null != t) {
+                var r = 0, u = -1, o = n ? n.length : 0;
+                for (t = X.createCallback(t, e, 3); ++u < o && t(n[u], u, n); ) r++;
+            } else r = null == t || e ? 1 : Ee(0, t);
+            return p(n, r);
+        }
+        function Tt(n, t, e, r) {
+            var u = 0, o = n ? n.length : u;
+            for (e = e ? X.createCallback(e, r, 1) : Mt, t = e(t); u < o; ) r = u + o >>> 1, 
+            e(n[r]) < t ? u = r + 1 : o = r;
+            return u;
+        }
+        function zt(n, t, e, r) {
+            return typeof t != "boolean" && null != t && (e = (r = e) && r[t] === n ? null : t, 
+            t = !1), null != e && (e = X.createCallback(e, r, 3)), ut(n, t, e);
+        }
+        function qt() {
+            for (var n = 1 < arguments.length ? arguments : arguments[0], t = -1, e = n ? Nt(Et(n, "length")) : 0, r = Ht(0 > e ? 0 : e); ++t < e; ) r[t] = Et(n, t);
+            return r;
+        }
+        function Wt(n, t) {
+            for (var e = -1, r = n ? n.length : 0, u = {}; ++e < r; ) {
+                var o = n[e];
+                t ? u[o] = t[e] : o && (u[o[0]] = o[1]);
             }
-            function e() {
-                var c = b - (oc() - i);
-                0 < c ? k = rc(e, c) : (g && jc(g), c = l, g = k = l = n, c && (m = oc(), h = a.apply(j, f)));
+            return u;
+        }
+        function Pt(n, t) {
+            return 2 < arguments.length ? at(n, 17, Re.call(arguments, 2), null, t) : at(n, 1, null, null, t);
+        }
+        function Kt(n, t, e) {
+            function r() {
+                c && le(c), a = c = p = v, (g || h !== t) && (s = he(), i = n.apply(l, o));
             }
-            var f, g, h, i, j, k, l, m = 0, o = !1, p = !0;
-            if (!pb(a)) throw new dc();
-            if (b = Cc(0, b) || 0, true === c) var q = !0, p = !1; else qb(c) && (q = c.leading, 
-            o = "maxWait" in c && (Cc(b, c.maxWait) || 0), p = "trailing" in c ? c.trailing : p);
+            function u() {
+                var e = t - (he() - f);
+                0 < e ? c = me(u, e) : (a && le(a), e = p, a = c = p = v, e && (s = he(), i = n.apply(l, o)));
+            }
+            var o, a, i, f, l, c, p, s = 0, h = !1, g = !0;
+            if (!gt(n)) throw new re();
+            if (t = Ee(0, t) || 0, true === e) var y = !0, g = !1; else yt(e) && (y = e.leading, 
+            h = "maxWait" in e && (Ee(t, e.maxWait) || 0), g = "trailing" in e ? e.trailing : g);
             return function() {
-                if (f = arguments, i = oc(), j = this, l = p && (k || !q), false === o) var c = q && !k; else {
-                    g || q || (m = i);
-                    var n = o - (i - m);
-                    0 < n ? g || (g = rc(d, n)) : (g && (g = jc(g)), m = i, h = a.apply(j, f));
+                if (o = arguments, f = he(), l = this, p = g && (c || !y), false === h) var e = y && !c; else {
+                    a || y || (s = f);
+                    var v = h - (f - s);
+                    0 < v ? a || (a = me(r, v)) : (a && (a = le(a)), s = f, i = n.apply(l, o));
                 }
-                return k || b === o || (k = rc(e, b)), c && (h = a.apply(j, f)), h;
+                return c || t === h || (c = me(u, t)), e && (i = n.apply(l, o)), i;
             };
         }
-        function Rb(a) {
-            if (!pb(a)) throw new dc();
-            var b = Gc.call(arguments, 1);
-            return rc(function() {
-                a.apply(n, b);
+        function Lt(n) {
+            if (!gt(n)) throw new re();
+            var t = Re.call(arguments, 1);
+            return me(function() {
+                n.apply(v, t);
             }, 1);
         }
-        function Sb(a) {
-            return a;
+        function Mt(n) {
+            return n;
         }
-        function Tb(a, b) {
-            var c = a, d = !b || pb(c);
-            b || (c = $, b = a, a = Z), yb(nb(b), function(e) {
-                var f = a[e] = b[e];
-                d && (c.prototype[e] = function() {
-                    var b = this.__wrapped__, d = [ b ];
-                    return pc.apply(d, arguments), d = f.apply(a, d), b && typeof b == "object" && b === d ? this : new c(d);
+        function Ut(n, t) {
+            var e = n, r = !t || gt(e);
+            t || (e = Y, t = n, n = X), xt(vt(t), function(u) {
+                var o = n[u] = t[u];
+                r && (e.prototype[u] = function() {
+                    var t = this.__wrapped__, r = [ t ];
+                    return ge.apply(r, arguments), r = o.apply(n, r), t && typeof t == "object" && t === r ? this : new e(r);
                 });
             });
         }
-        function Ub(a, b) {
-            null == a && null == b && (b = 1), a = +a || 0, null == b ? (b = a, a = 0) : b = +b || 0;
-            var c = Fc();
-            return a % 1 || b % 1 ? a + Dc(c * (b - a + parseFloat("1e-" + ((c + "").length - 1))), b) : a + kc(c * (b - a + 1));
+        function Vt(n, t) {
+            null == n && null == t && (t = 1), n = +n || 0, null == t ? (t = n, n = 0) : t = +t || 0;
+            var e = Ae();
+            return n % 1 || t % 1 ? n + Ie(e * (t - n + parseFloat("1e-" + ((e + "").length - 1))), t) : n + ce(e * (t - n + 1));
         }
-        function Vb() {
+        function Gt() {
             return this.__wrapped__;
         }
-        c = c ? X.defaults(T.Object(), c, X.pick(T, G)) : T;
-        var Wb = c.Array, Xb = c.Boolean, Yb = c.Date, Zb = c.Function, $b = c.Math, _b = c.Number, ac = c.Object, bc = c.RegExp, cc = c.String, dc = c.TypeError, ec = [], fc = ac.prototype, gc = c._, hc = bc("^" + cc(fc.valueOf).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/valueOf|for [^\]]+/g, ".+?") + "$"), ic = $b.ceil, jc = c.clearTimeout, kc = $b.floor, lc = Zb.prototype.toString, mc = hc.test(mc = ac.getPrototypeOf) && mc, nc = fc.hasOwnProperty, oc = hc.test(oc = Yb.now) && oc || function() {
-            return +new Yb();
-        }, pc = ec.push, qc = c.setImmediate, rc = c.setTimeout, sc = ec.splice, tc = fc.toString, uc = ec.unshift, vc = function() {
+        e = e ? J.defaults(U.Object(), e, J.pick(U, R)) : U;
+        var Ht = e.Array, Jt = e.Boolean, Qt = e.Date, Xt = e.Function, Yt = e.Math, Zt = e.Number, ne = e.Object, te = e.RegExp, ee = e.String, re = e.TypeError, ue = [], oe = ne.prototype, ae = e._, ie = te("^" + ee(oe.valueOf).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/valueOf|for [^\]]+/g, ".+?") + "$"), fe = Yt.ceil, le = e.clearTimeout, ce = Yt.floor, pe = Xt.prototype.toString, se = ie.test(se = ne.getPrototypeOf) && se, ve = oe.hasOwnProperty, he = ie.test(he = Qt.now) && he || function() {
+            return +new Qt();
+        }, ge = ue.push, ye = e.setImmediate, me = e.setTimeout, _e = ue.splice, be = oe.toString, de = ue.unshift, we = function() {
             try {
-                var a = {}, b = hc.test(b = ac.defineProperty) && b, c = b(a, a, a) && b;
-            } catch (d) {}
-            return c;
-        }(), wc = hc.test(wc = tc.bind) && wc, xc = hc.test(xc = ac.create) && xc, yc = hc.test(yc = Wb.isArray) && yc, zc = c.isFinite, Ac = c.isNaN, Bc = hc.test(Bc = ac.keys) && Bc, Cc = $b.max, Dc = $b.min, Ec = c.parseInt, Fc = $b.random, Gc = ec.slice, Hc = hc.test(c.attachEvent), Ic = wc && !/\n|true/.test(wc + Hc), Jc = {};
-        Jc[I] = Wb, Jc[J] = Xb, Jc[K] = Yb, Jc[L] = Zb, Jc[N] = ac, Jc[M] = _b, Jc[O] = bc, 
-        Jc[P] = cc, $.prototype = Z.prototype;
-        var Kc = Z.support = {};
-        Kc.fastBind = wc && !Ic, Kc.a = typeof Zb.name == "string", Z.templateSettings = {
+                var n = {}, t = ie.test(t = ne.defineProperty) && t, e = t(n, n, n) && t;
+            } catch (r) {}
+            return e;
+        }(), je = ie.test(je = be.bind) && je, ke = ie.test(ke = ne.create) && ke, xe = ie.test(xe = Ht.isArray) && xe, Ce = e.isFinite, Oe = e.isNaN, Ne = ie.test(Ne = ne.keys) && Ne, Ee = Yt.max, Ie = Yt.min, Se = e.parseInt, Ae = Yt.random, Re = ue.slice, Be = ie.test(e.attachEvent), $e = je && !/\n|true/.test(je + Be), De = {};
+        De[$] = Ht, De[D] = Jt, De[F] = Qt, De[T] = Xt, De[q] = ne, De[z] = Zt, De[W] = te, 
+        De[P] = ee, Y.prototype = X.prototype;
+        var Fe = X.support = {};
+        Fe.fastBind = je && !$e, Fe.a = typeof Xt.name == "string", X.templateSettings = {
             escape: /<%-([\s\S]+?)%>/g,
             evaluate: /<%([\s\S]+?)%>/g,
-            interpolate: B,
+            interpolate: N,
             variable: "",
             imports: {
-                _: Z
+                _: X
             }
         };
-        var Lc = yc || function(a) {
-            return a && typeof a == "object" ? tc.call(a) == I : !1;
-        }, Mc = Bc ? function(a) {
-            return qb(a) ? Bc(a) : [];
-        } : W, Nc = {
+        var Te = xe || function(n) {
+            return n && typeof n == "object" ? be.call(n) == $ : !1;
+        }, ze = Ne ? function(n) {
+            return yt(n) ? Ne(n) : [];
+        } : H, qe = {
             "&": "&amp;",
             "<": "&lt;",
             ">": "&gt;",
             '"': "&quot;",
             "'": "&#39;"
-        }, Oc = ob(Nc), Pc = bc("(" + Mc(Oc).join("|") + ")", "g"), Qc = bc("[" + Mc(Nc).join("") + "]", "g"), Rc = fb(function(a, b, c) {
-            nc.call(a, c) ? a[c]++ : a[c] = 1;
-        }), Sc = fb(function(a, b, c) {
-            (nc.call(a, c) ? a[c] : a[c] = []).push(b);
-        }), Tc = fb(function(a, b, c) {
-            a[c] = b;
+        }, We = ht(qe), Pe = te("(" + ze(We).join("|") + ")", "g"), Ke = te("[" + ze(qe).join("") + "]", "g"), Le = ot(function(n, t, e) {
+            ve.call(n, e) ? n[e]++ : n[e] = 1;
+        }), Me = ot(function(n, t, e) {
+            (ve.call(n, e) ? n[e] : n[e] = []).push(t);
+        }), Ue = ot(function(n, t, e) {
+            n[e] = t;
         });
-        Ic && V && typeof qc == "function" && (Rb = function(a) {
-            if (!pb(a)) throw new dc();
-            return qc.apply(c, arguments);
+        $e && G && typeof ye == "function" && (Lt = function(n) {
+            if (!gt(n)) throw new re();
+            return ye.apply(e, arguments);
         });
-        var Uc = 8 == Ec(u + "08") ? Ec : function(a, b) {
-            return Ec(sb(a) ? a.replace(C, "") : a, b || 0);
+        var Ve = 8 == Se(d + "08") ? Se : function(n, t) {
+            return Se(_t(n) ? n.replace(E, "") : n, t || 0);
         };
-        return Z.after = function(a, b) {
-            if (!pb(b)) throw new dc();
+        return X.after = function(n, t) {
+            if (!gt(t)) throw new re();
             return function() {
-                return 1 > --a ? b.apply(this, arguments) : void 0;
+                return 1 > --n ? t.apply(this, arguments) : void 0;
             };
-        }, Z.assign = U, Z.at = function(a) {
-            for (var b = arguments, c = -1, d = bb(b, !0, !1, 1), b = b[2] && b[2][b[1]] === a ? 1 : d.length, e = Wb(b); ++c < b; ) e[c] = a[d[c]];
-            return e;
-        }, Z.bind = Pb, Z.bindAll = function(a) {
-            for (var b = 1 < arguments.length ? bb(arguments, !0, !1, 1) : nb(a), c = -1, d = b.length; ++c < d; ) {
-                var e = b[c];
-                a[e] = gb(a[e], 1, null, null, a);
+        }, X.assign = V, X.at = function(n) {
+            for (var t = arguments, e = -1, r = tt(t, !0, !1, 1), t = t[2] && t[2][t[1]] === n ? 1 : r.length, u = Ht(t); ++e < t; ) u[e] = n[r[e]];
+            return u;
+        }, X.bind = Pt, X.bindAll = function(n) {
+            for (var t = 1 < arguments.length ? tt(arguments, !0, !1, 1) : vt(n), e = -1, r = t.length; ++e < r; ) {
+                var u = t[e];
+                n[u] = at(n[u], 1, null, null, n);
             }
-            return a;
-        }, Z.bindKey = function(a, b) {
-            return 2 < arguments.length ? gb(b, 19, Gc.call(arguments, 2), null, a) : gb(b, 3, null, null, a);
-        }, Z.chain = function(a) {
-            return a = new $(a), a.__chain__ = !0, a;
-        }, Z.compact = function(a) {
-            for (var b = -1, c = a ? a.length : 0, d = []; ++b < c; ) {
-                var e = a[b];
-                e && d.push(e);
+            return n;
+        }, X.bindKey = function(n, t) {
+            return 2 < arguments.length ? at(t, 19, Re.call(arguments, 2), null, n) : at(t, 3, null, null, n);
+        }, X.chain = function(n) {
+            return n = new Y(n), n.__chain__ = !0, n;
+        }, X.compact = function(n) {
+            for (var t = -1, e = n ? n.length : 0, r = []; ++t < e; ) {
+                var u = n[t];
+                u && r.push(u);
             }
-            return d;
-        }, Z.compose = function() {
-            for (var a = arguments, b = a.length || 1; b--; ) if (!pb(a[b])) throw new dc();
+            return r;
+        }, X.compose = function() {
+            for (var n = arguments, t = n.length || 1; t--; ) if (!gt(n[t])) throw new re();
             return function() {
-                for (var b = arguments, c = a.length; c--; ) b = [ a[c].apply(this, b) ];
-                return b[0];
+                for (var t = arguments, e = n.length; e--; ) t = [ n[e].apply(this, t) ];
+                return t[0];
             };
-        }, Z.countBy = Rc, Z.createCallback = function(a, b, c) {
-            var d = typeof a;
-            if (null == a || "function" == d) return ab(a, b, c);
-            if ("object" != d) return function(b) {
-                return b[a];
+        }, X.countBy = Le, X.createCallback = function(n, t, e) {
+            var r = typeof n;
+            if (null == n || "function" == r) return nt(n, t, e);
+            if ("object" != r) return function(t) {
+                return t[n];
             };
-            var e = Mc(a), f = e[0], g = a[f];
-            return 1 != e.length || g !== g || qb(g) ? function(b) {
-                for (var c = e.length, d = !1; c-- && (d = cb(b[e[c]], a[e[c]], null, !0)); ) ;
-                return d;
-            } : function(a) {
-                return a = a[f], g === a && (0 !== g || 1 / g == 1 / a);
+            var u = ze(n), o = u[0], a = n[o];
+            return 1 != u.length || a !== a || yt(a) ? function(t) {
+                for (var e = u.length, r = !1; e-- && (r = et(t[u[e]], n[u[e]], null, !0)); ) ;
+                return r;
+            } : function(n) {
+                return n = n[o], a === n && (0 !== a || 1 / a == 1 / n);
             };
-        }, Z.curry = function(a, b) {
-            return b = typeof b == "number" ? b : +b || a.length, gb(a, 4, null, null, null, b);
-        }, Z.debounce = Qb, Z.defaults = S, Z.defer = Rb, Z.delay = function(a, b) {
-            if (!pb(a)) throw new dc();
-            var c = Gc.call(arguments, 2);
-            return rc(function() {
-                a.apply(n, c);
-            }, b);
-        }, Z.difference = Hb, Z.filter = wb, Z.flatten = function(a, b, c, d) {
-            return typeof b != "boolean" && null != b && (c = (d = c) && d[b] === a ? null : b, 
-            b = !1), null != c && (a = Ab(a, c, d)), bb(a, b);
-        }, Z.forEach = yb, Z.forEachRight = zb, Z.forIn = t, Z.forInRight = function(a, b, c) {
-            var d = [];
-            t(a, function(a, b) {
-                d.push(b, a);
+        }, X.curry = function(n, t) {
+            return t = typeof t == "number" ? t : +t || n.length, at(n, 4, null, null, null, t);
+        }, X.debounce = Kt, X.defaults = M, X.defer = Lt, X.delay = function(n, t) {
+            if (!gt(n)) throw new re();
+            var e = Re.call(arguments, 2);
+            return me(function() {
+                n.apply(v, e);
+            }, t);
+        }, X.difference = Bt, X.filter = jt, X.flatten = function(n, t, e, r) {
+            return typeof t != "boolean" && null != t && (e = (r = e) && r[t] === n ? null : t, 
+            t = !1), null != e && (n = Ot(n, e, r)), tt(n, t);
+        }, X.forEach = xt, X.forEachRight = Ct, X.forIn = b, X.forInRight = function(n, t, e) {
+            var r = [];
+            b(n, function(n, t) {
+                r.push(t, n);
             });
-            var e = d.length;
-            for (b = ab(b, c, 3); e-- && false !== b(d[e--], d[e], a); ) ;
-            return a;
-        }, Z.forOwn = p, Z.forOwnRight = mb, Z.functions = nb, Z.groupBy = Sc, Z.indexBy = Tc, 
-        Z.initial = function(a, b, c) {
-            var d = 0, e = a ? a.length : 0;
-            if (typeof b != "number" && null != b) {
-                var f = e;
-                for (b = Z.createCallback(b, c, 3); f-- && b(a[f], f, a); ) d++;
-            } else d = null == b || c ? 1 : b || d;
-            return l(a, 0, Dc(Cc(0, e - d), e));
-        }, Z.intersection = function(c) {
-            for (var d = arguments, e = d.length, g = -1, i = h(), l = -1, m = ib(), n = c ? c.length : 0, o = [], p = h(); ++g < e; ) {
-                var q = d[g];
-                i[g] = m === a && (q ? q.length : 0) >= s && f(g ? d[g] : p);
+            var u = r.length;
+            for (t = nt(t, e, 3); u-- && false !== t(r[u--], r[u], n); ) ;
+            return n;
+        }, X.forOwn = g, X.forOwnRight = st, X.functions = vt, X.groupBy = Me, X.indexBy = Ue, 
+        X.initial = function(n, t, e) {
+            var r = 0, u = n ? n.length : 0;
+            if (typeof t != "number" && null != t) {
+                var o = u;
+                for (t = X.createCallback(t, e, 3); o-- && t(n[o], o, n); ) r++;
+            } else r = null == t || e ? 1 : t || r;
+            return p(n, 0, Ie(Ee(0, u - r), u));
+        }, X.intersection = function(e) {
+            for (var r = arguments, u = r.length, a = -1, f = i(), p = -1, s = ft(), v = e ? e.length : 0, h = [], g = i(); ++a < u; ) {
+                var y = r[a];
+                f[a] = s === n && (y ? y.length : 0) >= _ && o(a ? r[a] : g);
             }
-            a: for (;++l < n; ) {
-                var r = i[0], q = c[l];
-                if (0 > (r ? b(r, q) : m(p, q))) {
-                    for (g = e, (r || p).push(q); --g; ) if (r = i[g], 0 > (r ? b(r, q) : m(d[g], q))) continue a;
-                    o.push(q);
+            n: for (;++p < v; ) {
+                var m = f[0], y = e[p];
+                if (0 > (m ? t(m, y) : s(g, y))) {
+                    for (a = u, (m || g).push(y); --a; ) if (m = f[a], 0 > (m ? t(m, y) : s(r[a], y))) continue n;
+                    h.push(y);
                 }
             }
-            for (;e--; ) (r = i[e]) && k(r);
-            return j(i), j(p), o;
-        }, Z.invert = ob, Z.invoke = function(a, b) {
-            var c = Gc.call(arguments, 2), d = -1, e = typeof b == "function", f = a ? a.length : 0, g = Wb(typeof f == "number" ? f : 0);
-            return yb(a, function(a) {
-                g[++d] = (e ? b : a[b]).apply(a, c);
-            }), g;
-        }, Z.keys = Mc, Z.map = Ab, Z.max = Bb, Z.memoize = function(a, b) {
-            function c() {
-                var d = c.cache, e = b ? b.apply(this, arguments) : r + arguments[0];
-                return nc.call(d, e) ? d[e] : d[e] = a.apply(this, arguments);
+            for (;u--; ) (m = f[u]) && c(m);
+            return l(f), l(g), h;
+        }, X.invert = ht, X.invoke = function(n, t) {
+            var e = Re.call(arguments, 2), r = -1, u = typeof t == "function", o = n ? n.length : 0, a = Ht(typeof o == "number" ? o : 0);
+            return xt(n, function(n) {
+                a[++r] = (u ? t : n[t]).apply(n, e);
+            }), a;
+        }, X.keys = ze, X.map = Ot, X.max = Nt, X.memoize = function(n, t) {
+            function e() {
+                var r = e.cache, u = t ? t.apply(this, arguments) : m + arguments[0];
+                return ve.call(r, u) ? r[u] : r[u] = n.apply(this, arguments);
             }
-            if (!pb(a)) throw new dc();
-            return c.cache = {}, c;
-        }, Z.merge = function(a) {
-            var b = arguments, c = 2;
-            if (!qb(a)) return a;
-            if ("number" != typeof b[2] && (c = b.length), 3 < c && "function" == typeof b[c - 2]) var d = ab(b[--c - 1], b[c--], 2); else 2 < c && "function" == typeof b[c - 1] && (d = b[--c]);
-            for (var b = Gc.call(arguments, 1, c), e = -1, f = h(), g = h(); ++e < c; ) db(a, b[e], d, f, g);
-            return j(f), j(g), a;
-        }, Z.min = function(a, b, c) {
-            var e = 1 / 0, f = e;
-            if (!b && Lc(a)) {
-                c = -1;
-                for (var g = a.length; ++c < g; ) {
-                    var h = a[c];
-                    h < f && (f = h);
+            if (!gt(n)) throw new re();
+            return e.cache = {}, e;
+        }, X.merge = function(n) {
+            var t = arguments, e = 2;
+            if (!yt(n)) return n;
+            if ("number" != typeof t[2] && (e = t.length), 3 < e && "function" == typeof t[e - 2]) var r = nt(t[--e - 1], t[e--], 2); else 2 < e && "function" == typeof t[e - 1] && (r = t[--e]);
+            for (var t = Re.call(arguments, 1, e), u = -1, o = i(), a = i(); ++u < e; ) rt(n, t[u], r, o, a);
+            return l(o), l(a), n;
+        }, X.min = function(n, t, e) {
+            var u = 1 / 0, o = u;
+            if (!t && Te(n)) {
+                e = -1;
+                for (var a = n.length; ++e < a; ) {
+                    var i = n[e];
+                    i < o && (o = i);
                 }
-            } else b = !b && sb(a) ? d : Z.createCallback(b, c, 3), yb(a, function(a, c, d) {
-                c = b(a, c, d), c < e && (e = c, f = a);
+            } else t = !t && _t(n) ? r : X.createCallback(t, e, 3), xt(n, function(n, e, r) {
+                e = t(n, e, r), e < u && (u = e, o = n);
             });
-            return f;
-        }, Z.omit = function(a, b, c) {
-            var d = ib(), e = typeof b == "function", f = {};
-            if (e) b = Z.createCallback(b, c, 3); else var g = bb(arguments, !0, !1, 1);
-            return t(a, function(a, c, h) {
-                (e ? !b(a, c, h) : 0 > d(g, c)) && (f[c] = a);
-            }), f;
-        }, Z.once = function(a) {
-            var b, c;
-            if (!pb(a)) throw new dc();
+            return o;
+        }, X.omit = function(n, t, e) {
+            var r = ft(), u = typeof t == "function", o = {};
+            if (u) t = X.createCallback(t, e, 3); else var a = tt(arguments, !0, !1, 1);
+            return b(n, function(n, e, i) {
+                (u ? !t(n, e, i) : 0 > r(a, e)) && (o[e] = n);
+            }), o;
+        }, X.once = function(n) {
+            var t, e;
+            if (!gt(n)) throw new re();
             return function() {
-                return b ? c : (b = !0, c = a.apply(this, arguments), a = null, c);
+                return t ? e : (t = !0, e = n.apply(this, arguments), n = null, e);
             };
-        }, Z.pairs = function(a) {
-            for (var b = -1, c = Mc(a), d = c.length, e = Wb(d); ++b < d; ) {
-                var f = c[b];
-                e[b] = [ f, a[f] ];
+        }, X.pairs = function(n) {
+            for (var t = -1, e = ze(n), r = e.length, u = Ht(r); ++t < r; ) {
+                var o = e[t];
+                u[t] = [ o, n[o] ];
             }
-            return e;
-        }, Z.partial = function(a) {
-            return gb(a, 16, Gc.call(arguments, 1));
-        }, Z.partialRight = function(a) {
-            return gb(a, 32, null, Gc.call(arguments, 1));
-        }, Z.pick = function(a, b, c) {
-            var d = {};
-            if (typeof b != "function") for (var e = -1, f = bb(arguments, !0, !1, 1), g = qb(a) ? f.length : 0; ++e < g; ) {
-                var h = f[e];
-                h in a && (d[h] = a[h]);
-            } else b = Z.createCallback(b, c, 3), t(a, function(a, c, e) {
-                b(a, c, e) && (d[c] = a);
+            return u;
+        }, X.partial = function(n) {
+            return at(n, 16, Re.call(arguments, 1));
+        }, X.partialRight = function(n) {
+            return at(n, 32, null, Re.call(arguments, 1));
+        }, X.pick = function(n, t, e) {
+            var r = {};
+            if (typeof t != "function") for (var u = -1, o = tt(arguments, !0, !1, 1), a = yt(n) ? o.length : 0; ++u < a; ) {
+                var i = o[u];
+                i in n && (r[i] = n[i]);
+            } else t = X.createCallback(t, e, 3), b(n, function(n, e, u) {
+                t(n, e, u) && (r[e] = n);
             });
-            return d;
-        }, Z.pluck = Cb, Z.pull = function(a) {
-            for (var b = arguments, c = 0, d = b.length, e = a ? a.length : 0; ++c < d; ) for (var f = -1, g = b[c]; ++f < e; ) a[f] === g && (sc.call(a, f--, 1), 
-            e--);
+            return r;
+        }, X.pluck = Et, X.pull = function(n) {
+            for (var t = arguments, e = 0, r = t.length, u = n ? n.length : 0; ++e < r; ) for (var o = -1, a = t[e]; ++o < u; ) n[o] === a && (_e.call(n, o--, 1), 
+            u--);
+            return n;
+        }, X.range = function(n, t, e) {
+            n = +n || 0, e = typeof e == "number" ? e : +e || 1, null == t && (t = n, n = 0);
+            var r = -1;
+            t = Ee(0, fe((t - n) / (e || 1)));
+            for (var u = Ht(t); ++r < t; ) u[r] = n, n += e;
+            return u;
+        }, X.reject = function(n, t, e) {
+            return t = X.createCallback(t, e, 3), jt(n, function(n, e, r) {
+                return !t(n, e, r);
+            });
+        }, X.remove = function(n, t, e) {
+            var r = -1, u = n ? n.length : 0, o = [];
+            for (t = X.createCallback(t, e, 3); ++r < u; ) e = n[r], t(e, r, n) && (o.push(e), 
+            _e.call(n, r--, 1), u--);
+            return o;
+        }, X.rest = Ft, X.shuffle = At, X.sortBy = function(n, t, e) {
+            var r = -1, o = n ? n.length : 0, a = Ht(typeof o == "number" ? o : 0);
+            for (t = X.createCallback(t, e, 3), xt(n, function(n, e, u) {
+                var o = a[++r] = f();
+                o.l = t(n, e, u), o.m = r, o.n = n;
+            }), o = a.length, a.sort(u); o--; ) n = a[o], a[o] = n.n, c(n);
             return a;
-        }, Z.range = function(a, b, c) {
-            a = +a || 0, c = typeof c == "number" ? c : +c || 1, null == b && (b = a, a = 0);
-            var d = -1;
-            b = Cc(0, ic((b - a) / (c || 1)));
-            for (var e = Wb(b); ++d < b; ) e[d] = a, a += c;
-            return e;
-        }, Z.reject = function(a, b, c) {
-            return b = Z.createCallback(b, c, 3), wb(a, function(a, c, d) {
-                return !b(a, c, d);
-            });
-        }, Z.remove = function(a, b, c) {
-            var d = -1, e = a ? a.length : 0, f = [];
-            for (b = Z.createCallback(b, c, 3); ++d < e; ) c = a[d], b(c, d, a) && (f.push(c), 
-            sc.call(a, d--, 1), e--);
-            return f;
-        }, Z.rest = Kb, Z.shuffle = Fb, Z.sortBy = function(a, b, c) {
-            var d = -1, f = a ? a.length : 0, g = Wb(typeof f == "number" ? f : 0);
-            for (b = Z.createCallback(b, c, 3), yb(a, function(a, c, e) {
-                var f = g[++d] = i();
-                f.l = b(a, c, e), f.m = d, f.n = a;
-            }), f = g.length, g.sort(e); f--; ) a = g[f], g[f] = a.n, k(a);
-            return g;
-        }, Z.tap = function(a, b) {
-            return b(a), a;
-        }, Z.throttle = function(a, b, c) {
-            var d = !0, e = !0;
-            if (!pb(a)) throw new dc();
-            return false === c ? d = !1 : qb(c) && (d = "leading" in c ? c.leading : d, e = "trailing" in c ? c.trailing : e), 
-            c = i(), c.leading = d, c.maxWait = b, c.trailing = e, a = Qb(a, b, c), k(c), a;
-        }, Z.times = function(a, b, c) {
-            a = -1 < (a = +a) ? a : 0;
-            var d = -1, e = Wb(a);
-            for (b = ab(b, c, 1); ++d < a; ) e[d] = b(d);
-            return e;
-        }, Z.toArray = function(a) {
-            return a && typeof a.length == "number" ? l(a) : tb(a);
-        }, Z.transform = function(a, b, c, d) {
-            var e = Lc(a);
-            return b = ab(b, d, 4), null == c && (e ? c = [] : (d = a && a.constructor, c = qb(d && d.prototype) ? xc(d && d.prototype) : {})), 
-            (e ? yb : p)(a, function(a, d, e) {
-                return b(c, a, d, e);
-            }), c;
-        }, Z.union = function() {
-            return eb(bb(arguments, !0, !0));
-        }, Z.uniq = Mb, Z.values = tb, Z.where = wb, Z.without = function(a) {
-            return Hb(a, Gc.call(arguments, 1));
-        }, Z.wrap = function(a, b) {
-            if (!pb(b)) throw new dc();
+        }, X.tap = function(n, t) {
+            return t(n), n;
+        }, X.throttle = function(n, t, e) {
+            var r = !0, u = !0;
+            if (!gt(n)) throw new re();
+            return false === e ? r = !1 : yt(e) && (r = "leading" in e ? e.leading : r, u = "trailing" in e ? e.trailing : u), 
+            e = f(), e.leading = r, e.maxWait = t, e.trailing = u, n = Kt(n, t, e), c(e), n;
+        }, X.times = function(n, t, e) {
+            n = -1 < (n = +n) ? n : 0;
+            var r = -1, u = Ht(n);
+            for (t = nt(t, e, 1); ++r < n; ) u[r] = t(r);
+            return u;
+        }, X.toArray = function(n) {
+            return n && typeof n.length == "number" ? p(n) : bt(n);
+        }, X.transform = function(n, t, e, r) {
+            var u = Te(n);
+            return t = nt(t, r, 4), null == e && (u ? e = [] : (r = n && n.constructor, e = yt(r && r.prototype) ? ke(r && r.prototype) : {})), 
+            (u ? xt : g)(n, function(n, r, u) {
+                return t(e, n, r, u);
+            }), e;
+        }, X.union = function() {
+            return ut(tt(arguments, !0, !0));
+        }, X.uniq = zt, X.values = bt, X.where = jt, X.without = function(n) {
+            return Bt(n, Re.call(arguments, 1));
+        }, X.wrap = function(n, t) {
+            if (!gt(t)) throw new re();
             return function() {
-                var c = [ a ];
-                return pc.apply(c, arguments), b.apply(this, c);
+                var e = [ n ];
+                return ge.apply(e, arguments), t.apply(this, e);
             };
-        }, Z.zip = Nb, Z.zipObject = Ob, Z.collect = Ab, Z.drop = Kb, Z.each = yb, Z.c = zb, 
-        Z.extend = U, Z.methods = nb, Z.object = Ob, Z.select = wb, Z.tail = Kb, Z.unique = Mb, 
-        Z.unzip = Nb, Tb(Z), Z.clone = function(a, b, c, d) {
-            return typeof b != "boolean" && null != b && (d = c, c = b, b = !1), _(a, b, typeof c == "function" && ab(c, d, 1));
-        }, Z.cloneDeep = function(a, b, c) {
-            return _(a, !0, typeof b == "function" && ab(b, c, 1));
-        }, Z.contains = ub, Z.escape = function(a) {
-            return null == a ? "" : cc(a).replace(Qc, hb);
-        }, Z.every = vb, Z.find = xb, Z.findIndex = function(a, b, c) {
-            var d = -1, e = a ? a.length : 0;
-            for (b = Z.createCallback(b, c, 3); ++d < e; ) if (b(a[d], d, a)) return d;
+        }, X.zip = qt, X.zipObject = Wt, X.collect = Ot, X.drop = Ft, X.each = xt, X.c = Ct, 
+        X.extend = V, X.methods = vt, X.object = Wt, X.select = jt, X.tail = Ft, X.unique = zt, 
+        X.unzip = qt, Ut(X), X.clone = function(n, t, e, r) {
+            return typeof t != "boolean" && null != t && (r = e, e = t, t = !1), Z(n, t, typeof e == "function" && nt(e, r, 1));
+        }, X.cloneDeep = function(n, t, e) {
+            return Z(n, !0, typeof t == "function" && nt(t, e, 1));
+        }, X.contains = dt, X.escape = function(n) {
+            return null == n ? "" : ee(n).replace(Ke, it);
+        }, X.every = wt, X.find = kt, X.findIndex = function(n, t, e) {
+            var r = -1, u = n ? n.length : 0;
+            for (t = X.createCallback(t, e, 3); ++r < u; ) if (t(n[r], r, n)) return r;
             return -1;
-        }, Z.findKey = function(a, b, c) {
-            var d;
-            return b = Z.createCallback(b, c, 3), p(a, function(a, c, e) {
-                return b(a, c, e) ? (d = c, !1) : void 0;
-            }), d;
-        }, Z.findLast = function(a, b, c) {
-            var d;
-            return b = Z.createCallback(b, c, 3), zb(a, function(a, c, e) {
-                return b(a, c, e) ? (d = a, !1) : void 0;
-            }), d;
-        }, Z.findLastIndex = function(a, b, c) {
-            var d = a ? a.length : 0;
-            for (b = Z.createCallback(b, c, 3); d--; ) if (b(a[d], d, a)) return d;
+        }, X.findKey = function(n, t, e) {
+            var r;
+            return t = X.createCallback(t, e, 3), g(n, function(n, e, u) {
+                return t(n, e, u) ? (r = e, !1) : void 0;
+            }), r;
+        }, X.findLast = function(n, t, e) {
+            var r;
+            return t = X.createCallback(t, e, 3), Ct(n, function(n, e, u) {
+                return t(n, e, u) ? (r = n, !1) : void 0;
+            }), r;
+        }, X.findLastIndex = function(n, t, e) {
+            var r = n ? n.length : 0;
+            for (t = X.createCallback(t, e, 3); r--; ) if (t(n[r], r, n)) return r;
             return -1;
-        }, Z.findLastKey = function(a, b, c) {
-            var d;
-            return b = Z.createCallback(b, c, 3), mb(a, function(a, c, e) {
-                return b(a, c, e) ? (d = c, !1) : void 0;
-            }), d;
-        }, Z.has = function(a, b) {
-            return a ? nc.call(a, b) : !1;
-        }, Z.identity = Sb, Z.indexOf = Jb, Z.isArguments = lb, Z.isArray = Lc, Z.isBoolean = function(a) {
-            return true === a || false === a || tc.call(a) == J;
-        }, Z.isDate = function(a) {
-            return a ? typeof a == "object" && tc.call(a) == K : !1;
-        }, Z.isElement = function(a) {
-            return a ? 1 === a.nodeType : !1;
-        }, Z.isEmpty = function(a) {
-            var b = !0;
-            if (!a) return b;
-            var c = tc.call(a), d = a.length;
-            return c == I || c == P || c == H || c == N && typeof d == "number" && pb(a.splice) ? !d : (p(a, function() {
-                return b = !1;
-            }), b);
-        }, Z.isEqual = function(a, b, c, d) {
-            return cb(a, b, typeof c == "function" && ab(c, d, 2));
-        }, Z.isFinite = function(a) {
-            return zc(a) && !Ac(parseFloat(a));
-        }, Z.isFunction = pb, Z.isNaN = function(a) {
-            return rb(a) && a != +a;
-        }, Z.isNull = function(a) {
-            return null === a;
-        }, Z.isNumber = rb, Z.isObject = qb, Z.isPlainObject = o, Z.isRegExp = function(a) {
-            return a ? typeof a == "object" && tc.call(a) == O : !1;
-        }, Z.isString = sb, Z.isUndefined = function(a) {
-            return typeof a == "undefined";
-        }, Z.lastIndexOf = function(a, b, c) {
-            var d = a ? a.length : 0;
-            for (typeof c == "number" && (d = (0 > c ? Cc(0, d + c) : Dc(c, d - 1)) + 1); d--; ) if (a[d] === b) return d;
+        }, X.findLastKey = function(n, t, e) {
+            var r;
+            return t = X.createCallback(t, e, 3), st(n, function(n, e, u) {
+                return t(n, e, u) ? (r = e, !1) : void 0;
+            }), r;
+        }, X.has = function(n, t) {
+            return n ? ve.call(n, t) : !1;
+        }, X.identity = Mt, X.indexOf = Dt, X.isArguments = pt, X.isArray = Te, X.isBoolean = function(n) {
+            return true === n || false === n || be.call(n) == D;
+        }, X.isDate = function(n) {
+            return n ? typeof n == "object" && be.call(n) == F : !1;
+        }, X.isElement = function(n) {
+            return n ? 1 === n.nodeType : !1;
+        }, X.isEmpty = function(n) {
+            var t = !0;
+            if (!n) return t;
+            var e = be.call(n), r = n.length;
+            return e == $ || e == P || e == B || e == q && typeof r == "number" && gt(n.splice) ? !r : (g(n, function() {
+                return t = !1;
+            }), t);
+        }, X.isEqual = function(n, t, e, r) {
+            return et(n, t, typeof e == "function" && nt(e, r, 2));
+        }, X.isFinite = function(n) {
+            return Ce(n) && !Oe(parseFloat(n));
+        }, X.isFunction = gt, X.isNaN = function(n) {
+            return mt(n) && n != +n;
+        }, X.isNull = function(n) {
+            return null === n;
+        }, X.isNumber = mt, X.isObject = yt, X.isPlainObject = h, X.isRegExp = function(n) {
+            return n ? typeof n == "object" && be.call(n) == W : !1;
+        }, X.isString = _t, X.isUndefined = function(n) {
+            return typeof n == "undefined";
+        }, X.lastIndexOf = function(n, t, e) {
+            var r = n ? n.length : 0;
+            for (typeof e == "number" && (r = (0 > e ? Ee(0, r + e) : Ie(e, r - 1)) + 1); r--; ) if (n[r] === t) return r;
             return -1;
-        }, Z.mixin = Tb, Z.noConflict = function() {
-            return c._ = gc, this;
-        }, Z.parseInt = Uc, Z.random = Ub, Z.reduce = Db, Z.reduceRight = Eb, Z.result = function(a, b) {
-            if (a) {
-                var c = a[b];
-                return pb(c) ? a[b]() : c;
+        }, X.mixin = Ut, X.noConflict = function() {
+            return e._ = ae, this;
+        }, X.parseInt = Ve, X.random = Vt, X.reduce = It, X.reduceRight = St, X.result = function(n, t) {
+            if (n) {
+                var e = n[t];
+                return gt(e) ? n[t]() : e;
             }
-        }, Z.runInContext = m, Z.size = function(a) {
-            var b = a ? a.length : 0;
-            return typeof b == "number" ? b : Mc(a).length;
-        }, Z.some = Gb, Z.sortedIndex = Lb, Z.template = function(a, b, c) {
-            var d = Z.templateSettings;
-            a || (a = ""), c = S({}, c, d);
-            var e, f = S({}, c.imports, d.imports), d = Mc(f), f = tb(f), h = 0, i = c.interpolate || D, j = "__p+='", i = bc((c.escape || D).source + "|" + i.source + "|" + (i === B ? y : D).source + "|" + (c.evaluate || D).source + "|$", "g");
-            a.replace(i, function(b, c, d, f, i, k) {
-                return d || (d = f), j += a.slice(h, k).replace(F, g), c && (j += "'+__e(" + c + ")+'"), 
-                i && (e = !0, j += "';" + i + ";__p+='"), d && (j += "'+((__t=(" + d + "))==null?'':__t)+'"), 
-                h = k + b.length, b;
-            }), j += "';\n", i = c = c.variable, i || (c = "obj", j = "with(" + c + "){" + j + "}"), 
-            j = (e ? j.replace(v, "") : j).replace(w, "$1").replace(x, "$1;"), j = "function(" + c + "){" + (i ? "" : c + "||(" + c + "={});") + "var __t,__p='',__e=_.escape" + (e ? ",__j=Array.prototype.join;function print(){__p+=__j.call(arguments,'')}" : ";") + j + "return __p}";
+        }, X.runInContext = s, X.size = function(n) {
+            var t = n ? n.length : 0;
+            return typeof t == "number" ? t : ze(n).length;
+        }, X.some = Rt, X.sortedIndex = Tt, X.template = function(n, t, e) {
+            var r = X.templateSettings;
+            n || (n = ""), e = M({}, e, r);
+            var u, o = M({}, e.imports, r.imports), r = ze(o), o = bt(o), i = 0, f = e.interpolate || I, l = "__p+='", f = te((e.escape || I).source + "|" + f.source + "|" + (f === N ? x : I).source + "|" + (e.evaluate || I).source + "|$", "g");
+            n.replace(f, function(t, e, r, o, f, c) {
+                return r || (r = o), l += n.slice(i, c).replace(A, a), e && (l += "'+__e(" + e + ")+'"), 
+                f && (u = !0, l += "';" + f + ";__p+='"), r && (l += "'+((__t=(" + r + "))==null?'':__t)+'"), 
+                i = c + t.length, t;
+            }), l += "';\n", f = e = e.variable, f || (e = "obj", l = "with(" + e + "){" + l + "}"), 
+            l = (u ? l.replace(w, "") : l).replace(j, "$1").replace(k, "$1;"), l = "function(" + e + "){" + (f ? "" : e + "||(" + e + "={});") + "var __t,__p='',__e=_.escape" + (u ? ",__j=Array.prototype.join;function print(){__p+=__j.call(arguments,'')}" : ";") + l + "return __p}";
             try {
-                var k = Zb(d, "return " + j).apply(n, f);
-            } catch (l) {
-                throw l.source = j, l;
+                var c = Xt(r, "return " + l).apply(v, o);
+            } catch (p) {
+                throw p.source = l, p;
             }
-            return b ? k(b) : (k.source = j, k);
-        }, Z.unescape = function(a) {
-            return null == a ? "" : cc(a).replace(Pc, kb);
-        }, Z.uniqueId = function(a) {
-            var b = ++q;
-            return cc(null == a ? "" : a) + b;
-        }, Z.all = vb, Z.any = Gb, Z.detect = xb, Z.findWhere = xb, Z.foldl = Db, Z.foldr = Eb, 
-        Z.include = ub, Z.inject = Db, p(Z, function(a, b) {
-            Z.prototype[b] || (Z.prototype[b] = function() {
-                var b = [ this.__wrapped__ ], c = this.__chain__;
-                return pc.apply(b, arguments), b = a.apply(Z, b), c ? new $(b, c) : b;
+            return t ? c(t) : (c.source = l, c);
+        }, X.unescape = function(n) {
+            return null == n ? "" : ee(n).replace(Pe, ct);
+        }, X.uniqueId = function(n) {
+            var t = ++y;
+            return ee(null == n ? "" : n) + t;
+        }, X.all = wt, X.any = Rt, X.detect = kt, X.findWhere = kt, X.foldl = It, X.foldr = St, 
+        X.include = dt, X.inject = It, g(X, function(n, t) {
+            X.prototype[t] || (X.prototype[t] = function() {
+                var t = [ this.__wrapped__ ], e = this.__chain__;
+                return ge.apply(t, arguments), t = n.apply(X, t), e ? new Y(t, e) : t;
             });
-        }), Z.first = Ib, Z.last = function(a, b, c) {
-            var d = 0, e = a ? a.length : 0;
-            if (typeof b != "number" && null != b) {
-                var f = e;
-                for (b = Z.createCallback(b, c, 3); f-- && b(a[f], f, a); ) d++;
-            } else if (d = b, null == d || c) return a ? a[e - 1] : n;
-            return l(a, Cc(0, e - d));
-        }, Z.sample = function(a, b, c) {
-            var d = a ? a.length : 0;
-            return typeof d != "number" && (a = tb(a)), null == b || c ? a ? a[Ub(d - 1)] : n : (a = Fb(a), 
-            a.length = Dc(Cc(0, b), a.length), a);
-        }, Z.take = Ib, Z.head = Ib, p(Z, function(a, b) {
-            var c = "sample" !== b;
-            Z.prototype[b] || (Z.prototype[b] = function(b, d) {
-                var e = this.__chain__, f = a(this.__wrapped__, b, d);
-                return e || null != b && (!d || c && typeof b == "function") ? new $(f, e) : f;
+        }), X.first = $t, X.last = function(n, t, e) {
+            var r = 0, u = n ? n.length : 0;
+            if (typeof t != "number" && null != t) {
+                var o = u;
+                for (t = X.createCallback(t, e, 3); o-- && t(n[o], o, n); ) r++;
+            } else if (r = t, null == r || e) return n ? n[u - 1] : v;
+            return p(n, Ee(0, u - r));
+        }, X.sample = function(n, t, e) {
+            var r = n ? n.length : 0;
+            return typeof r != "number" && (n = bt(n)), null == t || e ? n ? n[Vt(r - 1)] : v : (n = At(n), 
+            n.length = Ie(Ee(0, t), n.length), n);
+        }, X.take = $t, X.head = $t, g(X, function(n, t) {
+            var e = "sample" !== t;
+            X.prototype[t] || (X.prototype[t] = function(t, r) {
+                var u = this.__chain__, o = n(this.__wrapped__, t, r);
+                return u || null != t && (!r || e && typeof t == "function") ? new Y(o, u) : o;
             });
-        }), Z.VERSION = "2.0.0", Z.prototype.chain = function() {
+        }), X.VERSION = "2.0.0", X.prototype.chain = function() {
             return this.__chain__ = !0, this;
-        }, Z.prototype.toString = function() {
-            return cc(this.__wrapped__);
-        }, Z.prototype.value = Vb, Z.prototype.valueOf = Vb, yb([ "join", "pop", "shift" ], function(a) {
-            var b = ec[a];
-            Z.prototype[a] = function() {
-                var a = this.__chain__, c = b.apply(this.__wrapped__, arguments);
-                return a ? new $(c, a) : c;
+        }, X.prototype.toString = function() {
+            return ee(this.__wrapped__);
+        }, X.prototype.value = Gt, X.prototype.valueOf = Gt, xt([ "join", "pop", "shift" ], function(n) {
+            var t = ue[n];
+            X.prototype[n] = function() {
+                var n = this.__chain__, e = t.apply(this.__wrapped__, arguments);
+                return n ? new Y(e, n) : e;
             };
-        }), yb([ "push", "reverse", "sort", "unshift" ], function(a) {
-            var b = ec[a];
-            Z.prototype[a] = function() {
-                return b.apply(this.__wrapped__, arguments), this;
+        }), xt([ "push", "reverse", "sort", "unshift" ], function(n) {
+            var t = ue[n];
+            X.prototype[n] = function() {
+                return t.apply(this.__wrapped__, arguments), this;
             };
-        }), yb([ "concat", "slice", "splice" ], function(a) {
-            var b = ec[a];
-            Z.prototype[a] = function() {
-                return new $(b.apply(this.__wrapped__, arguments), this.__chain__);
+        }), xt([ "concat", "slice", "splice" ], function(n) {
+            var t = ue[n];
+            X.prototype[n] = function() {
+                return new Y(t.apply(this.__wrapped__, arguments), this.__chain__);
             };
-        }), Z;
+        }), X;
     }
-    var n, o = [], p = [], q = 0, r = +new Date() + "", s = 75, t = 40, u = " 	\f ﻿\n\r\u2028\u2029 ᠎             　", v = /\b__p\+='';/g, w = /\b(__p\+=)''\+/g, x = /(__e\(.*?\)|\b__t\))\+'';/g, y = /\$\{([^\\}]*(?:\\.[^\\}]*)*)\}/g, z = /\w*$/, A = /^function[ \n\r\t]+\w/, B = /<%=([\s\S]+?)%>/g, C = RegExp("^[" + u + "]*0+(?=.$)"), D = /($^)/, E = (E = /\bthis\b/) && E.test(m) && E, F = /['\n\r\t\u2028\u2029\\]/g, G = "Array Boolean Date Function Math Number Object RegExp String _ attachEvent clearTimeout isFinite isNaN parseInt setImmediate setTimeout".split(" "), H = "[object Arguments]", I = "[object Array]", J = "[object Boolean]", K = "[object Date]", L = "[object Function]", M = "[object Number]", N = "[object Object]", O = "[object RegExp]", P = "[object String]", Q = {};
-    Q[L] = !1, Q[H] = Q[I] = Q[J] = Q[K] = Q[M] = Q[N] = Q[O] = Q[P] = !0;
-    var R = {
+    var v, h = [], g = [], y = 0, m = +new Date() + "", _ = 75, b = 40, d = " 	\f ﻿\n\r\u2028\u2029 ᠎             　", w = /\b__p\+='';/g, j = /\b(__p\+=)''\+/g, k = /(__e\(.*?\)|\b__t\))\+'';/g, x = /\$\{([^\\}]*(?:\\.[^\\}]*)*)\}/g, C = /\w*$/, O = /^function[ \n\r\t]+\w/, N = /<%=([\s\S]+?)%>/g, E = RegExp("^[" + d + "]*0+(?=.$)"), I = /($^)/, S = (S = /\bthis\b/) && S.test(s) && S, A = /['\n\r\t\u2028\u2029\\]/g, R = "Array Boolean Date Function Math Number Object RegExp String _ attachEvent clearTimeout isFinite isNaN parseInt setImmediate setTimeout".split(" "), B = "[object Arguments]", $ = "[object Array]", D = "[object Boolean]", F = "[object Date]", T = "[object Function]", z = "[object Number]", q = "[object Object]", W = "[object RegExp]", P = "[object String]", K = {};
+    K[T] = !1, K[B] = K[$] = K[D] = K[F] = K[z] = K[q] = K[W] = K[P] = !0;
+    var L = {
         "boolean": !1,
         "function": !0,
         object: !0,
         number: !1,
         string: !1,
         undefined: !1
-    }, S = {
+    }, M = {
         "\\": "\\",
         "'": "'",
         "\n": "n",
@@ -8477,13 +8478,13 @@ angular.element(document).find("head").prepend('<style type="text/css">@charset 
         "	": "t",
         "\u2028": "u2028",
         "\u2029": "u2029"
-    }, T = R[typeof window] && window || this, U = R[typeof exports] && exports, V = R[typeof module] && module && module.exports == U && module, W = R[typeof global] && global;
-    !W || W.global !== W && W.window !== W || (T = W);
-    var X = m();
-    typeof define == "function" && typeof define.amd == "object" && define.amd ? (T._ = X, 
+    }, U = L[typeof window] && window || this, V = L[typeof exports] && exports, G = L[typeof module] && module && module.exports == V && module, H = L[typeof global] && global;
+    !H || H.global !== H && H.window !== H || (U = H);
+    var J = s();
+    typeof define == "function" && typeof define.amd == "object" && define.amd ? (U._ = J, 
     define(function() {
-        return X;
-    })) : U && !U.nodeType ? V ? (V.exports = X)._ = X : U._ = X : T._ = X;
+        return J;
+    })) : V && !V.nodeType ? G ? (G.exports = J)._ = J : V._ = J : U._ = J;
 }).call(this);
 
 !function() {
